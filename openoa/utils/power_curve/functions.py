@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 from pygam import LinearGAM
 from scipy.optimize import differential_evolution
+from scipy.interpolate import interp1d
 
 from openoa.utils._converters import series_method, dataframe_method
 from openoa.utils.power_curve.parametric_forms import logistic5param
@@ -23,6 +24,7 @@ def IEC(
     bin_width: float = 0.5,
     windspeed_start: float = 0,
     windspeed_end: float = 30.0,
+    interpolate: bool = False,
     data: pd.DataFrame = None,
 ) -> Callable:
     """
@@ -30,13 +32,16 @@ def IEC(
     for values outside the cutoff range: [:py:attr:`windspeed_start`, :py:attr:`windspeed_end`].
 
     Args:
-        windspeed_col(:obj:`str` | `pandas.Series`): Windspeed data, or the name of the column in
+        windspeed_col(:obj:`str` | `pandas.Series`): Wind speed data, or the name of the column in
             :py:attr:`data`.
         power_col(:obj:`str` | `pandas.Series`): Power data, or the name of the column in
             :py:attr:`data`.
         bin_width(:obj:`float`): Width of windspeed bin. Defaults to 0.5 m/s, per the standard.
         windspeed_start(:obj:`float`): Left edge of first windspeed bin. Defaults to 0.0.
         windspeed_end(:obj:`float`): Right edge of last windspeed bin. Defaults to 30.0
+        interpolate(:obj:`bool`): If True, returns a power curve that is linearly interpolated
+            between wind speed bin points. Otherwise, the bin-average power will be assigned to all
+            wind speeds within a particular bin. Defaults to False.
         data(:obj:`pandas.DataFrame`, optional): a pandas DataFrame containing
             :py:attr:`windspeed_col` and :py:attr:`power_col`. Defaults to None.
 
@@ -61,7 +66,7 @@ def IEC(
     P_bin = pd.Series(data=P_bin).interpolate(method="linear").bfill().values
 
     # Create a closure over the computed bins which computes the power curve value for arbitrary array-like input
-    def pc_iec(x):
+    def pc_iec_bin(x):
         P = np.zeros(np.shape(x))
         for i in range(0, len(bins) - 1):
             idx = np.where((x >= bins[i]) & (x < bins[i + 1]))
@@ -70,7 +75,22 @@ def IEC(
         P[cutoff_idx] = 0.0
         return P
 
-    return pc_iec
+    def pc_iec_interp(x):
+        f = interp1d(
+            bins[0:-1] + 0.5 / 2,
+            P_bin,
+            fill_value=(P_bin[0], P_bin[-1]),
+            bounds_error=False,
+        )
+        P = f(x)
+        cutoff_idx = (x < windspeed_start) | (x > windspeed_end)
+        P[cutoff_idx] = 0.0
+        return P
+
+    if interpolate:
+        return pc_iec_interp
+    else:
+        return pc_iec_bin
 
 
 @series_method(data_cols=["windspeed_col", "power_col"])
