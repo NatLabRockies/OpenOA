@@ -3,7 +3,7 @@
 # turbines are identified using the turbine coordinates and a reference wind direction
 # signal. The mean power production for all turbines in the wind plant is summed over all
 # time steps and compared to the mean power of the freestream turbines summed over all time
-# steps to estimate wake losses during the period of record. Methods for calclating the
+# steps to estimate wake losses during the period of record. Methods for calculating the
 # long-term wake losses using reanalaysis data and quantifying uncertainty are provided as well.
 
 # The general approach for estimating wake losses and quantifying uncertainty using bootstrapping
@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import random
 from copy import deepcopy
+from typing import Callable
 
 import attrs
 import numpy as np
@@ -31,10 +32,11 @@ import pandas as pd
 import numpy.typing as npt
 from tqdm import tqdm
 from attrs import field, define
+from scipy.interpolate import interp1d
 from sklearn.linear_model import LinearRegression
 
 from openoa.plant import PlantData, convert_to_list
-from openoa.utils import plot, filters
+from openoa.utils import plot, filters, power_curve
 from openoa.utils import met_data_processing as met
 from openoa.schema import FromDictMixin, ResetValuesMixin
 from openoa.logging import logging, logged_method_call
@@ -123,7 +125,7 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
         wind_direction_asset_ids (:obj:`list`, optional): List of asset IDs (turbines or met towers)
             used to calculate the average wind direction at each time step. If None, all assets of
             the corresponding data type will be used. Defaults to None.
-        UQ (:obj:`bool`, optional): Dertermines whether to perform uncertainty quantification using
+        UQ (:obj:`bool`, optional): Determines whether to perform uncertainty quantification using
             Monte Carlo simulation (True) or provide a single wake loss estimate (False). Defaults
             to True.
         start_date (:obj:`pandas.Timestamp` or :obj:`string`, optional): Start datetime for wake
@@ -147,7 +149,7 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
             used if :py:attr:`UQ` = False and a default value of (50, 110) will be used if
             :py:attr:`UQ` = True. Defaults to None.
         freestream_power_method (str, optional): Method used to determine the representative power
-            prouction of the freestream turbines ("mean", "median", "max"). Defaults to "mean".
+            production of the freestream turbines ("mean", "median", "max"). Defaults to "mean".
         freestream_wind_speed_method (str, optional): Method used to determine the representative
             wind speed of the freestream turbines ("mean", "median"). Defaults to "mean".
         correct_for_derating (bool, optional): Indicates whether derated, curtailed, or otherwise
@@ -179,6 +181,19 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
             a single value when :py:attr:`UQ` = False. If undefined (None), a value of 7.0 will
             be used if :py:attr:`UQ` = False and values of (4.0, 13.0) will be used if
             :py:attr:`UQ` = True. Defaults to None.
+        correct_for_ws_heterogeneity (bool, optional): If True, a correction will be applied to the
+            potential wind plant and turbine power estimates to account for freestream wind speed
+            heterogeneity across the wind plant. If True, ws_speedup_factor_map must be
+            provided. Defaults to False.
+        ws_speedup_factor_map (pd.DataFrame | str, optional): A pandas data frame or a path to a
+            csv file with a column named "wd" that contains a list of wind directions between 0 and
+            360 and columns named for each of the wind turbine IDs that contain relative wind speed
+            speed up factors corresponding to each wind direction in the "wd" column. The speedup
+            factors are defined as multipliers of the mean wind speed across all turbines that give
+            the relative speed up or slow down at each turbine location. For example, a value of
+            1.5 means that the wind speed is 50% greater than the average wind speed over all
+            turbines for the particular wind turbine and wind direction. Only used when
+            correct_for_ws_heterogeneity is True. Defaults to None.
         wd_bin_width_LT_corr (float, optional): Size of wind direction bins used to calculate
             long-term frequencies from historical reanalysis data and correct wake losses during
             the period of record (degrees). Defaults to 5 degrees.
@@ -248,6 +263,8 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
     wind_bin_mad_thresh: float | tuple[float, float] = field(
         default=(4.0, 13.0), validator=validate_UQ_input
     )
+    correct_for_ws_heterogeneity: bool = field(default=False)
+    ws_speedup_factor_map: pd.DataFrame | str = field(default=None)
     wd_bin_width_LT_corr: float = field(default=5.0)
     ws_bin_width_LT_corr: float = field(default=1.0)
     num_years_LT: int | tuple[int, int] = field(default=(10, 20), validator=validate_UQ_input)
@@ -261,6 +278,7 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
     aggregate_df: pd.DataFrame = field(init=False)
     inputs: pd.DataFrame = field(init=False)
     aggregate_df_sample: pd.DataFrame = field(init=False)
+    power_curve_func: Callable = field(init=False)
     wake_losses_por: NDArrayFloat = field(init=False)
     turbine_wake_losses_por: NDArrayFloat = field(init=False)
     wake_losses_lt: NDArrayFloat = field(init=False)
@@ -299,6 +317,8 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
             "derating_filter_wind_speed_start",
             "max_power_filter",
             "wind_bin_mad_thresh",
+            "correct_for_ws_heterogeneity",
+            "ws_speedup_factor_map",
             "wd_bin_width_LT_corr",
             "ws_bin_width_LT_corr",
             "num_years_LT",
@@ -358,6 +378,14 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
         elif (self.wind_direction_asset_ids is None) & (self.wind_direction_data_type == "tower"):
             self.wind_direction_asset_ids = list(self.plant.tower_ids)
 
+        if self.correct_for_ws_heterogeneity & (
+            type(self.ws_speedup_factor_map) not in [pd.DataFrame, str]
+        ):
+            raise ValueError(
+                "If correct_for_ws_heterogeneity is True, ws_speedup_factor_map must "
+                "be either a pandas DataFrame or a path to a csv file."
+            )
+
         if self.end_date_lt is not None:
             # Set minutes to 30 to handle time indices on the hour and on the half hour
             self.end_date_lt = pd.to_datetime(self.end_date_lt).replace(minute=30)
@@ -383,6 +411,8 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
         derating_filter_wind_speed_start: float | None = None,
         max_power_filter: float | None = None,
         wind_bin_mad_thresh: float | None = None,
+        correct_for_ws_heterogeneity: bool | None = None,
+        ws_speedup_factor_map: pd.DataFrame | str | None = None,
         wd_bin_width_LT_corr: float | None = None,
         ws_bin_width_LT_corr: float | None = None,
         num_years_LT: int | None = None,
@@ -445,6 +475,19 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
                 a single value when :py:attr:`UQ` = False. If undefined (None), a value of 7.0 will
                 be used if :py:attr:`UQ` = False and values of (4.0, 13.0) will be used if
                 :py:attr:`UQ` = True. Defaults to None.
+            correct_for_ws_heterogeneity (bool, optional): If True, a correction will be applied to
+                the potential wind plant and turbine power estimates to account for freestream wind
+                speed heterogeneity across the wind plant. If True, a ws_heterogeneity_factor_map
+                must be provided. Defaults to False.
+            ws_speedup_factor_map (pd.DataFrame | str, optional): A pandas data frame or a path to
+                a csv file with a column named "wd" that contains a list of wind directions between
+                0 and 360 and columns named for each of the wind turbine IDs that contain relative
+                wind speed speed up factors corresponding to each wind direction in the "wd"
+                column. The speedup factors are defined as multipliers of the mean wind speed
+                across all turbines that give the relative speed up or slow down at each turbine
+                location. For example, a value of 1.5 means that the wind speed is 50% greater than
+                the average wind speed over all turbines for the particular wind turbine and wind
+                direction. Only used when correct_for_ws_heterogeneity is True. Defaults to None.
             wd_bin_width_LT_corr (float, optional): Size of wind direction bins used to calculate
                 long-term frequencies from historical reanalysis data and correct wake losses during
                 the period of record (degrees). Defaults to 5 degrees.
@@ -513,6 +556,12 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
         if wind_bin_mad_thresh is not None:
             initial_parameters["wind_bin_mad_thresh"] = self.wind_bin_mad_thresh
             self.wind_bin_mad_thresh = wind_bin_mad_thresh
+        if correct_for_ws_heterogeneity is not None:
+            initial_parameters["correct_for_ws_heterogeneity"] = correct_for_ws_heterogeneity
+            self.correct_for_ws_heterogeneity = correct_for_ws_heterogeneity
+        if ws_speedup_factor_map is not None:
+            initial_parameters["ws_speedup_factor_map"] = ws_speedup_factor_map
+            self.ws_speedup_factor_map = ws_speedup_factor_map
         if wd_bin_width_LT_corr is not None:
             initial_parameters["wd_bin_width_LT_corr"] = self.wd_bin_width_LT_corr
             self.wd_bin_width_LT_corr = wd_bin_width_LT_corr
@@ -575,6 +624,15 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
                 self.aggregate_df_sample.loc[
                     valid_inds, ("windspeed_normal", t)
                 ] = self.aggregate_df_sample.loc[valid_inds, ("WMET_HorWdSpd", t)]
+
+            if self.correct_for_ws_heterogeneity:
+                # Create a representative power curve model for the turbines in the plant
+                self.power_curve_func = power_curve.IEC(
+                    self.aggregate_df_sample.loc[:, "windspeed_normal"].stack(),
+                    self.aggregate_df_sample.loc[:, "power_normal"].stack(),
+                    windspeed_end=50.0,
+                    interpolate=True,
+                )
 
             # Find freestream turbines for each wind direction. Update the dictionary only when the set of turbines
             # differs from the previous wind direction bin.
@@ -1013,6 +1071,10 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
         if self.wind_direction_data_type == "scada":
             self.aggregate_df = self.aggregate_df.drop(columns=[self.wind_direction_col])
 
+        # Add turbine-level wind speed speed-up factors if correcting for heterogeneity
+        if self.correct_for_ws_heterogeneity:
+            self._get_speedup_factors()
+
     @logged_method_call
     def _calculate_mean_wind_direction(self):
         """
@@ -1052,6 +1114,48 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
             df_rean = df_rean[df_rean.index.isin(self.aggregate_df.index)]
 
             self.aggregate_df[[col for col in df_rean.columns]] = df_rean
+
+    @logged_method_call
+    def _get_speedup_factors(self):
+        """
+        Loads table of wind speed speed up factors as a function of wind direction for each
+        turbine, then creates a speed up factor column for each turbine by linearly
+        interpolating the speed up factors using the reference wind direction.
+        """
+
+        if type(self.ws_speedup_factor_map) is str:
+            df_ws_speedup_factor_map = pd.read_csv(self.ws_speedup_factor_map)
+        else:
+            df_ws_speedup_factor_map = self.ws_speedup_factor_map.copy()
+
+        wd_first = df_ws_speedup_factor_map.iloc[0]["wd"]
+        wd_last = df_ws_speedup_factor_map.iloc[-1]["wd"]
+
+        first_row = df_ws_speedup_factor_map.iloc[0:1]
+        last_row = df_ws_speedup_factor_map.iloc[-1:]
+
+        # Add rows to beginning and end of data frame to ensure the list of wind directions include
+        # 0 to 360 degrees
+        if wd_last < 360:
+            df_ws_speedup_factor_map = pd.concat([df_ws_speedup_factor_map, first_row], axis=0)
+            df_ws_speedup_factor_map.iloc[
+                -1, df_ws_speedup_factor_map.columns.get_loc("wd")
+            ] += 360.0
+
+        if wd_first > 0:
+            df_ws_speedup_factor_map = pd.concat([last_row, df_ws_speedup_factor_map], axis=0)
+            df_ws_speedup_factor_map.iloc[
+                0, df_ws_speedup_factor_map.columns.get_loc("wd")
+            ] -= 360.0
+
+        df_ws_speedup_factor_map = df_ws_speedup_factor_map.reset_index(drop=True)
+
+        for t in self.turbine_ids:
+            f = interp1d(df_ws_speedup_factor_map["wd"], df_ws_speedup_factor_map[t])
+
+            self.aggregate_df[("speedup_factor", t)] = f(self.aggregate_df["wind_direction_ref"])
+
+        return None
 
     @logged_method_call
     def _identify_derating(self):
