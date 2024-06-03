@@ -618,9 +618,6 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
                 self.aggregate_df_sample.loc[
                     valid_inds, ("power_normal", t)
                 ] = self.aggregate_df_sample.loc[valid_inds, ("WTUR_W", t)]
-
-            for t in self.turbine_ids:
-                valid_inds = ~self.aggregate_df_sample[("derate_flag", t)]
                 self.aggregate_df_sample.loc[
                     valid_inds, ("windspeed_normal", t)
                 ] = self.aggregate_df_sample.loc[valid_inds, ("WMET_HorWdSpd", t)]
@@ -633,6 +630,17 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
                     windspeed_end=50.0,
                     interpolate=True,
                 )
+
+                # Create column for speedup factor during normal operation (NaN otherwise)
+                for t in self.turbine_ids:
+                    valid_inds = ~self.aggregate_df_sample[("derate_flag", t)]
+                    self.aggregate_df_sample.loc[
+                        valid_inds, ("speedup_factor_normal", t)
+                    ] = self.aggregate_df_sample.loc[valid_inds, ("speedup_factor", t)]
+
+                    # Initialize columns for estimated freestream wind speeds and powers
+                    self.aggregate_df_sample[("windspeed_freestream_estimate", t)] = np.nan
+                    self.aggregate_df_sample[("power_freestream_estimate", t)] = np.nan
 
             # Find freestream turbines for each wind direction. Update the dictionary only when the set of turbines
             # differs from the previous wind direction bin.
@@ -686,7 +694,6 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
 
                 # Assign representative energy and wind speed of freestream turbines. If correct_for_derating
                 # is True, only freestream turbines operating normally will be considered.
-
                 _power = self.aggregate_df_sample.loc[wd_bin_flag, "power_normal"]
                 if self.freestream_power_method == "mean":
                     _power = _power[freestream_turbine_ids].mean(axis=1)
@@ -694,33 +701,86 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
                     _power = _power[freestream_turbine_ids].median(axis=1)
                 elif self.freestream_power_method == "max":
                     _power = _power[freestream_turbine_ids].max(axis=1)
-                self.aggregate_df_sample.loc[wd_bin_flag, "power_mean_freestream"] = _power
+                self.aggregate_df_sample.loc[wd_bin_flag, "power_mean_freestream"] = _power.values
 
                 _ws = self.aggregate_df_sample.loc[wd_bin_flag, "windspeed_normal"]
                 if self.freestream_wind_speed_method == "mean":
                     _ws = _ws[freestream_turbine_ids].mean(axis=1)
                 elif self.freestream_wind_speed_method == "median":
                     _ws = _ws[freestream_turbine_ids].median(axis=1)
-                self.aggregate_df_sample.loc[wd_bin_flag, "windspeed_mean_freestream"] = _ws
+                self.aggregate_df_sample.loc[wd_bin_flag, "windspeed_mean_freestream"] = _ws.values
+
+                if self.correct_for_ws_heterogeneity:
+                    # Estimate expected wind speed at each turbine location based on speed up
+                    # factors and wind speeds at normally operating freestream wind turbines.
+                    _mean_speedup_factor = self.aggregate_df_sample.loc[
+                        wd_bin_flag, "speedup_factor_normal"
+                    ]
+                    _mean_speedup_factor = _mean_speedup_factor[freestream_turbine_ids].mean(axis=1)
+                    self.aggregate_df_sample.loc[wd_bin_flag, "windspeed_freestream_estimate"] = (
+                        self.aggregate_df_sample.loc[wd_bin_flag, "speedup_factor"]
+                        .mul(_ws.values / _mean_speedup_factor.values, axis=0)
+                        .values
+                    )
+
+                    # Correct mean freestream wind speed to represent mean freestream wind speed
+                    # over all turbines in the plant based on speedup factors of unwaked turbines
+                    self.aggregate_df_sample.loc[wd_bin_flag, "windspeed_mean_freestream"] = (
+                        self.aggregate_df_sample.loc[wd_bin_flag, "windspeed_mean_freestream"]
+                        / _mean_speedup_factor
+                    ).values
+
+                    # Interpolate power curve to estimate potential freestream power
+                    self.aggregate_df_sample.loc[
+                        wd_bin_flag, "power_freestream_estimate"
+                    ] = self.power_curve_func(
+                        self.aggregate_df_sample.loc[wd_bin_flag, "windspeed_freestream_estimate"]
+                    )
+
+                    # Get mean estimated freestream power of normally operating unwaked turbines
+                    _valid_inds = ~self.aggregate_df_sample.loc[wd_bin_flag, "derate_flag"]
+                    _valid_inds = _valid_inds[freestream_turbine_ids]
+                    _power_freestream_estimate = self.aggregate_df_sample.loc[
+                        wd_bin_flag, "power_freestream_estimate"
+                    ]
+                    self.aggregate_df_sample.loc[wd_bin_flag, "power_mean_freestream_estimate"] = (
+                        (_valid_inds * _power_freestream_estimate[freestream_turbine_ids]).sum(
+                            axis=1
+                        )
+                        / _valid_inds.sum(axis=1)
+                    ).values
 
             # Remove rows where no freestream turbines in normal operation were identified
             self.aggregate_df_sample = self.aggregate_df_sample.dropna(
                 subset=[("power_mean_freestream", ""), ("windspeed_mean_freestream", "")]
             )
 
-            # calculate total plant-level wake losses during period of record
+            # Calculate total plant-level wake losses during period of record
 
             # Determine ideal wind plant energy, correcting for derated turbines if correct_for_derating is True. If
             # correct_for_derating is True, ideal energy is calculated as the sum of the power produced by derated
             # turbines and the mean power produced by freestream turbines operating normally multiplied by the total
-            # number of turbines operating normally
+            # number of turbines operating normally. If correcting for wind speed heterogeneity, the ideal power of
+            # the normally operating turbines is given by scaling the mean power of the normally operating freestream
+            # turbines by a correction factor determined using the estimated power variations across the wind plant
+            # from the provided wind speed speedup factors.
             total_derated_turbine_power = (
                 self.aggregate_df_sample["WTUR_W"] * self.aggregate_df_sample["derate_flag"]
             ).sum(axis=1)
 
-            total_potential_freestream_power = self.aggregate_df_sample["power_mean_freestream"] * (
-                ~self.aggregate_df_sample["derate_flag"]
-            ).sum(axis=1)
+            if self.correct_for_ws_heterogeneity:
+                total_potential_freestream_power = (
+                    self.aggregate_df_sample["power_mean_freestream"]
+                    * (
+                        ~self.aggregate_df_sample["derate_flag"]
+                        * self.aggregate_df_sample["power_freestream_estimate"]
+                    ).sum(axis=1)
+                    / self.aggregate_df_sample["power_mean_freestream_estimate"]
+                )
+            else:
+                total_potential_freestream_power = self.aggregate_df_sample[
+                    "power_mean_freestream"
+                ] * (~self.aggregate_df_sample["derate_flag"]).sum(axis=1)
 
             # Assign total potential power
             self.aggregate_df_sample["potential_plant_power"] = (
@@ -756,17 +816,22 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
                 # Determine ideal turbine energy as sum of the power produced by the turbine when it
                 # is derated and the mean power produced by all freestream turbines when the turbine
                 # is operating normally
-                self.aggregate_df_sample.loc[
-                    ~self.aggregate_df_sample[("derate_flag", t)], ("potential_turbine_power", t)
-                ] = self.aggregate_df_sample.loc[
-                    ~self.aggregate_df_sample[("derate_flag", t)], "power_mean_freestream"
-                ]
+
+                valid_inds = ~self.aggregate_df_sample[("derate_flag", t)]
+                if self.correct_for_ws_heterogeneity:
+                    self.aggregate_df_sample.loc[valid_inds, ("potential_turbine_power", t)] = (
+                        self.aggregate_df_sample.loc[valid_inds, "power_mean_freestream"]
+                        * self.aggregate_df_sample.loc[valid_inds, ("power_freestream_estimate", t)]
+                        / self.aggregate_df_sample.loc[valid_inds, "power_mean_freestream_estimate"]
+                    )
+                else:
+                    self.aggregate_df_sample.loc[
+                        valid_inds, ("potential_turbine_power", t)
+                    ] = self.aggregate_df_sample.loc[valid_inds, "power_mean_freestream"]
 
                 self.aggregate_df_sample.loc[
-                    self.aggregate_df_sample[("derate_flag", t)], ("potential_turbine_power", t)
-                ] = self.aggregate_df_sample.loc[
-                    self.aggregate_df_sample[("derate_flag", t)], ("WTUR_W", t)
-                ]
+                    ~valid_inds, ("potential_turbine_power", t)
+                ] = self.aggregate_df_sample.loc[~valid_inds, ("WTUR_W", t)]
                 turbine_wake_losses_por[i] = (
                     1
                     - self.aggregate_df_sample[("WTUR_W", t)].sum()
