@@ -3,8 +3,11 @@
 # turbines are identified using the turbine coordinates and a reference wind direction
 # signal. The mean power production for all turbines in the wind plant is summed over all
 # time steps and compared to the mean power of the freestream turbines summed over all time
-# steps to estimate wake losses during the period of record. Methods for calculating the
-# long-term wake losses using reanalaysis data and quantifying uncertainty are provided as well.
+# steps to estimate wake losses during the period of record. An optional correction can be applied
+# to the potential power of the wind plant to account for freestream wind speed heterogeneity
+# based on user-provided wind direction-dependent wind speedup factors at each turbine location.
+# Methods for calculating the long-term wake losses using reanalaysis data and quantifying
+# uncertainty are provided as well.
 
 # The general approach for estimating wake losses and quantifying uncertainty using bootstrapping
 # is based in part on the following publications:
@@ -92,6 +95,16 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
               wind plant is assumed to be the actual power produced by the derated turbines plus the
               mean power production of the freestream turbines for all other turbines in the wind
               plant. Again, a similar procedure is used to estimate individual turbine wake losses.
+           b. If :py:attr:`correct_for_ws_heterogeneity` is True, then the potential power production
+              of the normally operating wind turbines in the wind plant is corrected to account for
+              freestream heterogeneity across the wind plant, which is specified using wind direction
+              dependent speedup factors at each turbine location from a user-provided csv file. To
+              estimate the potential power of the normally operating turbines, the mean power of the
+              normally operating freestream turbines is multiplied by the sum of the expected
+              freestream power at all turbine locations, using an empirical power curve and estimated
+              freestream wind speeds at each turbine location based on the provided speedup factors,
+              divided by the mean expected freestream power of the normally operating freestream
+              turbines.
 
         5. Finally, estimate the long-term corrected wake losses using the long-term historical
            reanalysis data. Note that the long-term correction is determined for each reanalysis
@@ -99,7 +112,7 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
            each iteration. If UQ is not selected, the long-term corrected wake losses are calculated
            as the average wake losses determined for all reanalysis products.
 
-           a. Calculate the long-term occurence frequencies for a set of wind direction and wind
+           a. Calculate the long-term occurrence frequencies for a set of wind direction and wind
               speed bins based on the hourly reanalysis data (typically, 10-20 years).
            b. Next, using a linear regression, compare the mean freestream wind speeds calculated
               from the SCADA data to the wind speeds from the reanalysis data and correct to remove
@@ -183,14 +196,15 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
             :py:attr:`UQ` = True. Defaults to None.
         correct_for_ws_heterogeneity (bool, optional): If True, a correction will be applied to the
             potential wind plant and turbine power estimates to account for freestream wind speed
-            heterogeneity across the wind plant. If True, ws_speedup_factor_map must be
-            provided. Defaults to False.
+            heterogeneity across the wind plant. The freestream wind speed estimate used to apply
+            the long-term correction will also be corrected to approximate the mean plant-wide
+            freestream wind speed. If True, ws_speedup_factor_map must be provided. Defaults to False.
         ws_speedup_factor_map (pd.DataFrame | str, optional): A pandas data frame or a path to a
             csv file with a column named "wd" that contains a list of wind directions between 0 and
             360 and columns named for each of the wind turbine IDs that contain relative wind speed
-            speed up factors corresponding to each wind direction in the "wd" column. The speedup
+            speedup factors corresponding to each wind direction in the "wd" column. The speedup
             factors are defined as multipliers of the mean wind speed across all turbines that give
-            the relative speed up or slow down at each turbine location. For example, a value of
+            the relative speedup or slow down at each turbine location. For example, a value of
             1.5 means that the wind speed is 50% greater than the average wind speed over all
             turbines for the particular wind turbine and wind direction. Only used when
             correct_for_ws_heterogeneity is True. Defaults to None.
@@ -477,14 +491,16 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
                 :py:attr:`UQ` = True. Defaults to None.
             correct_for_ws_heterogeneity (bool, optional): If True, a correction will be applied to
                 the potential wind plant and turbine power estimates to account for freestream wind
-                speed heterogeneity across the wind plant. If True, a ws_heterogeneity_factor_map
-                must be provided. Defaults to False.
+                speed heterogeneity across the wind plant. The freestream wind speed estimate used
+                to apply the long-term correction will also be corrected to approximate the mean
+                plant-wide freestream wind speed. If True, ws_speedup_factor_map must be provided.
+                Defaults to False.
             ws_speedup_factor_map (pd.DataFrame | str, optional): A pandas data frame or a path to
                 a csv file with a column named "wd" that contains a list of wind directions between
                 0 and 360 and columns named for each of the wind turbine IDs that contain relative
-                wind speed speed up factors corresponding to each wind direction in the "wd"
+                wind speed speedup factors corresponding to each wind direction in the "wd"
                 column. The speedup factors are defined as multipliers of the mean wind speed
-                across all turbines that give the relative speed up or slow down at each turbine
+                across all turbines that give the relative speedup or slow down at each turbine
                 location. For example, a value of 1.5 means that the wind speed is 50% greater than
                 the average wind speed over all turbines for the particular wind turbine and wind
                 direction. Only used when correct_for_ws_heterogeneity is True. Defaults to None.
@@ -711,7 +727,7 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
                 self.aggregate_df_sample.loc[wd_bin_flag, "windspeed_mean_freestream"] = _ws.values
 
                 if self.correct_for_ws_heterogeneity:
-                    # Estimate expected wind speed at each turbine location based on speed up
+                    # Estimate expected wind speed at each turbine location based on speedup
                     # factors and wind speeds at normally operating freestream wind turbines.
                     _mean_speedup_factor = self.aggregate_df_sample.loc[
                         wd_bin_flag, "speedup_factor_normal"
@@ -1136,7 +1152,7 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
         if self.wind_direction_data_type == "scada":
             self.aggregate_df = self.aggregate_df.drop(columns=[self.wind_direction_col])
 
-        # Add turbine-level wind speed speed-up factors if correcting for heterogeneity
+        # Add turbine-level wind speed speedup factors if correcting for heterogeneity
         if self.correct_for_ws_heterogeneity:
             self._get_speedup_factors()
 
@@ -1183,9 +1199,9 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
     @logged_method_call
     def _get_speedup_factors(self):
         """
-        Loads table of wind speed speed up factors as a function of wind direction for each
-        turbine, then creates a speed up factor column for each turbine by linearly
-        interpolating the speed up factors using the reference wind direction.
+        Loads table of wind speed speedup factors as a function of wind direction for each
+        turbine, then creates a speedup factor column for each turbine by linearly
+        interpolating the speedup factors using the reference wind direction.
         """
 
         if type(self.ws_speedup_factor_map) is str:
