@@ -89,13 +89,13 @@ The minimum data specification for the base turbine ideal energy analysis.
 
 [JSON](scada_wake_losses_schema.json) [YAML](scada_wake_losses_schema.yml)
 
-The default wake loss schema, using SCADA windspeed and wind direction inputs.
+The default wake loss schema, using SCADA wind direction inputs.
 
 ### Wake Losses using Tower Wind Variables
 
 [JSON](tower_wake_losses_schema.json) [YAML](tower_wake_losses_schema.yml)
 
-The modified wake loss schema, using met tower data for windspeed and wind direction inputs.
+The modified wake loss schema, using met tower data for wind direction inputs.
 
 ## Base Static Yaw Misalignment
 

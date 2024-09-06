@@ -376,11 +376,9 @@ class PlantData:
             - "ElectricalLosses": Checks the data components that are relevant to an
               electrical losses analysis.
             - "WakeLosses-scada": Checks the data components that are relevant to a
-              wake losses analysis that uses the SCADA-based wind speed and direction
-              data.
+              wake losses analysis that uses the SCADA-based wind direction data.
             - "WakeLosses-tower": Checks the data components that are relevant to a
-              wake losses analysis that uses the met tower-based wind speed and
-              direction data.
+              wake losses analysis that uses the met tower-based wind direction data.
 
         scada (``pd.DataFrame``): Either the SCADA data that's been pre-loaded to a
             pandas `DataFrame`, or a path to the location of the data to be imported.

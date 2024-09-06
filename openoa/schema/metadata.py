@@ -148,7 +148,7 @@ ANALYSIS_REQUIREMENTS = {
             "freq": _at_least_hourly,
         },
         "tower": {
-            "columns": ["asset_id", "WMET_HorWdSpd", "WMET_HorWdDir"],
+            "columns": ["asset_id", "WMET_HorWdDir"],
             "freq": _at_least_hourly,
         },
         "reanalysis": {

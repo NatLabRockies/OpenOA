@@ -609,8 +609,10 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
             self._run = self.inputs.loc[n].copy()
 
             # Estimate periods when each turbine is unavailable, derated, or curtailed, based on power curve filtering
+            # and when the turbine's measured wind speed is abnormal.
             for t in self.turbine_ids:
                 self.aggregate_df[("derate_flag", t)] = False
+                self.aggregate_df[("abnormal_ws_flag", t)] = False
 
             if self.correct_for_derating:
                 self._identify_derating()
@@ -634,6 +636,7 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
                 self.aggregate_df_sample.loc[
                     valid_inds, ("power_normal", t)
                 ] = self.aggregate_df_sample.loc[valid_inds, ("WTUR_W", t)]
+                valid_inds = ~self.aggregate_df_sample[("abnormal_ws_flag", t)]
                 self.aggregate_df_sample.loc[
                     valid_inds, ("windspeed_normal", t)
                 ] = self.aggregate_df_sample.loc[valid_inds, ("WMET_HorWdSpd", t)]
@@ -641,15 +644,15 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
             if self.correct_for_ws_heterogeneity:
                 # Create a representative power curve model for the turbines in the plant
                 self.power_curve_func = power_curve.IEC(
-                    self.aggregate_df_sample.loc[:, "windspeed_normal"].stack(),
-                    self.aggregate_df_sample.loc[:, "power_normal"].stack(),
+                    self.aggregate_df_sample.loc[:, "windspeed_normal"].stack(dropna=False),
+                    self.aggregate_df_sample.loc[:, "power_normal"].stack(dropna=False),
                     windspeed_end=50.0,
                     interpolate=True,
                 )
 
                 # Create column for speedup factor during normal operation (NaN otherwise)
                 for t in self.turbine_ids:
-                    valid_inds = ~self.aggregate_df_sample[("derate_flag", t)]
+                    valid_inds = ~self.aggregate_df_sample[("abnormal_ws_flag", t)]
                     self.aggregate_df_sample.loc[
                         valid_inds, ("speedup_factor_normal", t)
                     ] = self.aggregate_df_sample.loc[valid_inds, ("speedup_factor", t)]
@@ -855,6 +858,9 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
                 )
 
             df_wd_bin = self.aggregate_df_sample.groupby("wind_direction_bin").sum()
+
+            index = np.arange(0.0, 360.0, self.wd_bin_width_LT_corr).tolist()
+            df_wd_bin = df_wd_bin.reindex(index)
 
             # Save plant and turbine-level wake losses binned by wind direction
             wake_losses_por_wd = (
@@ -1277,7 +1283,35 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
                 direction="above",
             )
 
-            self.aggregate_df[("derate_flag", t)] = flag_window | flag_bin
+            self.aggregate_df[("derate_flag", t)] = (
+                self.aggregate_df[("derate_flag", t)] | flag_window | flag_bin
+            )
+
+            # Apply bin-based filter to flag samples for which wind speed is less than a threshold from the median
+            # wind speed in each power bin, which likely indicates a faulty wind speed measurement
+            bin_width_frac = 0.04 * (
+                self._run.max_power_filter - 0.01
+            )  # split into 25 bins TODO: make this an optional argument?
+            flag_bin = filters.bin_filter(
+                bin_col=self.aggregate_df[("WTUR_W", t)],
+                value_col=self.aggregate_df[("WMET_HorWdSpd", t)],
+                bin_width=bin_width_frac * turb_capac,
+                threshold=self._run.wind_bin_mad_thresh,  # wind bin thresh
+                center_type="median",
+                bin_min=0.01 * turb_capac,
+                bin_max=self._run.max_power_filter * turb_capac,
+                threshold_type="mad",
+                direction="below",
+            )
+
+            self.aggregate_df[("abnormal_ws_flag", t)] = (
+                self.aggregate_df[("abnormal_ws_flag", t)] | flag_bin
+            )
+
+            # Classify the wind speed as abnormal if it is either faulty or corresponding to a derated period
+            self.aggregate_df[("abnormal_ws_flag", t)] = (
+                self.aggregate_df[("abnormal_ws_flag", t)] | self.aggregate_df[("derate_flag", t)]
+            )
 
     @logged_method_call
     def _apply_LT_correction(self):
@@ -1447,6 +1481,9 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
 
         # Save long-term corrected plant and turbine-level wake losses binned by wind direction
         df_1hr_wd_bin = df_1hr_bin.groupby(level=[0]).sum()
+
+        index = np.arange(0.0, 360.0, self.wd_bin_width_LT_corr).tolist()
+        df_1hr_wd_bin = df_1hr_wd_bin.reindex(index)
 
         wake_losses_lt_wd = (
             df_1hr_wd_bin["actual_plant_energy"] / df_1hr_wd_bin["potential_plant_energy"]
