@@ -128,7 +128,7 @@ def download_zenodo_data(record_id: int, outfile_path: str | Path) -> None:
     # create outfile_path if it does not exist
     outfile_path = Path(outfile_path).resolve()
     if not outfile_path.exists():
-        outfile_path.mkdir()
+        outfile_path.mkdir(parents=True)
 
     # save record details to json file
     outfile = outfile_path / "record_details.json"
@@ -243,7 +243,7 @@ def get_era5_monthly(
     # create save_pathname if it does not exist
     save_pathname = Path(save_pathname).resolve()
     if not save_pathname.exists():
-        save_pathname.mkdir()
+        save_pathname.mkdir(parents=True)
 
     # get the current date minus 37 days to find the most recent full month of data
     now = datetime.datetime.now() - datetime.timedelta(days=37)
@@ -309,7 +309,7 @@ def get_era5_monthly(
                 logger.error(e)
 
     # get the saved data
-    ds_nc = xr.open_mfdataset(f"{save_pathname / f'{save_filename}*.nc'}")
+    ds_nc = xr.open_mfdataset(str(save_pathname / f"{save_filename}*.nc"))
 
     # rename variables to conform with OpenOA
     ds_nc = ds_nc.rename_vars(
@@ -413,7 +413,7 @@ def get_era5_hourly(
     # create save_pathname if it does not exist
     save_pathname = Path(save_pathname).resolve()
     if not save_pathname.exists():
-        save_pathname.mkdir()
+        save_pathname.mkdir(parents=True)
 
     # get the current date
     now = datetime.datetime.now()
@@ -460,10 +460,10 @@ def get_era5_hourly(
         "time": [f"{i:02d}:00" for i in range(24)],
         "product_type": "reanalysis",
         "area": [
-            lat_nearest + 0.01,
+            lat_nearest,
             lon_nearest,
             lat_nearest,
-            lon_nearest + 0.01,
+            lon_nearest,
         ],
     }
 
@@ -493,7 +493,7 @@ def get_era5_hourly(
                 logger.error(e)
 
     # get the saved data
-    ds_nc = xr.open_mfdataset(f"{save_pathname / f'{save_filename}*.nc'}")
+    ds_nc = xr.open_mfdataset(str(save_pathname / f"{save_filename}*.nc"))
 
     # rename variables to conform with OpenOA
     ds_nc = ds_nc.rename_vars(
@@ -534,7 +534,7 @@ def get_era5_hourly(
     for file in save_pathname.glob(f"{save_filename}*.nc"):
         os.remove(file)
 
-    return df
+    return df, ds_nc
 
 
 def get_merra2_monthly(
@@ -592,7 +592,7 @@ def get_merra2_monthly(
     # create save_pathname if it does not exist
     save_pathname = Path(save_pathname).resolve()
     if not save_pathname.exists():
-        save_pathname.mkdir()
+        save_pathname.mkdir(parents=True)
 
     # get the current date minus 37 days to find the most recent full month of data
     now = datetime.datetime.now() - datetime.timedelta(days=37)
@@ -660,7 +660,7 @@ def get_merra2_monthly(
                 download_file(url, outfile)
 
     # get the saved data
-    ds_nc = xr.open_mfdataset(f"{save_pathname / f'{save_filename}*.nc'}")
+    ds_nc = xr.open_mfdataset(str(save_pathname / f"{save_filename}*.nc"))
 
     # rename variables to conform with OpenOA
     ds_nc = ds_nc.rename_vars(
@@ -756,7 +756,7 @@ def get_merra2_hourly(
     # create save_pathname if it does not exist
     save_pathname = Path(save_pathname).resolve()
     if not save_pathname.exists():
-        save_pathname.mkdir()
+        save_pathname.mkdir(parents=True)
 
     # get the current date
     now = datetime.datetime.now()
@@ -840,7 +840,7 @@ def get_merra2_hourly(
                     download_file(url, outfile)
 
     # get the saved data
-    ds_nc = xr.open_mfdataset(f"{save_pathname / f'{save_filename}*.nc'}")
+    ds_nc = xr.open_mfdataset(str(save_pathname / f"{save_filename}*.nc"))
 
     # rename variables to conform with OpenOA
     ds_nc = ds_nc.rename_vars(
