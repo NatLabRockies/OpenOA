@@ -469,8 +469,6 @@ def get_era5_hourly(
 
     # download the data
     for year in years:
-        outfile = save_pathname / f"{save_filename}_{year}.nc"
-
         # limit to months of interest
         if year == start_date.year:
             if year == end_date.year:
@@ -482,15 +480,19 @@ def get_era5_hourly(
         else:
             months = list(range(1, 12 + 1))
 
-        if not outfile.is_file():
-            logger.info(f"Downloading ERA5: {outfile}")
+        # requesting individual months to avoid exceeding data limits
+        for month in months:
+            outfile = save_pathname / f"{save_filename}_{year}_{month}.nc"
 
-            try:
-                cds_request.update({"year": year, "month": months})
-                c.retrieve(cds_dataset, cds_request, outfile)
-            except Exception as e:
-                logger.error(f"Failed to download ERA5: {outfile}")
-                logger.error(e)
+            if not outfile.is_file():
+                logger.info(f"Downloading ERA5: {outfile}")
+
+                try:
+                    cds_request.update({"year": year, "month": month})
+                    c.retrieve(cds_dataset, cds_request, outfile)
+                except Exception as e:
+                    logger.error(f"Failed to download ERA5: {outfile}")
+                    logger.error(e)
 
     # get the saved data
     ds_nc = xr.open_mfdataset(str(save_pathname / f"{save_filename}*.nc"))
@@ -534,7 +536,7 @@ def get_era5_hourly(
     for file in save_pathname.glob(f"{save_filename}*.nc"):
         os.remove(file)
 
-    return df, ds_nc
+    return df
 
 
 def get_merra2_monthly(
