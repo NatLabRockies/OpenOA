@@ -71,6 +71,27 @@ def circular_mean(x: pd.DataFrame | pd.Series | np.ndarray, axis: int = 0):
 
 
 @series_method(data_cols=["u", "v"])
+def compute_wind_speed(
+    u: pd.Series | str, v: pd.Series | str, data: pd.DataFrame = None
+) -> pd.Series:
+    """Compute the wind speed from the u and v components. This function should only be used for
+    higher resolution wind data, otherwise the resulting wind speed will be lower than expected.
+
+    Args:
+    u(:obj:`pandas.Series` | :obj:`str`): A pandas DataFrame or Series, or a numpy array
+        containing the u-component of the wind speed, in m/s.
+    v(pd.Series | str): A pandas DataFrame or Series, or a numpy array containing the v-component
+        of the wind speed, in m/s.
+    data(:obj:`pandas.Series` | :obj:`str`): The pandas ``DataFrame`` containg the columns
+        :py:attr:`u` and :py:attr:`v`.
+
+    Returns:
+        :obj:`pandas.Series`: wind speed, in m/s.
+    """
+    return np.sqrt(u**2 + v**2)
+
+
+@series_method(data_cols=["u", "v"])
 def compute_wind_direction(
     u: pd.Series | str, v: pd.Series | str, data: pd.DataFrame = None
 ) -> pd.Series:
