@@ -50,7 +50,7 @@ best practices, and engagement with subject matter experts when performing any d
 
 ## Part of the WETO Stack
 
-FLASC is primarily developed with the support of the U.S. Department of Energy and is part of the [WETO Software Stack](https://nrel.github.io/WETOStack). For more information and other integrated modeling software, see:
+OpenOA is primarily developed with the support of the U.S. Department of Energy and is part of the [WETO Software Stack](https://nrel.github.io/WETOStack). For more information and other integrated modeling software, see:
 
 - [Portfolio Overview](https://nrel.github.io/WETOStack/portfolio_analysis/overview.html)
 - [Entry Guide](https://nrel.github.io/WETOStack/_static/entry_guide/index.html)
