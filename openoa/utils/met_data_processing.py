@@ -73,7 +73,7 @@ def circular_mean(x: pd.DataFrame | pd.Series | np.ndarray, axis: int = 0):
 @series_method(data_cols=["u", "v"])
 def compute_wind_speed(
     u: pd.Series | np.ndarray | str, v: pd.Series | np.ndarray | str, data: pd.DataFrame = None
-) -> pd.Series:
+) -> pd.Series | np.ndarray:
     """Compute the wind speed from the u and v components.
 
     Note:
@@ -92,7 +92,7 @@ def compute_wind_speed(
             :py:attr:`u` and :py:attr:`v`.
 
     Returns:
-        :obj:`pandas.Series`: wind speed, in m/s.
+        :obj:`pandas.Series` | :obj:`numpy.ndarray`: wind speed, in m/s.
     """
     return np.sqrt(u**2 + v**2)
 
