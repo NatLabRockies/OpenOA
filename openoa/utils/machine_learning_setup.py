@@ -107,9 +107,6 @@ class MachineLearningSetup:
     random_search: Any = field(init=False)
     opt_hyp: Any = field(init=False)
     opt_model: Any = field(init=False)
-    n_jobs: int | None = field(
-        default=None,
-    )
 
     def __attrs_post_init__(self):
         """
@@ -206,7 +203,7 @@ class MachineLearningSetup:
             scoring=self.my_scorer,
             verbose=0,
             return_train_score=True,
-            n_jobs=self.n_jobs,
+            n_jobs=n_jobs,
         )
         # Fit the model to each combination of hyperparmeters
         self.random_search.fit(X, y)
