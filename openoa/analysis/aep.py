@@ -30,10 +30,6 @@ from openoa.utils.machine_learning_setup import MachineLearningSetup
 from openoa.analysis._analysis_validators import validate_reanalysis_selections
 
 
-# if sys.stderr.isatty():
-# else:
-#     from tqdm.notebook import tqdm, trange
-
 logger = logging.getLogger(__name__)
 
 NDArrayFloat = npt.NDArray[np.float64]
