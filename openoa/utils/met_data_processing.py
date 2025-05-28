@@ -79,7 +79,8 @@ def compute_wind_speed(
     Note:
         Vector-averaged u and v wind speed components will generally result in lower wind speed
         magnitudes than averages of the wind speed magnitude over the same time period. This becomes
-        more severe as the averaging period increases.
+        more severe as the averaging period increases. Therefore, the wind speed magnitude computed
+        using this function may be lower than expected when using data with low temporal resolution.
 
     Args:
         u(:obj:`pandas.Series` | :obj:`numpy.ndarray` | :obj:`str`): A pandas DataFrame or Series,
