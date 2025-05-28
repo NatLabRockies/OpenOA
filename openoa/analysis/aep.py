@@ -119,6 +119,11 @@ class MonteCarloAEP(FromDictMixin, ResetValuesMixin):
         n_jobs(:obj:`int` | :obj:`None`): The number of jobs to use for the computation in the scikit-learn model.
             This will only provide speedup in case of sufficiently large problems.``None`` means 1
             unless in a :obj:`joblib.parallel_backend` context. ``-1`` means using all processors.
+        apply_iav(:obj:`bool`): Toggles the application of the interannual variability at the end
+            of the simulation. If ``True``, then it is applied, and not if ``False``. Inclusion of
+            the IAV adjustment is useful for comparing against short-term estimates of energy
+            production, whereas the exclusion of the IAV is useful for comparing against long-term
+            energy production estimates. Defaults to ``True``.
     """
 
     plant: PlantData = field(converter=deepcopy, validator=attrs.validators.instance_of(PlantData))
@@ -334,7 +339,7 @@ class MonteCarloAEP(FromDictMixin, ResetValuesMixin):
             ml_setup_kwargs(:obj:`kwargs`): Keyword arguments to
                 :py:class:`openoa.utils.machine_learning_setup.MachineLearningSetup` class. Defaults to {}.
             progress_bar(:obj:`bool`): Flag to use a progress bar for the iterations in the AEP
-                calculation.
+                calculation. Defaults to ``True``.
 
         Returns:
             None
