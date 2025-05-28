@@ -988,7 +988,7 @@ class MonteCarloAEP(FromDictMixin, ResetValuesMixin):
 
         Args:
             progress_bar(:obj:`bool`): Flag to use a progress bar for the iterations in the AEP
-                calculation.
+                calculation. Defaults to ``True``.
 
         Returns:
             :obj:`numpy.ndarray` Array of AEP, long-term avail, long-term curtailment calculations
