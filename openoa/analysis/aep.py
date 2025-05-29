@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import sys
 import random
 import datetime
 from copy import deepcopy
@@ -10,8 +11,8 @@ import pandas as pd
 import numpy.typing as npt
 import statsmodels.api as sm
 import matplotlib.pyplot as plt
-from tqdm import tqdm
 from attrs import field, define
+from tqdm.auto import tqdm, trange
 from sklearn.metrics import r2_score, mean_squared_error
 from matplotlib.markers import MarkerStyle
 from sklearn.linear_model import LinearRegression
@@ -115,6 +116,14 @@ class MonteCarloAEP(FromDictMixin, ResetValuesMixin):
             points. Defaults to "lin".
         ml_setup_kwargs(:obj:`kwargs`): Keyword arguments to
             :py:class:`openoa.utils.machine_learning_setup.MachineLearningSetup` class. Defaults to {}.
+        n_jobs(:obj:`int` | :obj:`None`): The number of jobs to use for the computation in the scikit-learn model.
+            This will only provide speedup in case of sufficiently large problems.``None`` means 1
+            unless in a :obj:`joblib.parallel_backend` context. ``-1`` means using all processors.
+        apply_iav(:obj:`bool`): Toggles the application of the interannual variability at the end
+            of the simulation. If ``True``, then it is applied, and not if ``False``. Inclusion of
+            the IAV adjustment is useful for comparing against short-term estimates of energy
+            production, whereas the exclusion of the IAV is useful for comparing against long-term
+            energy production estimates. Defaults to ``True``.
     """
 
     plant: PlantData = field(converter=deepcopy, validator=attrs.validators.instance_of(PlantData))
@@ -169,6 +178,10 @@ class MonteCarloAEP(FromDictMixin, ResetValuesMixin):
         default="lin", converter=str, validator=attrs.validators.in_(("lin", "gbm", "etr", "gam"))
     )
     ml_setup_kwargs: dict = field(default={}, converter=dict)
+    n_jobs: int | None = field(
+        default=None, validator=attrs.validators.instance_of((int, type(None)))
+    )
+    apply_iav: bool = field(default=True, validator=attrs.validators.instance_of(bool))
 
     # Internally created attributes need to be given a type before usage
     resample_freq: str = field(init=False)
@@ -285,6 +298,7 @@ class MonteCarloAEP(FromDictMixin, ResetValuesMixin):
         time_resolution: str = None,
         end_date_lt: str | pd.Timestamp | None = None,
         ml_setup_kwargs: dict = None,
+        progress_bar: bool = True,
     ) -> None:
         """
         Process all appropriate data and run the MonteCarlo AEP analysis.
@@ -324,6 +338,8 @@ class MonteCarloAEP(FromDictMixin, ResetValuesMixin):
                 points. Defaults to "lin".
             ml_setup_kwargs(:obj:`kwargs`): Keyword arguments to
                 :py:class:`openoa.utils.machine_learning_setup.MachineLearningSetup` class. Defaults to {}.
+            progress_bar(:obj:`bool`): Flag to use a progress bar for the iterations in the AEP
+                calculation. Defaults to ``True``.
 
         Returns:
             None
@@ -382,7 +398,7 @@ class MonteCarloAEP(FromDictMixin, ResetValuesMixin):
         # Start the computation
         self.calculate_long_term_losses()
         self.setup_monte_carlo_inputs()
-        self.results = self.run_AEP_monte_carlo()
+        self.results = self.run_AEP_monte_carlo(progress_bar=progress_bar)
 
         # Log the completion of the run
         logger.info("Run completed")
@@ -749,6 +765,10 @@ class MonteCarloAEP(FromDictMixin, ResetValuesMixin):
             & (~df["nan_flag"]),
             :,
         ]
+        if df_sub.size == 0:
+            raise ValueError(
+                "The `uncertainty_loss_max` is too low for the data or there are too many NaN values."
+            )
 
         # Set maximum range for using bin-filter, convert from MW to GWh
         plant_capac = self.plant.metadata.capacity / 1000.0 * self.resample_hours
@@ -917,7 +937,9 @@ class MonteCarloAEP(FromDictMixin, ResetValuesMixin):
         # Run regression. Note, the last column of reg_data is the target variable for the regression
         # Linear regression
         if self.reg_model == "lin":
-            reg = LinearRegression().fit(np.array(reg_data[:, 0:-1]), reg_data[:, -1])
+            reg = LinearRegression(n_jobs=self.n_jobs).fit(
+                np.array(reg_data[:, 0:-1]), reg_data[:, -1]
+            )
             predicted_y = reg.predict(np.array(reg_data[:, 0:-1]))
 
             self._mc_slope[n, :] = reg.coef_
@@ -946,6 +968,7 @@ class MonteCarloAEP(FromDictMixin, ResetValuesMixin):
                     report=False,
                     cv=KFold(n_splits=5),
                     verbose=verbosity,
+                    n_jobs=self.n_jobs,
                 )
                 # Store optimized hyperparameters for each reanalysis product
                 self.opt_model[(self._run.reanalysis_product)] = ml.opt_model
@@ -959,9 +982,13 @@ class MonteCarloAEP(FromDictMixin, ResetValuesMixin):
             return self.opt_model[(self._run.reanalysis_product)]
 
     @logged_method_call
-    def run_AEP_monte_carlo(self):
+    def run_AEP_monte_carlo(self, progress_bar: bool = True):
         """
         Loop through OA process a number of times and return array of AEP results each time
+
+        Args:
+            progress_bar(:obj:`bool`): Flag to use a progress bar for the iterations in the AEP
+                calculation. Defaults to ``True``.
 
         Returns:
             :obj:`numpy.ndarray` Array of AEP, long-term avail, long-term curtailment calculations
@@ -991,7 +1018,8 @@ class MonteCarloAEP(FromDictMixin, ResetValuesMixin):
         iav = np.empty(num_sim)
 
         # Loop through number of simulations, run regression each time, store AEP results
-        for n in tqdm(np.arange(num_sim)):
+        _range = trange(num_sim) if progress_bar else np.arange(num_sim)
+        for n in _range:
             self._run = self.mc_inputs.loc[n]
 
             # Run regression
@@ -1075,9 +1103,10 @@ class MonteCarloAEP(FromDictMixin, ResetValuesMixin):
         iav_avg = iav.mean()
 
         # Apply IAV to AEP from single MC iterations
-        iav_nsim = np.random.normal(1, iav_avg, self.num_sim)
-        aep_GWh = aep_GWh * iav_nsim
-        lt_por_ratio = lt_por_ratio * iav_nsim
+        if self.apply_iav:
+            iav_nsim = np.random.normal(1, iav_avg, self.num_sim)
+            aep_GWh = aep_GWh * iav_nsim
+            lt_por_ratio = lt_por_ratio * iav_nsim
 
         # Return final output
         sim_results = pd.DataFrame(
@@ -1534,6 +1563,8 @@ __defaults_reg_model = MonteCarloAEP.__attrs_attrs__.reg_model.default
 __defaults_ml_setup_kwargs = MonteCarloAEP.__attrs_attrs__.ml_setup_kwargs.default
 __defaults_reg_temperature = MonteCarloAEP.__attrs_attrs__.reg_temperature.default
 __defaults_reg_wind_direction = MonteCarloAEP.__attrs_attrs__.reg_wind_direction.default
+__defaults_n_jobs = MonteCarloAEP.__attrs_attrs__.n_jobs.default
+__defaults_apply_iav = MonteCarloAEP.__attrs_attrs__.apply_iav.default
 
 
 def create_MonteCarloAEP(
@@ -1552,6 +1583,8 @@ def create_MonteCarloAEP(
     ml_setup_kwargs: dict = __defaults_ml_setup_kwargs,
     reg_temperature: bool = __defaults_reg_temperature,
     reg_wind_direction: bool = __defaults_reg_wind_direction,
+    n_jobs: int | None = __defaults_n_jobs,
+    apply_iav: bool = __defaults_apply_iav,
 ) -> MonteCarloAEP:
     return MonteCarloAEP(
         plant=project,
@@ -1569,6 +1602,8 @@ def create_MonteCarloAEP(
         ml_setup_kwargs=ml_setup_kwargs,
         reg_temperature=reg_temperature,
         reg_wind_direction=reg_wind_direction,
+        n_jobs=n_jobs,
+        apply_iav=apply_iav,
     )
 
 

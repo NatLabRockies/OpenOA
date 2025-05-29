@@ -71,6 +71,34 @@ def circular_mean(x: pd.DataFrame | pd.Series | np.ndarray, axis: int = 0):
 
 
 @series_method(data_cols=["u", "v"])
+def compute_wind_speed(
+    u: pd.Series | np.ndarray | str, v: pd.Series | np.ndarray | str, data: pd.DataFrame = None
+) -> pd.Series | np.ndarray:
+    """Compute the wind speed from the u and v components.
+
+    Note:
+        Vector-averaged u and v wind speed components will generally result in lower wind speed
+        magnitudes than averages of the wind speed magnitude over the same time period. This becomes
+        more severe as the averaging period increases. Therefore, the wind speed magnitude computed
+        using this function may be lower than expected when using data with low temporal resolution.
+
+    Args:
+        u(:obj:`pandas.Series` | :obj:`numpy.ndarray` | :obj:`str`): A pandas DataFrame or Series,
+            a numpy array, or the :obj:`str` name of the column in :py:attr:`data` containing the
+            u-component of the wind speed, in m/s.
+        v(:obj:`pandas.Series` | :obj:`numpy.ndarray` | :obj:`str`): A pandas DataFrame or Series,
+            a numpy array, or the :obj:`str` name of the column in :py:attr:`data` containing the
+            v-component of the wind speed, in m/s.
+        data(:obj:`pandas.Series` | :obj:`str`): The pandas ``DataFrame`` containg the columns
+            :py:attr:`u` and :py:attr:`v`.
+
+    Returns:
+        :obj:`pandas.Series` | :obj:`numpy.ndarray`: wind speed, in m/s.
+    """
+    return np.sqrt(u**2 + v**2)
+
+
+@series_method(data_cols=["u", "v"])
 def compute_wind_direction(
     u: pd.Series | str, v: pd.Series | str, data: pd.DataFrame = None
 ) -> pd.Series:
