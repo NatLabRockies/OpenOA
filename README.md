@@ -112,7 +112,7 @@ effort more broadly,** please use citation [^1], which is provided below in BibT
 
 ### Requirements
 
-- Python 3.8-3.11 with pip.
+- Python 3.9-3.12 with pip.
 
 We strongly recommend using the Anaconda Python distribution and creating a new conda environment
 for OpenOA. You can download Anaconda through
@@ -163,10 +163,6 @@ is also allowed).
 - `reanalysis`: for accessing and processing MERRA2 and ERA5 data
 - `nrel-wind`: for accessing the NREL WIND Toolkit
 - `all`: for the complete dependency stack
-
-> **Important**
-> If using Python 3.11, install `openoa` only, then reinstall adding the modifiers to reduce
-> the amount of time it takes for pip to resolve the dependency stack.
 
 #### Common Installation Issues
 
