@@ -21,6 +21,11 @@
 #    Peronne, O., Cordoba, M., Housley, P., Cussons, R., Håkansson, M., Knauer, A., and Maguire,
 #    E.: An evaluation of the predictive accuracy of wake effects models for offshore wind farms.
 #    *Wind Energy* 19(5):979–996 (2016). https://doi.org/10.1002/we.1871.
+#
+# The corrections for freestream wind speed heterogeneity are based in part on the approach
+# presented in:
+# 4. Kassebaum, J. Wake Validation Through SCADA Data Analysis. Proc. American Clean Power Resource
+#    & Project Energy Assessment Virtual Summit 2021 (2021).
 
 
 from __future__ import annotations
