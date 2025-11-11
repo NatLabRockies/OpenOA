@@ -328,7 +328,7 @@ This project follows the [all-contributors](https://github.com/all-contributors/
 
 [^5]: Todd, A. C., Optis, M., Bodini, N., Fields, M. J., Lee, J. C. Y., Simley, E., and Hammond, R. An independent analysis of bias sources and variability in wind plant pre‐construction energy yield estimation methods. *Wind Energy*, 25(10):1775-1790 (2022). https://doi.org/10.1002/we.2768.
 
-[^6]: Simley, E., Fields, M. J., Young, E., Allen, J., Hammond, R., Perr-Sauer, J., and Bodini, N. A Comparison of Preconstruction and Operational Wake Loss Estimates for Land-Based Wind Plants. *Wind Energy*, 28(11) (2025). https://doi.org/10.1002/we.70067.
+[^6]: Simley, E., Fields, M. J., Young, E., Allen, J., Hammond, R., Perr-Sauer, J., and Bodini, N. A comparison of preconstruction and operational wake loss estimates for land-based wind plants. *Wind Energy*, 28(11) (2025). https://doi.org/10.1002/we.70067.
 
 [^7]: Barthelmie, R. J. and Jensen, L. E. Evaluation of wind farm efficiency and wind turbine wakes at the Nysted offshore wind farm, *Wind Energy* 13(6):573–586 (2010). https://doi.org/10.1002/we.408.
 
