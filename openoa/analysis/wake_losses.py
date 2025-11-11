@@ -788,6 +788,22 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
             ).sum(axis=1)
 
             if self.correct_for_ws_heterogeneity:
+                # Indices where mean measured power and the mean estimated freestream power of all
+                # turbines are greater than zero, and mean estimated freestream power is
+                # sufficiently large (treated as greater than 1 kW), allowing valid potential power
+                # corrections.
+                valid_inds_freestream_power = (
+                    (self.aggregate_df_sample["power_mean_freestream"] > 0)
+                    & (
+                        (
+                            ~self.aggregate_df_sample["derate_flag"]
+                            * self.aggregate_df_sample["power_freestream_estimate"]
+                        ).sum(axis=1)
+                        > 0
+                    )
+                    & (self.aggregate_df_sample["power_mean_freestream_estimate"] > 1.0)
+                )
+
                 total_potential_freestream_power = (
                     self.aggregate_df_sample["power_mean_freestream"]
                     * (
@@ -796,6 +812,26 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
                     ).sum(axis=1)
                     / self.aggregate_df_sample["power_mean_freestream_estimate"]
                 )
+
+                # For invalid indices, use measured power of freestream turbines
+                total_potential_freestream_power.loc[
+                    ~valid_inds_freestream_power
+                ] = self.aggregate_df_sample.loc[
+                    ~valid_inds_freestream_power, "power_mean_freestream"
+                ] * (
+                    ~self.aggregate_df_sample.loc[~valid_inds_freestream_power, "derate_flag"]
+                ).sum(
+                    axis=1
+                )
+
+                # Check for corrected potential power values greater than the maximum possible
+                # output of number of normally operating turbines
+                plant_power_max = self.aggregate_df_sample["WTUR_W"].max().max() * (
+                    ~self.aggregate_df_sample["derate_flag"]
+                ).sum(axis=1)
+                total_potential_freestream_power.loc[
+                    total_potential_freestream_power > plant_power_max
+                ] = plant_power_max.loc[total_potential_freestream_power > plant_power_max]
             else:
                 total_potential_freestream_power = self.aggregate_df_sample[
                     "power_mean_freestream"
@@ -838,11 +874,38 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
 
                 valid_inds = ~self.aggregate_df_sample[("derate_flag", t)]
                 if self.correct_for_ws_heterogeneity:
+                    # Indices where mean measured power and the mean estimated freestream power of all
+                    # turbines are greater than zero, and mean estimated freestream power is
+                    # sufficiently large (treated as greater than 1 kW times the number of normally
+                    # operating freestream turbines), allowing valid potential power corrections.
+                    valid_inds_freestream_power = (
+                        (self.aggregate_df_sample["power_mean_freestream"] > 0)
+                        & (self.aggregate_df_sample[("power_freestream_estimate", t)] > 0)
+                        & (self.aggregate_df_sample["power_mean_freestream_estimate"] > 1.0)
+                    )
+
                     self.aggregate_df_sample.loc[valid_inds, ("potential_turbine_power", t)] = (
                         self.aggregate_df_sample.loc[valid_inds, "power_mean_freestream"]
                         * self.aggregate_df_sample.loc[valid_inds, ("power_freestream_estimate", t)]
                         / self.aggregate_df_sample.loc[valid_inds, "power_mean_freestream_estimate"]
                     )
+
+                    # For indices with insufficiently high freestream power, use measured power of freestream turbines
+                    self.aggregate_df_sample.loc[
+                        valid_inds & ~valid_inds_freestream_power, ("potential_turbine_power", t)
+                    ] = self.aggregate_df_sample.loc[
+                        valid_inds & ~valid_inds_freestream_power, "power_mean_freestream"
+                    ]
+
+                    # Check for corrected potential power values greater than the maximum possible
+                    turbine_power_max = self.aggregate_df_sample.loc[
+                        valid_inds, ("WTUR_W", t)
+                    ].max()
+                    self.aggregate_df_sample.loc[
+                        self.aggregate_df_sample[("potential_turbine_power", t)]
+                        > turbine_power_max,
+                        ("potential_turbine_power", t),
+                    ] = turbine_power_max
                 else:
                     self.aggregate_df_sample.loc[
                         valid_inds, ("potential_turbine_power", t)
