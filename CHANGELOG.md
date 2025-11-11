@@ -1,6 +1,40 @@
 # Changelog
 All notable changes to this project will be documented in this file. If you make a notable change to the project, please add a line describing the change to the "unreleased" section. The maintainers will make an effort to keep the [Github Releases](https://github.com/NREL/OpenOA/releases) page up to date with this changelog. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## Unreleased
+
+- Deprecate Python 3.8 support and enable 3.12 support.
+- Features and updates:
+  - `MonteCarloAEP` updates
+    - Add an `n_jobs` input to the Monte Carlo AEP method to allow for the underlying models to be
+      parallelized during each iteration for faster ML model computation.
+    - Add an `apply_iav` input to the Monte Carlo AEP analysis method to toggle the addition of the
+      IAV factor at the end of the analysis.
+    - Add a `progress_bar` flag to `MonteCarloAEP.run()` to allow for turing on or off the
+      simulation's default progress bar.
+  - Implement missing `compute_wind_speed` in `openoa/utils/met_data_processing.py` and apply it to
+    the `PlantData` reanalysis validation steps in place of the manual calculation.
+- Fixes:
+  - Add a default value for `PlantData`'s `asset_distance_matrix` and `asset_direction_matrix` to
+    ensure projects not utilizing location data are compatible.
+
+## v3.1.3 - 2025-01-31
+
+- Pin SciPy to >= 1.7 and <1.14 to avoid an incompatibility error with PyGAM.
+- Updates the Anaconda recommendation to alert users to the fact that Anaconda is no longer
+technically free, and so commercial users should consider Miniforge or Miniconda installations.
+
+## v3.1.2 - 2024-05-24
+
+- Updates the GitHub Actions workflows to use the latest versions of their workflow dependencies.
+- Changes a reference from the old `MonteCarloAEP._hours_in_res` to the new `MonteCarloAEP.resample_hours`.
+- Adds a step to filling in gaps in a time series that checks to see if there were any missing data,
+which helps avoid Pandas warnings.
+
+## v3.1.1 - 2024-04-05
+
+- Patches `pyproject.toml`'s package data specification to include openoa in the valid packages to install.
+
 ## v3.1 - 2024-03-14
 
 - Updated compatibility with Pandas datetime offsets. All uppercase offset strings representing

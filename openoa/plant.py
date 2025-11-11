@@ -441,8 +441,8 @@ class PlantData:
         default={"missing": {}, "dtype": {}, "frequency": {}, "attributes": []}, init=False
     )
     eia: dict = field(default={}, init=False)
-    asset_distance_matrix: pd.DataFrame = field(init=False)
-    asset_direction_matrix: pd.DataFrame = field(init=False)
+    asset_distance_matrix: pd.DataFrame = field(init=False, default=pd.DataFrame([]))
+    asset_direction_matrix: pd.DataFrame = field(init=False, default=pd.DataFrame([]))
 
     def __attrs_post_init__(self):
         """Post-initialization hook."""
@@ -1041,7 +1041,7 @@ class PlantData:
 
             ws = col_map["WMETR_HorWdSpd"]
             if ws not in df and has_u_v:
-                df[ws] = np.sqrt(df[u].values ** 2 + df[v].values ** 2)
+                df[ws] = met.compute_wind_speed(df[u], df[v]).values
 
             wd = col_map["WMETR_HorWdDir"]
             if wd not in df and has_u_v:
