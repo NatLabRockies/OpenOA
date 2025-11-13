@@ -125,7 +125,7 @@ class TestWakeLosses(unittest.TestCase):
             end_date="2015-11-25 00:00",
             UQ=False,
             correct_for_ws_heterogeneity=True,
-            ws_speedup_factor_map="../../examples/example_la_haute_borne_ws_speedup_factors.csv",
+            ws_speedup_factor_map="examples/example_la_haute_borne_ws_speedup_factors.csv",
         )
 
         # Run Wake Loss analysis, using default parameters. Aside from no_wakes_ws_thresh_LT_corr,
