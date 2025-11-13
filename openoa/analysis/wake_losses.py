@@ -649,8 +649,8 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
             if self.correct_for_ws_heterogeneity:
                 # Create a representative power curve model for the turbines in the plant
                 self.power_curve_func = power_curve.IEC(
-                    self.aggregate_df_sample.loc[:, "windspeed_normal"].stack(dropna=False),
-                    self.aggregate_df_sample.loc[:, "power_normal"].stack(dropna=False),
+                    self.aggregate_df_sample.loc[:, "windspeed_normal"].stack(future_stack=True),
+                    self.aggregate_df_sample.loc[:, "power_normal"].stack(future_stack=True),
                     windspeed_end=50.0,
                     interpolate=True,
                 )

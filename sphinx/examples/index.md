@@ -85,6 +85,8 @@ Be sure to install OpenOA using the `examples` and `reanalysis` modifiers for th
   reanalysis wind resource data
 * Illustrates the estimation of wake losses at the wind plant level as well as for each wind
   turbine with and without uncertainty quantification
+* Presents the option to correct for freestream wind speed heterogeneity across a wind plant when
+  estimating wake losses using a user-defined wind speedup factor map
 * Demonstrates methods for plotting wake losses as a function of wind direction and wind speed
 
 ## Estimate Yaw Misalignment [[link]](07_static_yaw_misalignment.ipynb)
