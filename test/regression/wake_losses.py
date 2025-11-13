@@ -111,6 +111,33 @@ class TestWakeLosses(unittest.TestCase):
         )
         self.check_simulation_results_wake_losses_with_UQ_new_params()
 
+    def test_wake_losses_with_heterogeneity_corrections(self):
+        reset_prng()
+        # ____________________________________________________________________
+        # Test POR and long-term corrected wake losses at plant and turbine level, without UQ, with
+        # corrections for freestream wind speed heterogeneity across the wind plant using the wind
+        # speedup factor file from the examples folder. Limit wind direction assets to three
+        # reliable turbines and limit date range to exclude change in wind direction reference.
+        # Otherwise, use default parameters.
+        self.analysis = wake_losses.WakeLosses(
+            plant=self.project,
+            wind_direction_asset_ids=["R80711", "R80721", "R80736"],
+            end_date="2015-11-25 00:00",
+            UQ=False,
+            correct_for_ws_heterogeneity=True,
+            ws_speedup_factor_map="../../examples/example_la_haute_borne_ws_speedup_factors.csv",
+        )
+
+        # Run Wake Loss analysis, using default parameters. Aside from no_wakes_ws_thresh_LT_corr,
+        # use default parameters. Confirm the results are consistent.
+        self.analysis.run(
+            no_wakes_ws_thresh_LT_corr=15.0,
+            num_years_LT=20,
+            freestream_sector_width=90.0,
+            wind_bin_mad_thresh=7.0,
+        )
+        self.check_simulation_results_wake_losses_with_heterogeneity_corrections()
+
     def check_simulation_results_wake_losses_without_UQ(self):
         # Make sure wake loss results are consistent to six decimal places
         # Confirm plant-level and turbine-level wake losses for POR and long-term corrected
@@ -219,6 +246,23 @@ class TestWakeLosses(unittest.TestCase):
         ]
         calculated_results_lt += list(100 * np.array(self.analysis.turbine_wake_losses_lt_mean))
         calculated_results_lt += list(100 * np.array(self.analysis.turbine_wake_losses_lt_std))
+
+        nptest.assert_array_almost_equal(expected_results_lt, calculated_results_lt)
+
+    def check_simulation_results_wake_losses_with_heterogeneity_corrections(self):
+        # Make sure wake loss results are consistent to six decimal places
+        # Confirm plant-level and turbine-level wake losses for POR and long-term corrected
+        # wake loss estimates.
+        expected_results_por = [1.670518, -0.077131, 2.223721, 0.278168, 4.298961]
+        expected_results_lt = [1.610428, 0.482218, 2.671905, -0.158225, 3.490358]
+
+        calculated_results_por = [100 * self.analysis.wake_losses_por]
+        calculated_results_por += list(100 * np.array(self.analysis.turbine_wake_losses_por))
+
+        nptest.assert_array_almost_equal(expected_results_por, calculated_results_por)
+
+        calculated_results_lt = [100 * self.analysis.wake_losses_lt]
+        calculated_results_lt += list(100 * np.array(self.analysis.turbine_wake_losses_lt))
 
         nptest.assert_array_almost_equal(expected_results_lt, calculated_results_lt)
 
