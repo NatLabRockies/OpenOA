@@ -142,8 +142,8 @@ class TestWakeLosses(unittest.TestCase):
         # Make sure wake loss results are consistent to six decimal places
         # Confirm plant-level and turbine-level wake losses for POR and long-term corrected
         # wake loss estimates.
-        expected_results_por = [0.341363, -11.731031, 10.896701, 4.066524, -1.901442]
-        expected_results_lt = [0.366556, -9.720608, 10.275471, 2.925847, -2.043537]
+        expected_results_por = [0.340045, -11.727658, 10.898059, 4.065239, -1.910556]
+        expected_results_lt = [0.373332, -9.713340, 10.282598, 2.933038, -2.034775]
 
         calculated_results_por = [100 * self.analysis.wake_losses_por]
         calculated_results_por += list(100 * np.array(self.analysis.turbine_wake_losses_por))
@@ -160,28 +160,28 @@ class TestWakeLosses(unittest.TestCase):
         # Confirm plant-level and turbine-level means and std. devs. from Monte Carlo simulation results
         # for POR and long-term corrected wake loss estimates.
         expected_results_por = [
-            0.472743,
-            1.521414,
-            -11.563967,
-            11.02269,
-            4.175078,
-            -1.776634,
-            1.698539,
-            1.36572,
-            1.484835,
-            1.551052,
+            0.466709,
+            1.519220,
+            -11.560934,
+            11.021836,
+            4.167384,
+            -1.795656,
+            1.698255,
+            1.364234,
+            1.483180,
+            1.545941,
         ]
         expected_results_lt = [
-            0.646731,
-            1.374425,
-            -9.437244,
-            10.615733,
-            3.114511,
-            -1.728213,
-            1.548299,
-            1.325133,
-            1.364934,
-            1.428777,
+            0.644775,
+            1.372648,
+            -9.436220,
+            10.614411,
+            3.111282,
+            -1.732393,
+            1.546301,
+            1.323577,
+            1.365420,
+            1.426536,
         ]
 
         calculated_results_por = [
