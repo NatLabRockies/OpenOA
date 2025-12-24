@@ -8,7 +8,7 @@ dynamic = ["version"]
 authors = [{name = "NREL PRUF OA Team", email = "openoa@nrel.gov"}]
 readme = {file = "README.md", content-type = "text/markdown"}
 description = "A package for collecting and assigning wind turbine metrics"
-requires-python = ">=3.8, <3.12"
+requires-python = ">=3.10"
 license = {file = "LICENSE.txt"}
 dependencies = [
     "scikit-learn>=1.0",
@@ -18,10 +18,10 @@ dependencies = [
     "shapely>=1.8",
     "numpy>=1.24",
     "pandas>=2.2",
-    "pygam>=0.9.0",
-    "scipy>=1.7,<1.14",
+    "pygam>=0.11.0",
+    "scipy>=1.7",
     "statsmodels>=0.11; python_version<'3.11'",
-    "statsmodels>=0.13.3; python_version=='3.11'",
+    "statsmodels>=0.13.3; python_version>='3.11'",
     "tqdm>=4.28.1",
     "matplotlib>=3.6",
     "bokeh>=3.3",
@@ -50,10 +50,11 @@ classifiers = [  # https://pypi.org/classifiers/
     "Operating System :: OS Independent",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Scientific/Engineering",
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Typing :: Typed",
