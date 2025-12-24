@@ -5,10 +5,10 @@ All notable changes to this project will be documented in this file. If you make
 
 - During the custom test collection, convert the `Path` objects to `str` to avoid issues with the
   type enforcement of `list[str]` for `args` in Pytest v9.
-- Update PyGAM minimum version for its latest update that includes Python 3.14 support.
+- Update PyGAM minimum version for its latest update that includes Python 3.10-3.13 support.
 - Remove maximum version pins for scipy and statsmodels with the support of the latest Python versions.
 - Adds a maximum version for scikit-learn for a change in their `__sklearn_tags__` support.
-- Deprecate support for Python 3.8 and 3.9, with additional support for Python 3.12+.
+- Deprecate support for Python 3.8 and 3.9, with additional support for Python 3.12 and 3.13.
 - Update the min and max versions to test in the testing CI workflow.
 
 ## v3.1.3 - 2025-01-31
