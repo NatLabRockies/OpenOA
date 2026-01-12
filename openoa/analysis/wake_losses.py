@@ -31,6 +31,7 @@
 from __future__ import annotations
 
 import random
+import itertools
 from copy import deepcopy
 from typing import Callable
 
@@ -397,8 +398,8 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
         elif (self.wind_direction_asset_ids is None) & (self.wind_direction_data_type == "tower"):
             self.wind_direction_asset_ids = list(self.plant.tower_ids)
 
-        if self.correct_for_ws_heterogeneity & (
-            type(self.ws_speedup_factor_map) not in [pd.DataFrame, str]
+        if self.correct_for_ws_heterogeneity and not isinstance(
+            self.ws_speedup_factor_map, (pd.DataFrame, str)
         ):
             raise ValueError(
                 "If correct_for_ws_heterogeneity is True, ws_speedup_factor_map must "
@@ -662,9 +663,11 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
                         valid_inds, ("speedup_factor_normal", t)
                     ] = self.aggregate_df_sample.loc[valid_inds, ("speedup_factor", t)]
 
-                    # Initialize columns for estimated freestream wind speeds and powers
-                    self.aggregate_df_sample[("windspeed_freestream_estimate", t)] = np.nan
-                    self.aggregate_df_sample[("power_freestream_estimate", t)] = np.nan
+                # Initialize columns for estimated freestream wind speeds and powers
+                new_cols = ["windspeed_freestream_estimate", "power_freestream_estimate"]
+                self.aggregate_df_sample[
+                    list(itertools.product(new_cols, self.turbine_ids))
+                ] = np.nan
 
             # Find freestream turbines for each wind direction. Update the dictionary only when the set of turbines
             # differs from the previous wind direction bin.
@@ -797,17 +800,12 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
                 # turbines are greater than zero, and mean estimated freestream power is
                 # sufficiently large (treated as greater than 1 kW), allowing valid potential power
                 # corrections.
-                valid_inds_freestream_power = (
-                    (self.aggregate_df_sample["power_mean_freestream"] > 0)
-                    & (
-                        (
-                            ~self.aggregate_df_sample["derate_flag"]
-                            * self.aggregate_df_sample["power_freestream_estimate"]
-                        ).sum(axis=1)
-                        > 0
-                    )
-                    & (self.aggregate_df_sample["power_mean_freestream_estimate"] > 1.0)
-                )
+                valid_ix = self.aggregate_df_sample["power_mean_freestream"] > 0
+                valid_ix &= (
+                    ~self.aggregate_df_sample["derate_flag"]
+                    * self.aggregate_df_sample["power_freestream_estimate"]
+                ).sum(axis=1) > 0
+                valid_ix &= self.aggregate_df_sample["power_mean_freestream_estimate"] > 1.0
 
                 total_potential_freestream_power = (
                     self.aggregate_df_sample["power_mean_freestream"]
@@ -819,15 +817,10 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
                 )
 
                 # For invalid indices, use measured power of freestream turbines
-                total_potential_freestream_power.loc[
-                    ~valid_inds_freestream_power
-                ] = self.aggregate_df_sample.loc[
-                    ~valid_inds_freestream_power, "power_mean_freestream"
-                ] * (
-                    ~self.aggregate_df_sample.loc[~valid_inds_freestream_power, "derate_flag"]
-                ).sum(
-                    axis=1
-                )
+                total_potential_freestream_power.loc[~valid_ix] = (
+                    self.aggregate_df_sample.loc[~valid_ix, "power_mean_freestream"]
+                    * ~self.aggregate_df_sample.loc[~valid_ix, "derate_flag"]
+                ).sum(axis=1)
 
                 # Check for corrected potential power values greater than the maximum possible
                 # output of number of normally operating turbines
@@ -927,7 +920,7 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
 
             df_wd_bin = self.aggregate_df_sample.groupby("wind_direction_bin").sum()
 
-            index = np.arange(0.0, 360.0, self.wd_bin_width_LT_corr).tolist()
+            index = np.arange(0.0, 360.0, self.wd_bin_width_LT_corr)
             df_wd_bin = df_wd_bin.reindex(index)
 
             # Save plant and turbine-level wake losses binned by wind direction
@@ -1479,7 +1472,7 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
         df_1hr_ws_por_bin = df_1hr.groupby(("windspeed_bin", "")).sum()
 
         # reindex to fill in missing wind speed bins
-        index = np.arange(0.0, 31.0, self.ws_bin_width_LT_corr).tolist()
+        index = np.arange(0.0, 31.0, self.ws_bin_width_LT_corr)
         df_1hr_ws_por_bin = df_1hr_ws_por_bin.reindex(index)
 
         wake_losses_por_ws = (
@@ -1550,7 +1543,7 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
         # Save long-term corrected plant and turbine-level wake losses binned by wind direction
         df_1hr_wd_bin = df_1hr_bin.groupby(level=[0]).sum()
 
-        index = np.arange(0.0, 360.0, self.wd_bin_width_LT_corr).tolist()
+        index = np.arange(0.0, 360.0, self.wd_bin_width_LT_corr)
         df_1hr_wd_bin = df_1hr_wd_bin.reindex(index)
 
         wake_losses_lt_wd = (
@@ -1573,7 +1566,7 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
         df_1hr_ws_bin = df_1hr_bin.groupby(level=[1]).sum()
 
         # reindex to fill in missing wind speed bins
-        index = np.arange(0.0, 31.0, self.ws_bin_width_LT_corr).tolist()
+        index = np.arange(0.0, 31.0, self.ws_bin_width_LT_corr)
         df_1hr_ws_bin = df_1hr_ws_bin.reindex(index)
 
         wake_losses_lt_ws = (
