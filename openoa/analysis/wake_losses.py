@@ -817,10 +817,9 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
                 )
 
                 # For invalid indices, use measured power of freestream turbines
-                total_potential_freestream_power.loc[~valid_ix] = (
-                    self.aggregate_df_sample.loc[~valid_ix, "power_mean_freestream"]
-                    * ~self.aggregate_df_sample.loc[~valid_ix, "derate_flag"]
-                ).sum(axis=1)
+                total_potential_freestream_power.loc[~valid_ix] = self.aggregate_df_sample.loc[
+                    ~valid_ix, "power_mean_freestream"
+                ] * (~self.aggregate_df_sample.loc[~valid_ix, "derate_flag"]).sum(axis=1)
 
                 # Check for corrected potential power values greater than the maximum possible
                 # output of number of normally operating turbines
