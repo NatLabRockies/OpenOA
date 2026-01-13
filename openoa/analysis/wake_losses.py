@@ -652,7 +652,7 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
                 self.power_curve_func = power_curve.IEC(
                     self.aggregate_df_sample.loc[:, "windspeed_normal"].stack(future_stack=True),
                     self.aggregate_df_sample.loc[:, "power_normal"].stack(future_stack=True),
-                    windspeed_end=50.0,
+                    windspeed_end=100.0,
                     interpolate=True,
                 )
 
