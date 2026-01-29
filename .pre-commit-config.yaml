@@ -1,4 +1,12 @@
 repos:
+  - repo: https://github.com/psf/black
+    rev: 26.1.0
+    hooks:
+        - id: black
+          name: black
+          stages: [pre-commit]
+          language_version: python3
+
   - repo: https://github.com/pycqa/isort
     rev: 7.0.0
     hooks:
@@ -19,14 +27,6 @@ repos:
     hooks:
     - id: pyupgrade
       args: [--py38-plus]
-
-  - repo: https://github.com/psf/black
-    rev: 26.1.0
-    hooks:
-        - id: black
-          name: black
-          stages: [pre-commit]
-          language_version: python3
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0

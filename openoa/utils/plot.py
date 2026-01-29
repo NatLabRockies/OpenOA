@@ -20,7 +20,6 @@ from matplotlib.ticker import StrMethodFormatter
 
 from openoa import PlantData
 
-
 NDArrayFloat = npt.NDArray[np.float64]
 
 
@@ -301,8 +300,8 @@ def plot_by_id(
     xlabel: str | None = None,
     ylabel: str | None = None,
     return_fig: bool = False,
-    figure_kwargs: dict = {},
-    plot_kwargs: dict = {},
+    figure_kwargs: dict | None = None,
+    plot_kwargs: dict | None = None,
 ) -> None:
     """Function to plot any two fields against each other in a dataframe with unique plots for each
     asset_id.
@@ -324,9 +323,9 @@ def plot_by_id(
         return_fig(:obj:`bool`, optional): Set to True to return the figure and axes objects,
             otherwise set to False. Defaults to False.
         figure_kwargs(:obj:`dict`, optional): Additional keyword arguments that should be passed to
-            `plt.figure()`. Defaults to {}.
+            `plt.figure()`. Defaults to None.
         plot_kwargs(:obj:`dict`, optional): Additional keyword arguments that should be passed
-            to `ax.scatter`. Defaults to {}.
+            to `ax.scatter`. Defaults to None.
 
     Returns:
         (:obj:`None`)
@@ -358,6 +357,11 @@ def plot_by_id(
     # Set the plotting defaults, if None are set
     xlabel = x_axis if xlabel is None else xlabel
     ylabel = y_axis if ylabel is None else ylabel
+
+    if figure_kwargs is None:
+        figure_kwargs = {}
+    if plot_kwargs is None:
+        plot_kwargs = {}
     figure_kwargs.setdefault("figsize", (15, num_rows * 5))
     plot_kwargs.setdefault("s", 5)
 
@@ -439,9 +443,9 @@ def plot_power_curve(
     ylim: tuple[float, float] = (None, None),
     legend: bool = False,
     return_fig: bool = False,
-    figure_kwargs: dict = {},
-    legend_kwargs: dict = {},
-    scatter_kwargs: dict = {},
+    figure_kwargs: dict | None = None,
+    legend_kwargs: dict | None = None,
+    scatter_kwargs: dict | None = None,
 ) -> None | tuple[plt.Figure, plt.Axes]:
     """Plots the individual points on a power curve, with an optional :py:attr:`flag` filtering for
     singling out readings in the figure. If `flag` is all false values then no overlaid flagge
@@ -466,15 +470,22 @@ def plot_power_curve(
         return_fig (:obj:`bool`, optional): Set to True to return the figure and axes objects,
             otherwise set to False. Defaults to False.
         figure_kwargs (:obj:`dict`, optional): Additional keyword arguments that should be passed to
-            ``plt.figure()``. Defaults to {}.
+            ``plt.figure()``. Defaults to None.
         scatter_kwargs (:obj:`dict`, optional): Additional keyword arguments that should be passed
-            to ``ax.scatter()``. Defaults to {}.
+            to ``ax.scatter()``. Defaults to None.
         legend_kwargs (:obj:`dict`, optional): Additional keyword arguments that should be passed to
-            ``ax.legend()``. Defaults to {}.
+            ``ax.legend()``. Defaults to None.
 
     Returns:
         None | tuple[plt.Figure, plt.Axes]: _description_
     """
+    if figure_kwargs is None:
+        figure_kwargs = {}
+    if legend_kwargs is None:
+        legend_kwargs = {}
+    if scatter_kwargs is None:
+        scatter_kwargs = {}
+
     figure_kwargs.setdefault("dpi", 200)
     fig = plt.figure(**figure_kwargs)
     ax = fig.add_subplot(111)
@@ -514,9 +525,9 @@ def plot_monthly_reanalysis_windspeed(
     xlim: tuple[datetime.datetime, datetime.datetime] = (None, None),
     ylim: tuple[float, float] = (None, None),
     return_fig: bool = False,
-    figure_kwargs: dict = {},
-    plot_kwargs: dict = {},
-    legend_kwargs: dict = {},
+    figure_kwargs: dict | None = None,
+    plot_kwargs: dict | None = None,
+    legend_kwargs: dict | None = None,
 ) -> None | tuple[plt.Figure, plt.Axes]:
     """Make a plot of the normalized annual average wind speeds from reanalysis data to show general
     trends for each, and highlighting the period of record for the plant data.
@@ -534,11 +545,11 @@ def plot_monthly_reanalysis_windspeed(
             Defaults to (None, None).
         return_fig (:obj:`bool`, optional): Flag to return the figure and axes objects. Defaults to False.
         figure_kwargs (:obj:`dict`, optional): Additional figure instantiation keyword arguments
-            that are passed to ``plt.figure()``. Defaults to {}.
+            that are passed to ``plt.figure()``. Defaults to None.
         plot_kwargs (:obj:`dict`, optional): Additional plotting keyword arguments that are passed to
-            ``ax.plot()``. Defaults to {}.
+            ``ax.plot()``. Defaults to None.
         legend_kwargs (:obj:`dict`, optional): Additional legend keyword arguments that are passed to
-            ``ax.legend()``. Defaults to {}.
+            ``ax.legend()``. Defaults to None.
 
     Returns:
         None | tuple[matplotlib.pyplot.Figure, matplotlib.pyplot.Axes]: If :py:attr:`return_fig` is
@@ -546,6 +557,13 @@ def plot_monthly_reanalysis_windspeed(
     """
     # Define parameters needed for plotting
     min_val, max_val = (np.inf, -np.inf) if ylim == (None, None) else ylim
+
+    if figure_kwargs is None:
+        figure_kwargs = {}
+    if plot_kwargs is None:
+        plot_kwargs = {}
+    if legend_kwargs is None:
+        legend_kwargs = {}
 
     figure_kwargs.setdefault("figsize", (14, 6))
     figure_kwargs.setdefault("dpi", 200)
@@ -601,9 +619,9 @@ def plot_plant_energy_losses_timeseries(
     ylim_energy: tuple[float, float] = (None, None),
     ylim_loss: tuple[float, float] = (None, None),
     return_fig: bool = False,
-    figure_kwargs: dict = {},
-    plot_kwargs: dict = {},
-    legend_kwargs: dict = {},
+    figure_kwargs: dict | None = None,
+    plot_kwargs: dict | None = None,
+    legend_kwargs: dict | None = None,
 ):
     """
     Plot timeseries of energy, and the loss categories of interest.
@@ -622,17 +640,24 @@ def plot_plant_energy_losses_timeseries(
             limits for the loss plot (bottom figure). Defaults to (None, None).
         return_fig (:obj:`bool`, optional): Flag to return the figure and axes objects. Defaults to False.
         figure_kwargs (:obj:`dict`, optional): Additional figure instantiation keyword arguments
-            that are passed to ``plt.figure()``. Defaults to {}.
+            that are passed to ``plt.figure()``. Defaults to None.
         plot_kwargs (:obj:`dict`, optional): Additional plotting keyword arguments that are passed to
-            ``ax.plot()``. Defaults to {}.
+            ``ax.plot()``. Defaults to None.
         legend_kwargs (:obj:`dict`, optional): Additional legend keyword arguments that are passed to
-            ``ax.legend()``. Defaults to {}.
+            ``ax.legend()``. Defaults to None.
 
     Returns:
         None | tuple[matplotlib.pyplot.Figure, tuple[matplotlib.pyplot.Axes, matplotlib.pyplot.Axes]]:
             If :py:attr:`return_fig` is True, then the figure and axes objects are returned for further
             tinkering/saving.
     """
+    if figure_kwargs is None:
+        figure_kwargs = {}
+    if plot_kwargs is None:
+        plot_kwargs = {}
+    if legend_kwargs is None:
+        legend_kwargs = {}
+
     figure_kwargs.setdefault("figsize", (12, 9))
     figure_kwargs.setdefault("dpi", 200)
     fig = plt.figure(**figure_kwargs)
@@ -672,9 +697,9 @@ def plot_distributions(
     xlim: tuple[tuple[float, float], ...] = None,
     ylim: tuple[tuple[float, float], ...] = None,
     return_fig: bool = False,
-    figure_kwargs: dict = {},
-    plot_kwargs: dict = {},
-    annotate_kwargs: dict = {},
+    figure_kwargs: dict | None = None,
+    plot_kwargs: dict | None = None,
+    annotate_kwargs: dict | None = None,
     title: str | None = None,
 ) -> None | tuple[plt.Figure, plt.Axes]:
     """
@@ -692,17 +717,24 @@ def plot_distributions(
             Defaults to None.
         return_fig (:obj:`bool`, optional): Flag to return the figure and axes objects. Defaults to ``False``.
         figure_kwargs (:obj:`dict`, optional): Additional figure instantiation keyword arguments
-            that are passed to ```plt.figure()```. Defaults to {}.
+            that are passed to ```plt.figure()```. Defaults to None.
         plot_kwargs (:obj:`dict`, optional): Additional plotting keyword arguments that are passed to
-            ``ax.hist()``. Defaults to {}.
+            ``ax.hist()``. Defaults to None.
         annotate_kwargs (:obj:`dict`, optional): Additional annotation keyword arguments that are
-            passed to ``ax.annotate()``. Defaults to {}.
+            passed to ``ax.annotate()``. Defaults to None.
         title (:str:, optional): Title to place over all subplots.
 
     Returns:
         None | tuple[matplotlib.pyplot.Figure, matplotlib.pyplot.Axes]: If :py:attr:`return_fig` is
             True, then the figure and axes objects are returned for further tinkering/saving.
     """
+    if figure_kwargs is None:
+        figure_kwargs = {}
+    if plot_kwargs is None:
+        plot_kwargs = {}
+    if annotate_kwargs is None:
+        annotate_kwargs = {}
+
     if xlim is None:
         xlim = tuple([(None, None) for _ in range(len(which))])
     if ylim is None:
@@ -818,10 +850,10 @@ def plot_boxplot(
     with_points: bool = False,
     points_label: str | None = None,
     return_fig: bool = False,
-    figure_kwargs: dict = {},
-    plot_kwargs_box: dict = {},
-    plot_kwargs_points: dict = {},
-    legend_kwargs: dict = {},
+    figure_kwargs: dict | None = None,
+    plot_kwargs_box: dict | None = None,
+    plot_kwargs_points: dict | None = None,
+    legend_kwargs: dict | None = None,
 ) -> None | tuple[plt.Figure, plt.Axes]:
     """Plot box plots of AEP results sliced by a specified Monte Carlo parameter
 
@@ -838,19 +870,28 @@ def plot_boxplot(
             Defaults to None.
         return_fig(:obj:`bool`, optional): Flag to return the figure and axes objects. Defaults to False.
         figure_kwargs(:obj:`dict`, optional): Additional figure instantiation keyword arguments
-            that are passed to `plt.figure()`. Defaults to {}.
+            that are passed to `plt.figure()`. Defaults to None.
         plot_kwargs_box(:obj:`dict`, optional): Additional plotting keyword arguments that are passed to
-            ``ax.boxplot()``. Defaults to {}.
+            ``ax.boxplot()``. Defaults to None.
         plot_kwargs_points(:obj:`dict`, optional): Additional plotting keyword arguments that are passed to
-            ``ax.boxplot()``. Defaults to {}.
+            ``ax.boxplot()``. Defaults to None.
         legend_kwargs(:obj:`dict`, optional): Additional legend keyword arguments that are passed to
-            ``ax.legend()``. Defaults to {}.
+            ``ax.legend()``. Defaults to None.
 
     Returns:
         None | tuple[matplotlib.pyplot.Figure, matplotlib.pyplot.Axes, dict]: If :py:attr:`return_fig` is
             True, then the figure object, axes object, and a dictionary of the boxplot objects are
             returned for further tinkering/saving.
     """
+    if figure_kwargs is None:
+        figure_kwargs = {}
+    if plot_kwargs_box is None:
+        plot_kwargs_box = {}
+    if plot_kwargs_points is None:
+        plot_kwargs_points = {}
+    if legend_kwargs is None:
+        legend_kwargs = {}
+
     df = pd.DataFrame(data={"x": x, "y": y})
     figure_kwargs.setdefault("figsize", (8, 6))
 
@@ -899,8 +940,8 @@ def plot_waterfall(
     ylabel: str | None = None,
     ylim: tuple[float, float] = (None, None),
     return_fig: bool = False,
-    plot_kwargs: dict = {},
-    figure_kwargs: dict = {},
+    plot_kwargs: dict | None = None,
+    figure_kwargs: dict | None = None,
 ) -> None | tuple:
     """
     Produce a waterfall plot showing the progression from the EYA estimates to the calculated OA
@@ -917,16 +958,19 @@ def plot_waterfall(
         return_fig(:obj:`bool`, optional): Set to True to return the figure and axes objects,
             otherwise set to False. Defaults to False.
         figure_kwargs(:obj:`dict`, optional): Additional keyword arguments that should be
-            passed to ``plt.figure()``. Defaults to {}.
+            passed to ``plt.figure()``. Defaults to None.
         plot_kwargs(:obj:`dict`, optional): Additional keyword arguments that should be
-            passed to ``ax.plot()``. Defaults to {}.
-        legend_kwargs(:obj:`dict`, optional): Additional keyword arguments that should be
-            passed to` `ax.legend()``. Defaults to {}.
+            passed to ``ax.plot()``. Defaults to None.
 
     Returns:
         None | tuple[plt.Figure, plt.Axes]: If :py:attr:`return_fig`, then return the figure
             and axes objects in addition to showing the plot.
     """
+    if figure_kwargs is None:
+        figure_kwargs = {}
+    if plot_kwargs is None:
+        plot_kwargs = {}
+
     # Store data and create a bottom series to use for the waterfall
     plot_data = pd.DataFrame(data={"amount": data}, index=index[:-1])
     bottom = plot_data.amount.cumsum().shift(1).fillna(0)
@@ -993,9 +1037,9 @@ def plot_power_curves(
     ylim: tuple[float, float] = (None, None),
     legend: bool = False,
     return_fig: bool = False,
-    figure_kwargs: dict = {},
-    legend_kwargs: dict = {},
-    plot_kwargs: dict = {},
+    figure_kwargs: dict | None = None,
+    legend_kwargs: dict | None = None,
+    plot_kwargs: dict | None = None,
 ):
     """Plots a series of power curves for a dictionary of turbine data, allowing for an optional
     filtering for singling out readings in the figure.
@@ -1023,16 +1067,23 @@ def plot_power_curves(
         return_fig(:obj:`bool`, optional): Set to True to return the figure and axes objects,
             otherwise set to False. Defaults to False.
         figure_kwargs(:obj:`dict`, optional): Additional keyword arguments that should be passed to
-            ``plt.figure()``. Defaults to {}.
+            ``plt.figure()``. Defaults to None.
         plot_kwargs(:obj:`dict`, optional): Additional keyword arguments that should be passed
-            to ``ax.scatter()``. Defaults to {}.
+            to ``ax.scatter()``. Defaults to None.
         legend_kwargs(:obj:`dict`, optional): Additional keyword arguments that should be passed to
-            ``ax.legend()``. Defaults to {}.
+            ``ax.legend()``. Defaults to None.
 
     Returns:
         None | tuple[plt.Figure, plt.Axes]: Returns the figure and axes objects if
             :py:attr:`return_fig` is True.
     """
+    if figure_kwargs is None:
+        figure_kwargs = {}
+    if legend_kwargs is None:
+        legend_kwargs = {}
+    if plot_kwargs is None:
+        plot_kwargs = {}
+
     turbines = list(data.keys()) if turbines is None else turbines
     num_cols = len(turbines)
     num_rows = int(np.ceil(num_cols / max_cols))
@@ -1090,10 +1141,10 @@ def plot_wake_losses(
     ylim_efficiency: tuple[float, float] = (None, None),
     ylim_energy: tuple[float, float] = (None, None),
     return_fig: bool = False,
-    figure_kwargs: dict = None,
-    plot_kwargs_line: dict = {},
-    plot_kwargs_fill: dict = {},
-    legend_kwargs: dict = {},
+    figure_kwargs: dict | None = None,
+    plot_kwargs_line: dict | None = None,
+    plot_kwargs_fill: dict | None = None,
+    legend_kwargs: dict | None = None,
 ):
     """Plots wake losses in the form of wind farm efficiency as well as normalized wind plant energy
     production for both the period of record and with the long-term correction as a function of either
@@ -1136,14 +1187,14 @@ def plot_wake_losses(
             that are passed to `plt.figure()`. Defaults to None.
         plot_kwargs_line (:obj:`dict`, optional): Additional plotting keyword arguments that are passed to
             `ax.plot()` for plotting lines for the wind farm efficiency and, if :py:attr:`energy_data_por` and
-            `energy_data_lt` arguments are provided, energy distributions subplots. Defaults to {}.
+            `energy_data_lt` arguments are provided, energy distributions subplots. Defaults to None.
         plot_kwargs_fill (:obj:`dict`, optional): If `UQ` is True, additional plotting keyword arguments
             that are passed to `ax.fill_between()` for plotting shading regions for 95% confidence
             intervals for the wind farm efficiency and, if :py:attr:`energy_data_por` and `energy_data_lt` arguments
-            are provided, energy distributions subplots. Defaults to {}.
+            are provided, energy distributions subplots. Defaults to None.
         legend_kwargs (:obj:`dict`, optional): Additional legend keyword arguments that are passed to
             `ax.legend()` for the wind farm efficiency and, if :py:attr:`energy_data_por` and `energy_data_lt`
-            arguments are provided, energy distributions subplots. Defaults to {}.
+            arguments are provided, energy distributions subplots. Defaults to None.
 
     Returns:
         None | tuple[matplotlib.pyplot.Figure, matplotlib.pyplot.Axes] | tuple[matplotlib.pyplot.Figure, tuple [matplotlib.pyplot.Axes, matplotlib.pyplot.Axes]]:
@@ -1151,6 +1202,15 @@ def plot_wake_losses(
             loss plot or, if :py:attr:`energy_data_por` and :py:attr:`energy_data_lt` arguments are provided, wake loss
             and normalized energy plots, are returned for further tinkering/saving.
     """
+    if figure_kwargs is None:
+        figure_kwargs = {}
+    if plot_kwargs_line is None:
+        plot_kwargs_line = {}
+    if plot_kwargs_fill is None:
+        plot_kwargs_fill = {}
+    if legend_kwargs is None:
+        legend_kwargs = {}
+
     color_codes = ["#4477AA", "#228833"]
 
     plot_kwargs_fill.setdefault("alpha", 0.2)
@@ -1338,11 +1398,11 @@ def plot_yaw_misalignment(
     xlim: tuple[float, float] = (None, None),
     ylim: tuple[float, float] = (None, None),
     return_fig: bool = False,
-    figure_kwargs: dict = None,
-    plot_kwargs_curve: dict = {},
-    plot_kwargs_line: dict = {},
-    plot_kwargs_fill: dict = {},
-    legend_kwargs: dict = {},
+    figure_kwargs: dict | None = None,
+    plot_kwargs_curve: dict | None = None,
+    plot_kwargs_line: dict | None = None,
+    plot_kwargs_fill: dict | None = None,
+    legend_kwargs: dict | None = None,
 ):
     """Plots power performance vs. wind vane angle along with the best-fit cosine curve for each
     wind speed bin for a single turbine. The mean wind vane angle and the wind vane angle where
@@ -1403,14 +1463,22 @@ def plot_yaw_misalignment(
 
     from openoa.analysis.yaw_misalignment import cos_curve
 
+    if figure_kwargs is None:
+        figure_kwargs = {}
+    if plot_kwargs_curve is None:
+        plot_kwargs_curve = {}
+    if plot_kwargs_line is None:
+        plot_kwargs_line = {}
+    if plot_kwargs_fill is None:
+        plot_kwargs_fill = {}
+    if legend_kwargs is None:
+        legend_kwargs = {}
+
     power_color_code = "#4477AA"
     mean_vane_color_code = "#000000"
     curve_fit_color_code = "#EE6677"
 
     plot_kwargs_fill.setdefault("alpha", 0.2)
-
-    if figure_kwargs is None:
-        figure_kwargs = {}
 
     # determine if confidence intervals should be plotted (i.e., UQ) based on dimension of data
     if (
@@ -1509,7 +1577,7 @@ def plot_yaw_misalignment(
                 ],
                 color=curve_fit_color_code,
                 linestyle="--",
-                label=rf"Max. Power Vane Angle = {round(curve_fit_params_ws[:,i,1].mean(),1)}$^\circ$",  # noqa: W605
+                label=rf"Max. Power Vane Angle = {round(curve_fit_params_ws[:, i, 1].mean(), 1)}$^\circ$",  # noqa: W605
             )
 
             yaw_mis_mean = np.round(np.mean(yaw_misalignment_ws[:, i]), 1)
@@ -1553,11 +1621,11 @@ def plot_yaw_misalignment(
                 ],
                 color=curve_fit_color_code,
                 linestyle="--",
-                label=rf"Max. Power Vane Angle = {round(curve_fit_params_ws[i,1],1)}$^\circ$",  # noqa: W605
+                label=rf"Max. Power Vane Angle = {round(curve_fit_params_ws[i, 1], 1)}$^\circ$",  # noqa: W605
             )
 
             ax.set_title(
-                f"{ws} m/s\nYaw Misalignment = {np.round(yaw_misalignment_ws[i],1)}$^\\circ$"  # noqa: W605
+                f"{ws} m/s\nYaw Misalignment = {np.round(yaw_misalignment_ws[i], 1)}$^\\circ$"  # noqa: W605
             )
 
         ax.plot(
@@ -1568,7 +1636,7 @@ def plot_yaw_misalignment(
             ],
             color=mean_vane_color_code,
             linestyle="--",
-            label=rf"Mean Vane Angle = {round(mean_vane_angle_ws[i],1)}$^\circ$",  # noqa: W605
+            label=rf"Mean Vane Angle = {round(mean_vane_angle_ws[i], 1)}$^\circ$",  # noqa: W605
         )
 
         ax.grid("on")
