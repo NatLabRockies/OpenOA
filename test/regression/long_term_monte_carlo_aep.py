@@ -329,7 +329,7 @@ class TestLongTermMonteCarloAEP(unittest.TestCase):
         sim_results = self.analysis.results
         self.check_simulation_results_gam_daily(sim_results)
 
-    @pytest.mark.xfail(strict=False)
+    @pytest.mark.xfail(reason="Fails intermittently depending, mostly on MacOS.")
     def test_daily_gbm(self):
         reset_prng()
         # ____________________________________________________________________
