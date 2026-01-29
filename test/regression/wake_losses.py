@@ -8,7 +8,6 @@ from numpy import testing as nptest
 
 from openoa.analysis import wake_losses
 
-
 from test.conftest import project_ENGIE, example_data_path_str  # isort: skip
 
 

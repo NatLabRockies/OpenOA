@@ -23,7 +23,6 @@ from openoa.schema.metadata import ANALYSIS_REQUIREMENTS, PlantMetaData
 from openoa.utils.metadata_fetch import attach_eia_data
 from openoa.utils.unit_conversion import convert_power_to_energy
 
-
 setup_logging(level="WARNING")
 logger = logging.getLogger(__name__)
 

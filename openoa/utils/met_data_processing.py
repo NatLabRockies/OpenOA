@@ -12,7 +12,6 @@ import scipy.constants as const
 
 from openoa.utils._converters import df_to_series, series_method
 
-
 # Define constants used in some of the methods
 R = 287.058  # Gas constant for dry air, units of J/kg/K
 Rw = 461.5  # Gas constant of water vapour, unit J/kg/K

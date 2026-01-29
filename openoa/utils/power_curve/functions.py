@@ -2,6 +2,7 @@
 This module holds ready-to-use power curve functions. They take windspeed and power columns as arguments and return a
 python function which can be used to evaluate the power curve at arbitrary locations.
 """
+
 from __future__ import annotations
 
 from typing import Callable

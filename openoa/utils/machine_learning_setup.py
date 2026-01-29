@@ -59,7 +59,9 @@ from sklearn.ensemble import ExtraTreesRegressor, GradientBoostingRegressor
 from sklearn.model_selection import KFold, RandomizedSearchCV
 
 
-def _algorithm_map(abbreviation: str) -> GAM | ExtraTreesRegressor | GradientBoostingRegressor:
+def _algorithm_map(
+    abbreviation: str,
+) -> GAM | ExtraTreesRegressor | GradientBoostingRegressor:
     """Maps the input string abbreviation to an instantiated ML model.
 
     Args:

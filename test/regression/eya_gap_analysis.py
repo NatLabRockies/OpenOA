@@ -5,7 +5,6 @@ import numpy.testing as npt
 
 from openoa.analysis.eya_gap_analysis import EYAGapAnalysis
 
-
 from test.conftest import project_ENGIE, example_data_path_str  # isort: skip
 
 

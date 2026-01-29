@@ -12,7 +12,6 @@ from openoa import PlantData
 from openoa.schema import ANALYSIS_REQUIREMENTS, ReanalysisMetaData
 from openoa.schema.schema import create_schema, create_analysis_schema
 
-
 from test.conftest import project_ENGIE, example_data_path_str  # isort: skip
 
 
@@ -94,24 +93,22 @@ class TestPlantData(unittest.TestCase):
         self.plant.validate()
 
         # Get the OpenOA standardized column names where the default isn't used
-        scada_original = set((v for k, v in self.plant.metadata.scada.col_map.items() if k != v))
+        scada_original = {v for k, v in self.plant.metadata.scada.col_map.items() if k != v}
         assert len(scada_original.intersection(self.plant.scada.columns)) == 0
 
-        meter_original = set((v for k, v in self.plant.metadata.meter.col_map.items() if k != v))
+        meter_original = {v for k, v in self.plant.metadata.meter.col_map.items() if k != v}
         assert len(meter_original.intersection(self.plant.meter.columns)) == 0
 
-        asset_original = set((v for k, v in self.plant.metadata.asset.col_map.items() if k != v))
+        asset_original = {v for k, v in self.plant.metadata.asset.col_map.items() if k != v}
         assert len(asset_original.intersection(self.plant.asset.columns)) == 0
 
-        curtail_original = set(
-            (v for k, v in self.plant.metadata.curtail.col_map.items() if k != v)
-        )
+        curtail_original = {v for k, v in self.plant.metadata.curtail.col_map.items() if k != v}
         assert len(curtail_original.intersection(self.plant.curtail.columns)) == 0
 
         for name in self.plant.reanalysis:
-            re_original = set(
-                (v for k, v in self.plant.metadata.reanalysis[name].col_map.items() if k != v)
-            )
+            re_original = {
+                v for k, v in self.plant.metadata.reanalysis[name].col_map.items() if k != v
+            }
             assert len(re_original.intersection(self.plant.reanalysis[name].columns)) == 0
 
     def test_toCSV(self):
@@ -190,7 +187,7 @@ class TestPlantDatPartial(unittest.TestCase):
         """
         Create the plantdata object
         """
-        with open(example_data_path_str + "/../plant_meta.yml", "r") as f:
+        with open(example_data_path_str + "/../plant_meta.yml") as f:
             meta_partial = yaml.safe_load(f)
         meta_partial.pop("reanalysis")
         self.plant = PlantData(
@@ -209,7 +206,7 @@ class TestPlantDatPartial(unittest.TestCase):
         """Tests that when there are missing products in the reanalysis metadata, that
         a KeyError is raised early.
         """
-        with open(example_data_path_str + "/../plant_meta.yml", "r") as f:
+        with open(example_data_path_str + "/../plant_meta.yml") as f:
             metadata = yaml.safe_load(f)
 
         # Raised when all missing
@@ -229,19 +226,19 @@ class TestSchema(unittest.TestCase):
     def setUp(self):
         schema_path = Path(__file__).resolve().parents[2] / "openoa/schema"
 
-        with open(schema_path / "full_schema.yml", "r") as f:
+        with open(schema_path / "full_schema.yml") as f:
             self.full_schema = yaml.safe_load(f)
 
-        with open(schema_path / "base_electrical_losses_schema.yml", "r") as f:
+        with open(schema_path / "base_electrical_losses_schema.yml") as f:
             self.el_schema = yaml.safe_load(f)
 
-        with open(schema_path / "base_monte_carlo_aep_schema.yml", "r") as f:
+        with open(schema_path / "base_monte_carlo_aep_schema.yml") as f:
             self.mc_aep_schema = yaml.safe_load(f)
 
-        with open(schema_path / "base_tie_schema.yml", "r") as f:
+        with open(schema_path / "base_tie_schema.yml") as f:
             self.tie_schema = yaml.safe_load(f)
 
-        with open(schema_path / "scada_wake_losses_schema.yml", "r") as f:
+        with open(schema_path / "scada_wake_losses_schema.yml") as f:
             self.wake_schema = yaml.safe_load(f)
 
     def test_full_schema(self):

@@ -13,7 +13,6 @@ import pandas as pd
 
 from openoa.utils import unit_conversion
 
-
 if TYPE_CHECKING:
     from openoa import PlantData
 

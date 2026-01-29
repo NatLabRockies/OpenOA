@@ -21,7 +21,6 @@ from openoa.schema.metadata import (
     determine_analysis_requirements,
 )
 
-
 HERE = Path(__file__).resolve().parent
 
 meta_class_map = {

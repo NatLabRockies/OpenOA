@@ -39,7 +39,6 @@ from openoa.schema.metadata import (
     deprecated_offset_map,
 )
 
-
 EXAMPLE_DATA_PATH = Path(__file__).resolve().parents[2] / "examples/data"
 
 

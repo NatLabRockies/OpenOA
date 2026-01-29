@@ -44,7 +44,6 @@ import openoa.utils.downloader as downloader
 from openoa.plant import PlantData
 from openoa.logging import logging
 
-
 logger = logging.getLogger()
 
 

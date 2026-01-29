@@ -60,7 +60,7 @@ class TestMLToolkit(unittest.TestCase):
                 self.y.sum() / 1e6,
                 y_pred.sum() / 1e6,
                 significant=3,
-                err_msg="Sum of predicted and actual power for {} not close enough".format(a),
+                err_msg=f"Sum of predicted and actual power for {a} not close enough",
             )
 
             # Test correlation of model fit
@@ -68,11 +68,11 @@ class TestMLToolkit(unittest.TestCase):
                 corr,
                 required_metrics[a][0],
                 significant=4,
-                err_msg="Correlation between {} features and response is wrong".format(a),
+                err_msg=f"Correlation between {a} features and response is wrong",
             )
 
             # Test RMSE of model fit
-            self.assertLess(rmse, required_metrics[a][1], "RMSE of {} fit is too high".format(a))
+            self.assertLess(rmse, required_metrics[a][1], f"RMSE of {a} fit is too high")
 
     def tearDown(self):
         pass

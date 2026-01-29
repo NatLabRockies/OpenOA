@@ -51,7 +51,6 @@ from requests.exceptions import SSLError
 from openoa.utils import met_data_processing as met
 from openoa.logging import logging
 
-
 logger = logging.getLogger()
 
 
@@ -157,7 +156,7 @@ def download_zenodo_data(record_id: int, outfile_path: str | Path) -> None:
             # download and unzip if the checksum isn't correct
             else:
                 logger.info(f"Downloading: {file_name}")
-                logger.info(f"File size: {f['size']/(BYTES_MB):,.2f} MB")
+                logger.info(f"File size: {f['size'] / (BYTES_MB):,.2f} MB")
 
                 download_file(url_file, outfile)
 
@@ -170,7 +169,7 @@ def download_zenodo_data(record_id: int, outfile_path: str | Path) -> None:
         # download and unzip if the file doesn't exist
         else:
             logger.info(f"\nDownloading: {file_name}")
-            logger.info(f"File size: {f['size']/(BYTES_MB):,.2f} MB")
+            logger.info(f"File size: {f['size'] / (BYTES_MB):,.2f} MB")
 
             download_file(url_file, outfile)
 

@@ -7,7 +7,6 @@ from numpy import testing as nptest
 from openoa.utils import power_curve
 from openoa.utils.power_curve.parametric_forms import logistic5param, logistic5param_capped
 
-
 noise = 0.1
 
 

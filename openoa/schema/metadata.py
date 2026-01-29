@@ -17,7 +17,6 @@ from tabulate import tabulate
 
 from openoa.logging import logging, logged_method_call
 
-
 logger = logging.getLogger(__name__)
 warnings.filterwarnings("once", category=DeprecationWarning)
 

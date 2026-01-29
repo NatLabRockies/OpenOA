@@ -16,7 +16,6 @@ from openoa.utils._converters import (
     multiple_df_to_single_df,
 )
 
-
 test_df1 = pd.DataFrame(
     np.arange(15).reshape(5, 3, order="F"), columns=["a", "b", "c"], dtype=float
 )

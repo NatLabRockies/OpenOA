@@ -18,7 +18,6 @@ from openoa.utils import timeseries as ts
 from openoa.logging import logging, logged_method_call
 from openoa.utils.plot import set_styling
 
-
 Number = Union[int, float]
 logger = logging.getLogger(__name__)
 set_styling()
@@ -42,9 +41,11 @@ def _remove_tz(df: pd.DataFrame, t_local_column: str) -> tuple[np.ndarray, np.nd
     """
     arr = np.array(
         [
-            [True, pd.to_datetime(el).tz_localize(None).to_pydatetime()]
-            if not isinstance(el, float)
-            else [False, np.nan]
+            (
+                [True, pd.to_datetime(el).tz_localize(None).to_pydatetime()]
+                if not isinstance(el, float)
+                else [False, np.nan]
+            )
             for ix, el in enumerate(df.loc[:, t_local_column])
         ]
     )
