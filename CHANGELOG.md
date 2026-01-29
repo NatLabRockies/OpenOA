@@ -29,6 +29,7 @@ All notable changes to this project will be documented in this file. If you make
     ensure projects not utilizing location data are compatible.
   - Fix miscellaneous pandas warnings.
   - Rerun pre-commit and update code styling for adherence to 3.10+ standards.
+  - Replace mutable default arguments with None and handle Nones internally.
 
 ## v3.1.4 - 2026-01-29
 
