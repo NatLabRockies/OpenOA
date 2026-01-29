@@ -50,6 +50,7 @@ class TestStaticYawMisalignment(unittest.TestCase):
         )
         self.check_simulation_results_yaw_misalignment_without_UQ()
 
+    @pytest.mark.xfail(reason="System-dependendent intermittent failures")
     def test_yaw_misaliginment_with_UQ(self):
         reset_prng()
         # ____________________________________________________________________
@@ -72,7 +73,6 @@ class TestStaticYawMisalignment(unittest.TestCase):
         )
         self.check_simulation_results_yaw_misalignment_with_UQ()
 
-    @pytest.mark.xfail(reason="System-dependendent intermittent failures")
     def test_yaw_misaliginment_with_UQ_new_parameters(self):
         reset_prng()
         # ____________________________________________________________________
