@@ -29,7 +29,6 @@ from openoa.schema.metadata import convert_frequency
 from openoa.utils.machine_learning_setup import MachineLearningSetup
 from openoa.analysis._analysis_validators import validate_reanalysis_selections
 
-
 logger = logging.getLogger(__name__)
 
 NDArrayFloat = npt.NDArray[np.float64]
@@ -1186,9 +1185,9 @@ class MonteCarloAEP(FromDictMixin, ResetValuesMixin):
             )
 
         # Store result in dictionary
-        self.long_term_sampling[
-            (self._run.reanalysis_product, self._run.num_years_windiness)
-        ] = long_term_reg_inputs
+        self.long_term_sampling[(self._run.reanalysis_product, self._run.num_years_windiness)] = (
+            long_term_reg_inputs
+        )
 
         # Return result
         return long_term_reg_inputs.copy()
@@ -1228,9 +1227,9 @@ class MonteCarloAEP(FromDictMixin, ResetValuesMixin):
         xlim: tuple[datetime.datetime, datetime.datetime] = (None, None),
         ylim: tuple[float, float] = (None, None),
         return_fig: bool = False,
-        figure_kwargs: dict = {},
-        plot_kwargs: dict = {},
-        legend_kwargs: dict = {},
+        figure_kwargs: dict | None = None,
+        plot_kwargs: dict | None = None,
+        legend_kwargs: dict | None = None,
     ) -> None | tuple[plt.Figure, plt.Axes]:
         """Make a plot of the normalized annual average wind speeds from reanalysis data to show
         general trends for each, and highlighting the period of record for the plant data.
@@ -1243,11 +1242,11 @@ class MonteCarloAEP(FromDictMixin, ResetValuesMixin):
                 Defaults to (None, None).
             return_fig (:obj:`bool`, optional): Flag to return the figure and axes objects. Defaults to False.
             figure_kwargs (:obj:`dict`, optional): Additional figure instantiation keyword arguments
-                that are passed to ``plt.figure()``. Defaults to {}.
+                that are passed to ``plt.figure()``. Defaults to None.
             plot_kwargs (:obj:`dict`, optional): Additional plotting keyword arguments that are passed to
-                ``ax.plot()``. Defaults to {}.
+                ``ax.plot()``. Defaults to None.
             legend_kwargs (:obj:`dict`, optional): Additional legend keyword arguments that are passed to
-                ``ax.legend()``. Defaults to {}.
+                ``ax.legend()``. Defaults to None.
 
         Returns:
             None | tuple[matplotlib.pyplot.Figure, matplotlib.pyplot.Axes]: If ``return_fig`` is
@@ -1271,9 +1270,9 @@ class MonteCarloAEP(FromDictMixin, ResetValuesMixin):
         xlim: tuple[float, float] = (None, None),
         ylim: tuple[float, float] = (None, None),
         return_fig: bool = False,
-        figure_kwargs: dict = {},
-        plot_kwargs: dict = {},
-        legend_kwargs: dict = {},
+        figure_kwargs: dict | None = None,
+        plot_kwargs: dict | None = None,
+        legend_kwargs: dict | None = None,
     ) -> None | tuple[plt.Figure, plt.Axes]:
         """
         Makes a plot of the gross energy vs wind speed for each reanalysis product, with outliers
@@ -1290,16 +1289,23 @@ class MonteCarloAEP(FromDictMixin, ResetValuesMixin):
                 Defaults to (None, None).
             return_fig (:obj:`bool`, optional): Flag to return the figure and axes objects. Defaults to False.
             figure_kwargs (:obj:`dict`, optional): Additional figure instantiation keyword arguments
-                that are passed to ``plt.figure()``. Defaults to {}.
+                that are passed to ``plt.figure()``. Defaults to None.
             plot_kwargs (:obj:`dict`, optional): Additional plotting keyword arguments that are passed to
-                ``ax.scatter()``. Defaults to {}.
+                ``ax.scatter()``. Defaults to None.
             legend_kwargs (:obj:`dict`, optional): Additional legend keyword arguments that are passed to
-                ``ax.legend()``. Defaults to {}.
+                ``ax.legend()``. Defaults to None.
 
         Returns:
             None | tuple[matplotlib.pyplot.Figure, matplotlib.pyplot.Axes]: If `return_fig` is True, then
                 the figure and axes objects are returned for further tinkering/saving.
         """
+        if figure_kwargs is None:
+            figure_kwargs = {}
+        if plot_kwargs is None:
+            plot_kwargs = {}
+        if legend_kwargs is None:
+            legend_kwargs = {}
+
         figure_kwargs.setdefault("figsize", (9, 9))
         figure_kwargs.setdefault("dpi", 200)
         fig = plt.figure(**figure_kwargs)
@@ -1392,9 +1398,9 @@ class MonteCarloAEP(FromDictMixin, ResetValuesMixin):
         ylim_energy: tuple[float, float] = (None, None),
         ylim_loss: tuple[float, float] = (None, None),
         return_fig: bool = False,
-        figure_kwargs: dict = {},
-        plot_kwargs: dict = {},
-        legend_kwargs: dict = {},
+        figure_kwargs: dict | None = None,
+        plot_kwargs: dict | None = None,
+        legend_kwargs: dict | None = None,
     ):
         """
         Plot timeseries of monthly/daily gross energy, availability and curtailment.
@@ -1413,11 +1419,11 @@ class MonteCarloAEP(FromDictMixin, ResetValuesMixin):
                 limits for the loss plot (bottom figure). Defaults to (None, None).
             return_fig (:obj:`bool`, optional): Flag to return the figure and axes objects. Defaults to False.
             figure_kwargs (:obj:`dict`, optional): Additional figure instantiation keyword arguments
-                that are passed to ``plt.figure()``. Defaults to {}.
+                that are passed to ``plt.figure()``. Defaults to None.
             plot_kwargs (:obj:`dict`, optional): Additional plotting keyword arguments that are passed to
-                ``ax.scatter()``. Defaults to {}.
+                ``ax.scatter()``. Defaults to None.
             legend_kwargs (:obj:`dict`, optional): Additional legend keyword arguments that are passed to
-                ``ax.legend()``. Defaults to {}.
+                ``ax.legend()``. Defaults to None.
 
         Returns:
             None | tuple[matplotlib.pyplot.Figure, tuple[matplotlib.pyplot.Axes, matplotlib.pyplot.Axes]]:
@@ -1448,9 +1454,9 @@ class MonteCarloAEP(FromDictMixin, ResetValuesMixin):
         ylim_availability: tuple[float, float] = (None, None),
         ylim_curtail: tuple[float, float] = (None, None),
         return_fig: bool = False,
-        figure_kwargs: dict = {},
-        plot_kwargs: dict = {},
-        annotate_kwargs: dict = {},
+        figure_kwargs: dict | None = None,
+        plot_kwargs: dict | None = None,
+        annotate_kwargs: dict | None = None,
     ) -> None | tuple[plt.Figure, plt.Axes]:
         """
         Plot a distribution of AEP values from the Monte-Carlo OA method
@@ -1470,11 +1476,11 @@ class MonteCarloAEP(FromDictMixin, ResetValuesMixin):
                 y-axis plotting display limits for the curtailment subplot. Defaults to (None, None).
             return_fig (:obj:`bool`, optional): Flag to return the figure and axes objects. Defaults to False.
             figure_kwargs (:obj:`dict`, optional): Additional figure instantiation keyword arguments
-                that are passed to ``plt.figure()``. Defaults to {}.
+                that are passed to ``plt.figure()``. Defaults to None.
             plot_kwargs (:obj:`dict`, optional): Additional plotting keyword arguments that are passed to
-                ``ax.hist()``. Defaults to {}.
+                ``ax.hist()``. Defaults to None.
             annotate_kwargs (:obj:`dict`, optional): Additional annotation keyword arguments that are
-                passed to ``ax.annotate()``. Defaults to {}.
+                passed to ``ax.annotate()``. Defaults to None
 
         Returns:
             None | tuple[matplotlib.pyplot.Figure, matplotlib.pyplot.Axes]: If `return_fig` is True, then
@@ -1502,10 +1508,10 @@ class MonteCarloAEP(FromDictMixin, ResetValuesMixin):
         with_points: bool = False,
         points_label: str = "Individual AEP Estimates",
         return_fig: bool = False,
-        figure_kwargs: dict = {},
-        plot_kwargs_box: dict = {},
-        plot_kwargs_points: dict = {},
-        legend_kwargs: dict = {},
+        figure_kwargs: dict | None = None,
+        plot_kwargs_box: dict | None = None,
+        plot_kwargs_points: dict | None = None,
+        legend_kwargs: dict | None = None,
     ) -> None | tuple[plt.Figure, plt.Axes]:
         """Plot box plots of AEP results sliced by a specified Monte Carlo parameter
 
@@ -1520,13 +1526,13 @@ class MonteCarloAEP(FromDictMixin, ResetValuesMixin):
                 Defaults to None.
             return_fig (:obj:`bool`, optional): Flag to return the figure and axes objects. Defaults to False.
             figure_kwargs (:obj:`dict`, optional): Additional figure instantiation keyword arguments
-                that are passed to ``plt.figure()``. Defaults to {}.
+                that are passed to ``plt.figure()``. Defaults to None.
             plot_kwargs_box (:obj:`dict`, optional): Additional plotting keyword arguments that are passed to
-                ``ax.boxplot()``. Defaults to {}.
+                ``ax.boxplot()``. Defaults to None.
             plot_kwargs_points (:obj:`dict`, optional): Additional plotting keyword arguments that are passed to
-                ``ax.boxplot()``. Defaults to {}.
+                ``ax.boxplot()``. Defaults to None.
             legend_kwargs (:obj:`dict`, optional): Additional legend keyword arguments that are passed to
-                ``ax.legend()``. Defaults to {}.
+                ``ax.legend()``. Defaults to None.
 
         Returns:
             None | tuple[matplotlib.pyplot.Figure, matplotlib.pyplot.Axes, dict]: If `return_fig` is
