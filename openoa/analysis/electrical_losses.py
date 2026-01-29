@@ -23,7 +23,6 @@ from openoa.logging import logging, logged_method_call
 from openoa.utils.plot import set_styling
 from openoa.analysis._analysis_validators import validate_UQ_input, validate_half_closed_0_1_right
 
-
 logger = logging.getLogger(__name__)
 set_styling()
 
@@ -170,9 +169,9 @@ class ElectricalLosses(FromDictMixin, ResetValuesMixin):
             initial_parameters["uncertainty_scada"] = self.uncertainty_scada
             self.uncertainty_scada = uncertainty_scada
         if uncertainty_correction_threshold is not None:
-            initial_parameters[
-                "uncertainty_correction_threshold"
-            ] = self.uncertainty_correction_threshold
+            initial_parameters["uncertainty_correction_threshold"] = (
+                self.uncertainty_correction_threshold
+            )
             self.uncertainty_correction_threshold = uncertainty_correction_threshold
 
         # Setup Monte Carlo approach, and calculate the electrical losses
@@ -334,9 +333,9 @@ class ElectricalLosses(FromDictMixin, ResetValuesMixin):
         xlim: tuple[datetime.datetime | None, datetime.datetime | None] = (None, None),
         ylim: tuple[float | None, float | None] = (None, None),
         return_fig: bool = False,
-        figure_kwargs: dict = {},
-        legend_kwargs: dict = {},
-        plot_kwargs: dict = {},
+        figure_kwargs: dict | None = None,
+        legend_kwargs: dict | None = None,
+        plot_kwargs: dict | None = None,
     ) -> None | tuple[plt.Figure, plt.Axes]:
         """Plots the monthly timeseries of electrical losses as a percent.
 
@@ -348,16 +347,23 @@ class ElectricalLosses(FromDictMixin, ResetValuesMixin):
             return_fig(:obj:`bool`, optional): Set to True to return the figure and axes objects,
                 otherwise set to False. Defaults to False.
             figure_kwargs(:obj:`dict`, optional): Additional keyword arguments that should be
-                passed to ``plt.figure()``. Defaults to {}.
-            scatter_kwargs(:obj:`dict`, optional): Additional keyword arguments that should be
-                passed to ``ax.plot()``. Defaults to {}.
+                passed to ``plt.figure()``. Defaults to None.
             legend_kwargs(:obj:`dict`, optional): Additional keyword arguments that should be
-                passed to ``ax.legend()``. Defaults to {}.
+                passed to ``ax.legend()``. Defaults to None.
+            plot_kwargs(:obj:`dict`, optional): Additional keyword arguments that should be
+                passed to ``ax.plot()``. Defaults to None.
 
         Returns:
             None | tuple[plt.Figure, plt.Axes]: If :py:attr:`return_fig`, then return the figure
                 and axes objects in addition to showing the plot.
         """
+        if figure_kwargs is None:
+            figure_kwargs = {}
+        if legend_kwargs is None:
+            legend_kwargs = {}
+        if plot_kwargs is None:
+            plot_kwargs = {}
+
         figure_kwargs.setdefault("dpi", 200)
         fig = plt.figure(**figure_kwargs)
         ax = fig.add_subplot(111)
@@ -401,9 +407,9 @@ def create_ElectricalLosses(
     project: PlantData,
     UQ: bool = __defaults_UQ,
     num_sim: int = __defaults_num_sim,
-    uncertainty_correction_threshold: NDArrayFloat
-    | tuple[float, float]
-    | float = __defaults_uncertainty_correction_threshold,
+    uncertainty_correction_threshold: (
+        NDArrayFloat | tuple[float, float] | float
+    ) = __defaults_uncertainty_correction_threshold,
     uncertainty_meter: NDArrayFloat | tuple[float, float] | float = __defaults_uncertainty_meter,
     uncertainty_scada: NDArrayFloat | tuple[float, float] | float = __defaults_uncertainty_scada,
 ) -> ElectricalLosses:
