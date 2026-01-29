@@ -19,7 +19,6 @@ from openoa.schema import FromDictMixin
 from openoa.logging import logging, logged_method_call
 from openoa.analysis._analysis_validators import validate_half_closed_0_1_left
 
-
 logger = logging.getLogger(__name__)
 plot.set_styling()
 
@@ -190,8 +189,8 @@ class EYAGapAnalysis(FromDictMixin):
         ylabel: str = "Energy (GWh/yr)",
         ylim: tuple[float, float] = (None, None),
         return_fig: bool = False,
-        plot_kwargs: dict = {},
-        figure_kwargs: dict = {},
+        plot_kwargs: dict | None = None,
+        figure_kwargs: dict | None = None,
     ) -> None | tuple:
         """
         Produce a waterfall plot showing the progression from the EYA estimates to the calculated OA
@@ -210,9 +209,9 @@ class EYAGapAnalysis(FromDictMixin):
             figure_kwargs(:obj:`dict`, optional): Additional keyword arguments that should be
                 passed to ``plt.figure()``. Defaults to {}.
             plot_kwargs(:obj:`dict`, optional): Additional keyword arguments that should be
-                passed to ``ax.plot()``. Defaults to {}.
+                passed to ``ax.plot()``. Defaults to None.
             legend_kwargs(:obj:`dict`, optional): Additional keyword arguments that should be
-                passed to ``ax.legend()``. Defaults to {}.
+                passed to ``ax.legend()``. Defaults to None.
 
         Returns:
             None | tuple[plt.Figure, plt.Axes]: If :py:attr:`return_fig`, then return the figure
