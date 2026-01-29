@@ -211,7 +211,7 @@ def gap_fill_data_frame(data: pd.DataFrame, dt_col: str, freq: str) -> pd.DataFr
     if (not missing_dt.empty) and missing_dt.notnull().any():
         gap_df = pd.DataFrame(columns=data.columns)
         gap_df[dt_col] = missing_dt
-        if gap_df.shape[0] > 0:
+        if gap_df.shape[0] > 0 and gap_df.isna().sum() != gap_df.size:
             data = pd.concat([data, gap_df], axis=0)
     try:
         return data.sort_values(dt_col)

@@ -30,6 +30,7 @@ dependencies = [
     "pyyaml",
     "tabulate",
     "ipython",
+    "ipywidgets",
 ]
 keywords = [
     "python3",
