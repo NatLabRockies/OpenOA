@@ -141,7 +141,7 @@ filterwarnings = [
 [tool.black]
 # https://github.com/psf/black
 line-length = 100
-target-version = ["py38", "py39", "py310"]
+target-version = ["py310", "py311", "py312", "py313"]
 include = '\.pyi?$'
 exclude = '''
 # A regex preceded with ^/ will apply only to files and directories
@@ -167,7 +167,7 @@ exclude = '''
 [tool.isort]
 # https://github.com/PyCQA/isort
 profile = "black"
-py_version = 39
+py_version = 310
 src_paths = ["isort", "test"]
 line_length = "100"
 length_sort = "True"
