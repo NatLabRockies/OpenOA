@@ -1,7 +1,7 @@
 # Changelog
 All notable changes to this project will be documented in this file. If you make a notable change to the project, please add a line describing the change to the "unreleased" section. The maintainers will make an effort to keep the [Github Releases](https://github.com/NREL/OpenOA/releases) page up to date with this changelog. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## v3.1.4 - 2025-12-24
+## v3.1.4 - 2026-01-29
 
 - During the custom test collection, convert the `Path` objects to `str` to avoid issues with the
   type enforcement of `list[str]` for `args` in Pytest v9.
@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file. If you make
 - Update the min and max versions to test in the testing CI workflow.
 - Utilizes pytest xfail and subtests to manange intermittent and finnicky test failures until a
   long-term solution can be implemented.
+- Pin Pandas maximum version to the 2.x release cycle.
 
 ## v3.1.3 - 2025-01-31
 
