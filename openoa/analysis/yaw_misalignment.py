@@ -630,17 +630,6 @@ class StaticYawMisalignment(FromDictMixin, ResetValuesMixin):
                 keys.
         """
 
-        if figure_kwargs is None:
-            figure_kwargs = {}
-        if plot_kwargs_curve is None:
-            plot_kwargs_curve = {}
-        if plot_kwargs_line is None:
-            plot_kwargs_line = {}
-        if plot_kwargs_fill is None:
-            plot_kwargs_fill = {}
-        if legend_kwargs is None:
-            legend_kwargs = {}
-
         if self.use_power_coeff:
             power_performance_label = "Normalized Cp (-)"
         else:

@@ -33,7 +33,6 @@ from openoa.analysis._analysis_validators import (
     validate_reanalysis_selections,
 )
 
-
 logger = logging.getLogger(__name__)
 plot.set_styling()
 
@@ -573,9 +572,9 @@ class TurbineLongTermGrossEnergy(FromDictMixin, ResetValuesMixin):
         ylim: tuple[float, float] = (None, None),
         legend: bool = False,
         return_fig: bool = False,
-        figure_kwargs: dict = {},
-        legend_kwargs: dict = {},
-        plot_kwargs: dict = {},
+        figure_kwargs: dict | None = None,
+        legend_kwargs: dict | None = None,
+        plot_kwargs: dict | None = None,
     ):
         """Plot the raw and flagged power curve data.
 
@@ -595,11 +594,11 @@ class TurbineLongTermGrossEnergy(FromDictMixin, ResetValuesMixin):
             return_fig(:obj:`bool`, optional): Set to True to return the figure and axes objects,
                 otherwise set to False. Defaults to False.
             figure_kwargs(:obj:`dict`, optional): Additional keyword arguments that should be passed
-                to ``plt.figure()``. Defaults to {}.
+                to ``plt.figure()``. Defaults to None.
             plot_kwargs(:obj:`dict`, optional): Additional keyword arguments that should be passed
-                to ``ax.scatter()``. Defaults to {}.
+                to ``ax.scatter()``. Defaults to None.
             legend_kwargs(:obj:`dict`, optional): Additional keyword arguments that should be passed
-                to ``ax.legend()``. Defaults to {}.
+                to ``ax.legend()``. Defaults to None.
 
         Returns:
             None | tuple[matplotlib.pyplot.Figure, matplotlib.pyplot.Axes]: If `return_fig` is True, then
@@ -631,9 +630,9 @@ class TurbineLongTermGrossEnergy(FromDictMixin, ResetValuesMixin):
         ylim: tuple[float, float] = (None, None),
         legend: bool = False,
         return_fig: bool = False,
-        figure_kwargs: dict = {},
-        legend_kwargs: dict = {},
-        plot_kwargs: dict = {},
+        figure_kwargs: dict | None = None,
+        legend_kwargs: dict | None = None,
+        plot_kwargs: dict | None = None,
     ):
         """Plot the raw, imputed, and modeled power curve data.
 
@@ -653,16 +652,23 @@ class TurbineLongTermGrossEnergy(FromDictMixin, ResetValuesMixin):
             return_fig(:obj:`bool`, optional): Set to True to return the figure and axes objects,
                 otherwise set to False. Defaults to False.
             figure_kwargs(:obj:`dict`, optional): Additional keyword arguments that should be passed
-                to ``plt.figure()``. Defaults to {}.
+                to ``plt.figure()``. Defaults to None.
             plot_kwargs(:obj:`dict`, optional): Additional keyword arguments that should be passed
-                to ``ax.scatter()``. Defaults to {}.
+                to ``ax.scatter()``. Defaults to None.
             legend_kwargs(:obj:`dict`, optional): Additional keyword arguments that should be passed
-                to ``ax.legend()``. Defaults to {}.
+                to ``ax.legend()``. Defaults to None.
 
         Returns:
             None | tuple[matplotlib.pyplot.Figure, matplotlib.pyplot.Axes]: If :py:attr`return_fig`
                 is True, then the figure and axes objects are returned for further tinkering/saving.
         """
+        if figure_kwargs is None:
+            figure_kwargs = {}
+        if plot_kwargs is None:
+            plot_kwargs = {}
+        if legend_kwargs is None:
+            legend_kwargs = {}
+
         turbines = list(self.turbine_model_dict.keys()) if turbines is None else turbines
         num_cols = len(turbines)
         num_rows = int(np.ceil(num_cols / max_cols))
