@@ -50,7 +50,6 @@ from openoa.schema import FromDictMixin, ResetValuesMixin
 from openoa.logging import logging, logged_method_call
 from openoa.analysis._analysis_validators import validate_UQ_input, validate_half_closed_0_1_right
 
-
 logger = logging.getLogger(__name__)
 NDArrayFloat = npt.NDArray[np.float64]
 plot.set_styling()
@@ -588,11 +587,11 @@ class StaticYawMisalignment(FromDictMixin, ResetValuesMixin):
         xlim: tuple[float, float] = (None, None),
         ylim: tuple[float, float] = (None, None),
         return_fig: bool = False,
-        figure_kwargs: dict = None,
-        plot_kwargs_curve: dict = {},
-        plot_kwargs_line: dict = {},
-        plot_kwargs_fill: dict = {},
-        legend_kwargs: dict = {},
+        figure_kwargs: dict | None = None,
+        plot_kwargs_curve: dict | None = None,
+        plot_kwargs_line: dict | None = None,
+        plot_kwargs_fill: dict | None = None,
+        legend_kwargs: dict | None = None,
     ):
         """Plots power performance vs. wind vane angle along with the best-fit cosine curve for
         each wind speed bin for each turbine specified. The mean wind vane angle and the wind vane
@@ -614,15 +613,15 @@ class StaticYawMisalignment(FromDictMixin, ResetValuesMixin):
             figure_kwargs (:obj:`dict`, optional): Additional figure instantiation keyword arguments
                 that are passed to ``plt.figure()``. Defaults to None.
             plot_kwargs_curve (:obj:`dict`, optional): Additional plotting keyword arguments that are passed to
-                ``ax.plot()`` for plotting lines for the power performance vs. wind vane plots. Defaults to {}.
+                ``ax.plot()`` for plotting lines for the power performance vs. wind vane plots. Defaults to None.
             plot_kwargs_line (:obj:`dict`, optional): Additional plotting keyword arguments that are passed to
                 ``ax.plot()`` for plotting vertical lines indicating mean vane angle and vane angle where
-                power is maximized. Defaults to {}.
+                power is maximized. Defaults to None.
             plot_kwargs_fill (:obj:`dict`, optional): If :py:attr:`UQ` is True, additional plotting keyword arguments
                 that are passed to ``ax.fill_between()`` for plotting shading regions for 95% confidence
-                intervals for power performance vs. wind vane. Defaults to {}.
+                intervals for power performance vs. wind vane. Defaults to None.
             legend_kwargs (:obj:`dict`, optional): Additional legend keyword arguments that are passed to
-                ``ax.legend()`` for the power performance vs. wind vane plots. Defaults to {}.
+                ``ax.legend()`` for the power performance vs. wind vane plots. Defaults to None.
         Returns:
             None | dict of tuple[matplotlib.pyplot.Figure, matplotlib.pyplot.Axes]:
                 If :py:attr:`return_fig` is True, then a dictionary containing the figure and axes object(s)
@@ -630,6 +629,17 @@ class StaticYawMisalignment(FromDictMixin, ResetValuesMixin):
                 tinkering/saving. The turbine names in the `turbine_ids` aregument are the dicitonary
                 keys.
         """
+
+        if figure_kwargs is None:
+            figure_kwargs = {}
+        if plot_kwargs_curve is None:
+            plot_kwargs_curve = {}
+        if plot_kwargs_line is None:
+            plot_kwargs_line = {}
+        if plot_kwargs_fill is None:
+            plot_kwargs_fill = {}
+        if legend_kwargs is None:
+            legend_kwargs = {}
 
         if self.use_power_coeff:
             power_performance_label = "Normalized Cp (-)"
