@@ -204,14 +204,14 @@ def gap_fill_data_frame(data: pd.DataFrame, dt_col: str, freq: str) -> pd.DataFr
 
     """
     # If the dataframe is empty, just return it.
-    if data.shape[0] == 0:
+    if data.empty:
         return data
 
     missing_dt = find_time_gaps(data[dt_col], freq)
     if (not missing_dt.empty) and missing_dt.notnull().any():
         gap_df = pd.DataFrame(columns=data.columns)
         gap_df[dt_col] = missing_dt
-        if gap_df.shape[0] > 0 and gap_df.isna().sum() != gap_df.size:
+        if not (gap_df.empty or gap_df.isna().values.sum() != gap_df.size):
             data = pd.concat([data, gap_df], axis=0)
     try:
         return data.sort_values(dt_col)
