@@ -55,7 +55,6 @@ from openoa.analysis._analysis_validators import (
     validate_reanalysis_selections,
 )
 
-
 logger = logging.getLogger(__name__)
 NDArrayFloat = npt.NDArray[np.float64]
 plot.set_styling()
@@ -568,9 +567,9 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
             initial_parameters["correct_for_derating"] = correct_for_derating
             self.correct_for_derating = correct_for_derating
         if derating_filter_wind_speed_start is not None:
-            initial_parameters[
-                "derating_filter_wind_speed_start"
-            ] = self.derating_filter_wind_speed_start
+            initial_parameters["derating_filter_wind_speed_start"] = (
+                self.derating_filter_wind_speed_start
+            )
             self.derating_filter_wind_speed_start = derating_filter_wind_speed_start
         if max_power_filter is not None:
             initial_parameters["max_power_filter"] = self.max_power_filter
@@ -594,9 +593,9 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
             initial_parameters["num_years_LT"] = self.num_years_LT
             self.num_years_LT = num_years_LT
         if assume_no_wakes_high_ws_LT_corr is not None:
-            initial_parameters[
-                "assume_no_wakes_high_ws_LT_corr"
-            ] = self.assume_no_wakes_high_ws_LT_corr
+            initial_parameters["assume_no_wakes_high_ws_LT_corr"] = (
+                self.assume_no_wakes_high_ws_LT_corr
+            )
             self.assume_no_wakes_high_ws_LT_corr = assume_no_wakes_high_ws_LT_corr
         if no_wakes_ws_thresh_LT_corr is not None:
             initial_parameters["no_wakes_ws_thresh_LT_corr"] = self.no_wakes_ws_thresh_LT_corr
@@ -639,13 +638,13 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
             # Create columns for turbine power and wind speed during normal operation (NaN otherwise)
             for t in self.turbine_ids:
                 valid_inds = ~self.aggregate_df_sample[("derate_flag", t)]
-                self.aggregate_df_sample.loc[
-                    valid_inds, ("power_normal", t)
-                ] = self.aggregate_df_sample.loc[valid_inds, ("WTUR_W", t)]
+                self.aggregate_df_sample.loc[valid_inds, ("power_normal", t)] = (
+                    self.aggregate_df_sample.loc[valid_inds, ("WTUR_W", t)]
+                )
                 valid_inds = ~self.aggregate_df_sample[("abnormal_ws_flag", t)]
-                self.aggregate_df_sample.loc[
-                    valid_inds, ("windspeed_normal", t)
-                ] = self.aggregate_df_sample.loc[valid_inds, ("WMET_HorWdSpd", t)]
+                self.aggregate_df_sample.loc[valid_inds, ("windspeed_normal", t)] = (
+                    self.aggregate_df_sample.loc[valid_inds, ("WMET_HorWdSpd", t)]
+                )
 
             if self.correct_for_ws_heterogeneity:
                 # Create a representative power curve model for the turbines in the plant
@@ -659,15 +658,15 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
                 # Create column for speedup factor during normal operation (NaN otherwise)
                 for t in self.turbine_ids:
                     valid_inds = ~self.aggregate_df_sample[("abnormal_ws_flag", t)]
-                    self.aggregate_df_sample.loc[
-                        valid_inds, ("speedup_factor_normal", t)
-                    ] = self.aggregate_df_sample.loc[valid_inds, ("speedup_factor", t)]
+                    self.aggregate_df_sample.loc[valid_inds, ("speedup_factor_normal", t)] = (
+                        self.aggregate_df_sample.loc[valid_inds, ("speedup_factor", t)]
+                    )
 
                 # Initialize columns for estimated freestream wind speeds and powers
                 new_cols = ["windspeed_freestream_estimate", "power_freestream_estimate"]
-                self.aggregate_df_sample[
-                    list(itertools.product(new_cols, self.turbine_ids))
-                ] = np.nan
+                self.aggregate_df_sample[list(itertools.product(new_cols, self.turbine_ids))] = (
+                    np.nan
+                )
 
             # Find freestream turbines for each wind direction. Update the dictionary only when the set of turbines
             # differs from the previous wind direction bin.
@@ -758,10 +757,12 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
                     ).values
 
                     # Interpolate power curve to estimate potential freestream power
-                    self.aggregate_df_sample.loc[
-                        wd_bin_flag, "power_freestream_estimate"
-                    ] = self.power_curve_func(
-                        self.aggregate_df_sample.loc[wd_bin_flag, "windspeed_freestream_estimate"]
+                    self.aggregate_df_sample.loc[wd_bin_flag, "power_freestream_estimate"] = (
+                        self.power_curve_func(
+                            self.aggregate_df_sample.loc[
+                                wd_bin_flag, "windspeed_freestream_estimate"
+                            ]
+                        )
                     )
 
                     # Get mean estimated freestream power of normally operating unwaked turbines
@@ -904,13 +905,13 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
                         ("potential_turbine_power", t),
                     ] = turbine_power_max
                 else:
-                    self.aggregate_df_sample.loc[
-                        valid_inds, ("potential_turbine_power", t)
-                    ] = self.aggregate_df_sample.loc[valid_inds, "power_mean_freestream"]
+                    self.aggregate_df_sample.loc[valid_inds, ("potential_turbine_power", t)] = (
+                        self.aggregate_df_sample.loc[valid_inds, "power_mean_freestream"]
+                    )
 
-                self.aggregate_df_sample.loc[
-                    ~valid_inds, ("potential_turbine_power", t)
-                ] = self.aggregate_df_sample.loc[~valid_inds, ("WTUR_W", t)]
+                self.aggregate_df_sample.loc[~valid_inds, ("potential_turbine_power", t)] = (
+                    self.aggregate_df_sample.loc[~valid_inds, ("WTUR_W", t)]
+                )
                 turbine_wake_losses_por[i] = (
                     1
                     - self.aggregate_df_sample[("WTUR_W", t)].sum()
@@ -1606,10 +1607,10 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
         ylim_efficiency: tuple[float, float] = (None, None),
         ylim_energy: tuple[float, float] = (None, None),
         return_fig: bool = False,
-        figure_kwargs: dict = None,
-        plot_kwargs_line: dict = {},
-        plot_kwargs_fill: dict = {},
-        legend_kwargs: dict = {},
+        figure_kwargs: dict | None = None,
+        plot_kwargs_line: dict | None = None,
+        plot_kwargs_fill: dict | None = None,
+        legend_kwargs: dict | None = None,
     ):
         """
         Plots wake losses in the form of wind farm efficiency as well as normalized wind plant energy
@@ -1634,20 +1635,29 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
                 that are passed to `plt.figure()`. Defaults to None.
             plot_kwargs_line (:obj:`dict`, optional): Additional plotting keyword arguments that are passed to
                 ``ax.plot()`` for plotting lines for the wind farm efficiency and, if `plot_norm_energy` is True,
-                energy distributions subplots. Defaults to {}.
+                energy distributions subplots. Defaults to None.
             plot_kwargs_fill (:obj:`dict`, optional): If `UQ` is True, additional plotting keyword arguments
                 that are passed to ``ax.fill_between()`` for plotting shading regions for 95% confidence
                 intervals for the wind farm efficiency and, if `plot_norm_energy` is True, energy
-                distributions subplots. Defaults to {}.
+                distributions subplots. Defaults to None.
             legend_kwargs (:obj:`dict`, optional): Additional legend keyword arguments that are passed to
                 ``ax.legend()`` for the wind farm efficiency and, if `plot_norm_energy` is True, energy
-                distributions subplots. Defaults to {}.
+                distributions subplots. Defaults to None.
         Returns:
             None | tuple[matplotlib.pyplot.Figure, matplotlib.pyplot.Axes] | tuple[matplotlib.pyplot.Figure, tuple [matplotlib.pyplot.Axes, matplotlib.pyplot.Axes]]:
                 If :py:attr:`return_fig` is True, then the figure and axes object(s), corresponding to the wake
                 loss plot or, if :py:attr:`plot_norm_energy` is True, wake loss and normalized energy plots, are
                 returned for further tinkering/saving.
         """
+
+        if figure_kwargs is None:
+            figure_kwargs = {}
+        if plot_kwargs_line is None:
+            plot_kwargs_line = {}
+        if plot_kwargs_fill is None:
+            plot_kwargs_fill = {}
+        if legend_kwargs is None:
+            legend_kwargs = {}
 
         wd_bins = np.arange(0.0, 360.0, self.wd_bin_width_LT_corr)
 
@@ -1698,10 +1708,10 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
         ylim_efficiency: tuple[float, float] = (None, None),
         ylim_energy: tuple[float, float] = (None, None),
         return_fig: bool = False,
-        figure_kwargs: dict = None,
-        plot_kwargs_line: dict = {},
-        plot_kwargs_fill: dict = {},
-        legend_kwargs: dict = {},
+        figure_kwargs: dict | None = None,
+        plot_kwargs_line: dict | None = None,
+        plot_kwargs_fill: dict | None = None,
+        legend_kwargs: dict | None = None,
     ):
         """
         Plots wake losses in the form of wind farm efficiency as well as normalized wind plant energy
@@ -1726,20 +1736,29 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
                 that are passed to ``plt.figure()``. Defaults to None.
             plot_kwargs_line (:obj:`dict`, optional): Additional plotting keyword arguments that are passed to
                 ``ax.plot()`` for plotting lines for the wind farm efficiency and, if :py:attr:`plot_norm_energy` is True,
-                energy distributions subplots. Defaults to {}.
+                energy distributions subplots. Defaults to None.
             plot_kwargs_fill (:obj:`dict`, optional): If `UQ` is True, additional plotting keyword arguments
                 that are passed to ``ax.fill_between()`` for plotting shading regions for 95% confidence
                 intervals for the wind farm efficiency and, if :py:attr:`plot_norm_energy` is True, energy
-                distributions subplots. Defaults to {}.
+                distributions subplots. Defaults to None.
             legend_kwargs (:obj:`dict`, optional): Additional legend keyword arguments that are passed to
                 ``ax.legend()`` for the wind farm efficiency and, if :py:attr:`plot_norm_energy` is True, energy
-                distributions subplots. Defaults to {}.
+                distributions subplots. Defaults to None.
         Returns:
             None | tuple[matplotlib.pyplot.Figure, matplotlib.pyplot.Axes] | tuple[matplotlib.pyplot.Figure, tuple [matplotlib.pyplot.Axes, matplotlib.pyplot.Axes]]:
                 If :py:attr:`return_fig` is True, then the figure and axes object(s), corresponding to the wake
                 loss plot or, if :py:attr:`plot_norm_energy` is True, wake loss and normalized energy plots, are
                 returned for further tinkering/saving.
         """
+
+        if figure_kwargs is None:
+            figure_kwargs = {}
+        if plot_kwargs_line is None:
+            plot_kwargs_line = {}
+        if plot_kwargs_fill is None:
+            plot_kwargs_fill = {}
+        if legend_kwargs is None:
+            legend_kwargs = {}
 
         ws_bins_orig = np.arange(0.0, 31.0, self.ws_bin_width_LT_corr)
 
