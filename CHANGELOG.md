@@ -10,6 +10,8 @@ All notable changes to this project will be documented in this file. If you make
 - Adds a maximum version for scikit-learn for a change in their `__sklearn_tags__` support.
 - Deprecate support for Python 3.8 and 3.9, with additional support for Python 3.12 and 3.13.
 - Update the min and max versions to test in the testing CI workflow.
+- Utilizes pytest xfail and subtests to manange intermittent and finnicky test failures until a
+  long-term solution can be implemented.
 
 ## v3.1.3 - 2025-01-31
 
