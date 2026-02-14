@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenOA | Wind Energy Analytics</title>
+    <meta name="description" content="Advanced Annual Energy Production (AEP) analysis dashboard powered by OpenOA.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #00f2fe;
+            --secondary: #4facfe;
+            --bg-dark: #0a0e14;
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --text-main: #e0e6ed;
+            --text-dim: #94a3b8;
+            --accent: #ff007a;
+            --success: #00e676;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            overflow-x: hidden;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Background Effects */
+        .bg-gradient {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                radial-gradient(circle at 10% 20%, rgba(0, 242, 254, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(79, 172, 254, 0.05) 0%, transparent 40%);
+            z-index: -1;
+        }
+
+        .turbine-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('openoa_dashboard_background.png');
+            /* Created artifact */
+            background-size: cover;
+            background-position: center;
+            opacity: 0.15;
+            filter: grayscale(0.5) contrast(1.2);
+            z-index: -2;
+        }
+
+        header {
+            width: 100%;
+            padding: 2rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            margin-bottom: 3rem;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 800;
+            letter-spacing: -1px;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 2rem;
+            padding-bottom: 5rem;
+        }
+
+        @media (max-width: 900px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Glass Cards */
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 2rem;
+            transition: var(--transition);
+        }
+
+        .card:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+        }
+
+        p {
+            color: var(--text-dim);
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+
+        /* Controls */
+        .btn {
+            width: 100%;
+            padding: 1.2rem;
+            border: none;
+            border-radius: 16px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #000;
+            font-weight: 800;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: var(--transition);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn:hover {
+            filter: brightness(1.1);
+            transform: scale(1.02);
+            box-shadow: 0 0 30px rgba(0, 242, 254, 0.3);
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn:disabled {
+            background: #2d3748;
+            color: #718096;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Results Display */
+        .results-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .stat-card {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 16px;
+            padding: 1.5rem;
+            border-left: 4px solid var(--primary);
+        }
+
+        .stat-label {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 800;
+        }
+
+        .stat-unit {
+            font-size: 0.9rem;
+            color: var(--text-dim);
+            margin-left: 4px;
+        }
+
+        #loading {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 2rem;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .error {
+            color: var(--accent);
+            background: rgba(255, 0, 122, 0.1);
+            padding: 1rem;
+            border-radius: 12px;
+            margin-top: 1rem;
+            display: none;
+            font-size: 0.9rem;
+        }
+
+        /* Animations */
+        .fade-in {
+            animation: fadeIn 0.8s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="bg-gradient"></div>
+    <div class="turbine-bg"></div>
+
+    <header class="fade-in">
+        <div class="logo">OPENOA CLOUD</div>
+        <div style="font-size: 0.8rem; color: var(--text-dim);">V1.0 BETA</div>
+    </header>
+
+    <main class="container fade-in" style="animation-delay: 0.2s;">
+        <!-- Configuration Card -->
+        <div class="card">
+            <h2>Project Configuration</h2>
+            <p>Ready to analyze the <strong>ENGIE La Haute Borne</strong> dataset. This project includes SCADA, Revenue
+                Meter, and Reanalysis data (ERA5/MERRA2).</p>
+
+            <div style="margin: 2rem 0; padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 12px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                    <span>Capacity:</span>
+                    <span style="color: var(--primary);">8.2 MW</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                    <span>Analysis:</span>
+                    <span style="color: var(--primary);">Monte Carlo AEP</span>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span>Iterations:</span>
+                    <span style="color: var(--primary);">10 SIMS</span>
+                </div>
+            </div>
+
+            <button id="calcBtn" class="btn">
+                <span>Start Calculation</span>
+            </button>
+
+            <div id="loading">
+                <div class="spinner"></div>
+                <p>Computing operational AEP...</p>
+            </div>
+
+            <div id="errorMessage" class="error"></div>
+        </div>
+
+        <!-- Dashboard / Results -->
+        <div class="card" id="resultsArea">
+            <h2>Analysis Analytics</h2>
+            <p id="placeholderText">Run a calculation to populate the energy production distribution metrics.</p>
+
+            <div id="resultsContent" style="display: none;">
+                <div class="results-grid">
+                    <div class="stat-card">
+                        <span class="stat-label">Mean AEP</span>
+                        <span class="stat-value" id="aepValue">0.00</span>
+                        <span class="stat-unit">GWh</span>
+                    </div>
+                    <div class="stat-card" style="border-color: var(--accent);">
+                        <span class="stat-label">Uncertainty (σ)</span>
+                        <span class="stat-value" id="stdValue">0.00</span>
+                        <span class="stat-unit">GWh</span>
+                    </div>
+                    <div class="stat-card" style="border-color: var(--success); grid-column: span 2;">
+                        <span class="stat-label">Calculation Status</span>
+                        <div style="display: flex; align-items: center; gap: 8px; margin-top: 5px;">
+                            <div
+                                style="width: 12px; height: 12px; border-radius: 50%; background: var(--success); box-shadow: 0 0 10px var(--success);">
+                            </div>
+                            <span style="font-weight: 600;">Verified Successful</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 2rem; padding: 1.5rem; background: rgba(0,0,0,0.3); border-radius: 16px;">
+                    <h3
+                        style="font-size: 0.9rem; color: var(--text-dim); margin-bottom: 1rem; text-transform: uppercase;">
+                        Technical Metrics (JSON)</h3>
+                    <code id="metricsOutput"
+                        style="font-size: 0.75rem; color: #a5d6ff; display: block; overflow-x: auto; white-space: pre-wrap;"></code>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const calcBtn = document.getElementById('calcBtn');
+        const loading = document.getElementById('loading');
+        const resultsContent = document.getElementById('resultsContent');
+        const placeholderText = document.getElementById('placeholderText');
+        const errorMsg = document.getElementById('errorMessage');
+
+        const aepValue = document.getElementById('aepValue');
+        const stdValue = document.getElementById('stdValue');
+        const metricsOutput = document.getElementById('metricsOutput');
+
+        calcBtn.addEventListener('click', async () => {
+            // UI State
+            calcBtn.disabled = true;
+            loading.style.display = 'flex';
+            errorMsg.style.display = 'none';
+            resultsContent.style.display = 'none';
+            placeholderText.style.display = 'block';
+
+            try {
+                const response = await fetch('/calculate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                // Check if response is JSON
+                const contentType = response.headers.get("content-type");
+                if (!contentType || !contentType.includes("application/json")) {
+                    const text = await response.text();
+                    throw new Error(`Server returned non-JSON response. Is the server running? \n\n${text.substring(0, 100)}`);
+                }
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.detail || 'Calculation failed');
+                }
+
+                // Update UI
+                aepValue.innerText = data.aep_GWh.toFixed(2);
+                stdValue.innerText = data.aep_std.toFixed(4);
+                metricsOutput.innerText = JSON.stringify(data.metrics, null, 2);
+
+                placeholderText.style.display = 'none';
+                resultsContent.style.display = 'block';
+
+            } catch (err) {
+                console.error(err);
+                errorMsg.innerText = `Error: ${err.message}`;
+                errorMsg.style.display = 'block';
+            } finally {
+                loading.style.display = 'none';
+                calcBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+
+</html>

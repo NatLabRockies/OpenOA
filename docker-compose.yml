@@ -1,0 +1,9 @@
+services:
+  openoa-api:
+    build: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./examples/data:/app/examples/data
+    environment:
+      - LOG_LEVEL=INFO

@@ -1,0 +1,23 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.pyc
+.venv
+.env
+
+# Tests
+.pytest_cache
+.coverage
+htmlcov
+
+# IDE
+.vscode
+.idea
+
+# OA Data (Exclude large datasets, but KEEP la_haute_borne for demo)
+examples/data/kelmarsh
+examples/data/penmanshiel
+examples/data/cleansed

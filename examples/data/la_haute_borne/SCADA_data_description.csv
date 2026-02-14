@@ -1,0 +1,10 @@
+Variable_name;Variable_long_name;Unit_long_name;Comment
+Ws;Wind_speed;m/s;Average wind speed
+Ot;Outdoor_temperature;deg_C;
+Ya;Nacelle_angle;deg;
+Rm;Torque;Nm;
+Wa;Absolute_wind_direction;deg;
+Ba;Pitch_angle;deg;
+Ds;Generator_speed;rpm;
+Va;Vane_position;deg;
+P;Active_power;kW;
