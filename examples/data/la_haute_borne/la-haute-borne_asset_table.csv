@@ -1,0 +1,5 @@
+Wind_turbine_name,Latitude,Longitude,elevation_m,Rated_power,Hub_height_m,Rotor_diameter_m,Manufacturer,Model
+R80711,48.4569,5.5847,411,2050,80,82,Senvion,MM82
+R80721,48.4497,5.5869,411,2050,80,82,Senvion,MM82
+R80736,48.4461,5.5925,411,2050,80,82,Senvion,MM82
+R80790,48.4536,5.5875,411,2050,80,82,Senvion,MM82

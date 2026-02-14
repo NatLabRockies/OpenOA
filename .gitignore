@@ -41,3 +41,6 @@ sphinx/examplesout.ipynb
 
 .ipython
 *.nc
+
+# Allow La Haute Borne data for deployment
+!examples/data/la_haute_borne/*.csv
