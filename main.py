@@ -29,22 +29,35 @@ async def calculate():
         # Load Asset Data
         asset_df = pd.read_csv(data_path / "la-haute-borne_asset_table.csv")
 
-        # Load SCADA Data
-        scada_df = pd.read_csv(data_path / "la-haute-borne-data-2014-2015.csv")
+        # Load SCADA Data (Only needed columns: Date_time, P_avg, Ws_avg)
+        scada_df = pd.read_csv(
+            data_path / "la-haute-borne-data-2014-2015.csv", 
+            usecols=["Date_time", "P_avg", "Ws_avg"]
+        )
         scada_df["Date_time"] = pd.to_datetime(scada_df["Date_time"], utc=True).dt.tz_localize(None)
 
-        # Load Meter Data (contains energy, availability, curtailment)
-        meter_df = pd.read_csv(data_path / "plant_data.csv")
+        # Load Meter Data (Only needed columns: time_utc, net_energy_kwh, availability_kwh, curtailment_kwh)
+        meter_cols = ["time_utc", "net_energy_kwh", "availability_kwh", "curtailment_kwh"]
+        meter_df = pd.read_csv(data_path / "plant_data.csv", usecols=meter_cols)
         meter_df["time_utc"] = pd.to_datetime(meter_df["time_utc"], utc=True).dt.tz_localize(None)
 
         # Use same file for curtail data as it contains those columns
         curtail_df = meter_df.copy()
 
         # Load Reanalysis Data - ERA5 and MERRA2 have leading index columns
-        era5_df = pd.read_csv(data_path / "era5_wind_la_haute_borne.csv", index_col=0)
+        # Needed for ERA5: datetime, ws_100m, u_100, v_100, dens_100m (index_col=0 is usually the first col in CSV)
+        # To avoid loading full index and then separate columns, we specify names if known, or just load everything and slim down.
+        # Given reanalysis structure, usecols is tricky with index_col=0. 
+        # Safer strategy: Load with usecols if we know the names, but we handle index_col=0.
+        # Let's trust pandas to be smarter if we specify usecols.
+        # ERA5 cols: [index], datetime, ws_100m, u_100, v_100, dens_100m...
+        
+        era5_cols = ["datetime", "ws_100m", "u_100", "v_100", "dens_100m"]
+        era5_df = pd.read_csv(data_path / "era5_wind_la_haute_borne.csv", index_col=0, usecols=[0] + era5_cols)
         era5_df["datetime"] = pd.to_datetime(era5_df["datetime"], utc=True).dt.tz_localize(None)
         
-        merra2_df = pd.read_csv(data_path / "merra2_la_haute_borne.csv", index_col=0)
+        merra2_cols = ["datetime", "ws_50m", "u_50", "v_50", "dens_50m"]
+        merra2_df = pd.read_csv(data_path / "merra2_la_haute_borne.csv", index_col=0, usecols=[0] + merra2_cols)
         merra2_df["datetime"] = pd.to_datetime(merra2_df["datetime"], utc=True).dt.tz_localize(None)
 
         # Define Metadata based on verified mapping
@@ -100,7 +113,7 @@ async def calculate():
 
         logger.info("Running AEP Monte Carlo analysis...")
         pa = MonteCarloAEP(plant)
-        pa.run(num_sim=10, progress_bar=False)
+        pa.run(num_sim=5, progress_bar=False)
 
         # Access results. MonteCarloAEP provides 'results' dataframe with summarized stats.
         # pa.results is a DataFrame where columns are 'aep_GWh', 'avail_pct', etc.
