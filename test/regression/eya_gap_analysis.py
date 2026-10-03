@@ -3,7 +3,6 @@ import unittest
 import numpy as np
 import numpy.testing as npt
 
-from openoa.analysis.eya_gap_analysis import EYAGapAnalysis
 
 from test.conftest import project_ENGIE, example_data_path_str  # isort: skip
 
@@ -12,24 +11,24 @@ class EYAGAPAnalysis(unittest.TestCase):
     def setUp(self):
         np.random.seed(42)
         # Set up operational results data
-        oa_data = dict(
-            aep=448.0,
-            availability_losses=0.0493,
-            electrical_losses=0.012,
-            turbine_ideal_energy=477.8,
-        )
+        oa_data = {
+            "aep": 448.0,
+            "availability_losses": 0.0493,
+            "electrical_losses": 0.012,
+            "turbine_ideal_energy": 477.8,
+        }
         # AEP (GWh/yr), availability loss (fraction), electrical loss (fraction), turbine ideal energy (GWh/yr)
 
         # Set up EYA estimates
-        eya_data = dict(
-            aep=467.0,
-            gross_energy=597.14,
-            availability_losses=0.062,
-            electrical_losses=0.024,
-            turbine_losses=0.037,
-            blade_degradation_losses=0.011,
-            wake_losses=0.087,
-        )
+        eya_data = {
+            "aep": 467.0,
+            "gross_energy": 597.14,
+            "availability_losses": 0.062,
+            "electrical_losses": 0.024,
+            "turbine_losses": 0.037,
+            "blade_degradation_losses": 0.011,
+            "wake_losses": 0.087,
+        }
 
         self.project = project_ENGIE.prepare(example_data_path_str, use_cleansed=False)
 

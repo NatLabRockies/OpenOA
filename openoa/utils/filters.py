@@ -1,5 +1,4 @@
-"""
-This module provides functions for flagging pandas data series based on a range of criteria. The functions are largely
+"""This module provides functions for flagging pandas data series based on a range of criteria. The functions are largely
 intended for application in wind plant operational energy analysis, particularly wind speed vs. power curves.
 """
 
@@ -30,7 +29,7 @@ def range_flag(
         data (:obj:`pandas.Series` | `pandas.DataFrame`): data frame containing the column to be flagged;
             can either be a ``pandas.Series`` or ``pandas.DataFrame``. If a ``pandas.DataFrame``, a list of
             threshold values and columns (if checking a subset of the columns) must be provided.
-        col (:obj:`list[str]`): column(s) in :pyattr:`data` to be flagged, by default None. Only
+        col (:obj:`list[str]`): column(s) in :py:attr:`data` to be flagged, by default None. Only
             required when the `data` is a ``pandas.DataFrame`` and a subset of the columns will be
             checked. Must be the same length as :py:attr:`lower` and :py:attr:`upper`.
         lower (:obj:`float` | `list[float]`): lower threshold (inclusive) for each element of :py:attr:`data`,
@@ -45,6 +44,7 @@ def range_flag(
     Returns:
         :obj:`pandas.Series` | `pandas.DataFrame`: Series or DataFrame (depending on :py:attr:`data` type) with
             boolean entries.
+
     """
     # Prepare the inputs to be standardized for use with DataFrames
     if to_series := isinstance(data, pd.Series):
@@ -85,6 +85,7 @@ def unresponsive_flag(
     Returns:
         :obj:`pandas.Series` | `pandas.DataFrame`: Series or DataFrame (depending on ``data`` type) with
             boolean entries.
+
     """
     # Prepare the inputs to be standardized for use with DataFrames
     if to_series := isinstance(data, pd.Series):
@@ -136,6 +137,7 @@ def std_range_flag(
     Returns:
         :obj:`pandas.Series` | `pandas.DataFrame`: Series or DataFrame (depending on :py:attr:`data` type) with
             boolean entries.
+
     """
     # Prepare the inputs to be standardized for use with DataFrames
     if to_series := isinstance(data, pd.Series):
@@ -183,6 +185,7 @@ def window_range_flag(
 
     Returns:
         :obj:`pandas.Series`: Series with boolean entries.
+
     """
     flag = window_col.between(window_start, window_end) & ~value_col.between(value_min, value_max)
     return flag
@@ -195,15 +198,15 @@ def bin_filter(
     bin_width: float,
     threshold: float = 2,
     center_type: str = "mean",
-    bin_min: float = None,
-    bin_max: float = None,
+    bin_min: float | None = None,
+    bin_max: float | None = None,
     threshold_type: str = "std",
     direction: str = "all",
     data: pd.DataFrame = None,
 ):
     """Flag time stamps for which data in `value_col` when binned by data in `bin_col` into bins of
     width `bin_width` are outside the `threhsold` bin. The `center_type` of each bin can be either the
-    median or mean, and flagging can be applied directionally (i.e. above or below the center, or both)
+    median or mean, and flagging can be applied directionally (i.e. above or below the center, or both).
 
     Args:
         bin_col(:obj:`pandas.Series` | `str`): The Series or column in :py:attr:`data` to be used for binning.
@@ -221,6 +224,7 @@ def bin_filter(
 
     Returns:
         :obj:`pandas.Series(bool)`: Array-like object with boolean entries.
+
     """
     if center_type not in ("mean", "median"):
         raise ValueError("Incorrect `center_type` specified; must be one of 'mean' or 'median'.")
@@ -311,6 +315,7 @@ def cluster_mahalanobis_2d(
 
     Returns:
         :obj:`pandas.Series(bool)`: Array-like object with boolean entries.
+
     """
     data = data.loc[:, [data_col1, data_col2]].copy()
     kmeans = KMeans(n_clusters=n_clusters).fit(data)
@@ -333,7 +338,8 @@ def cluster_mahalanobis_2d(
 
         # Compute mahalnobis distance of each point in cluster
         mahalanobis_dist = cluster.apply(
-            lambda r: sp.spatial.distance.mahalanobis(r.values, centroid, invcovmx), axis=1
+            lambda r: sp.spatial.distance.mahalanobis(r.values, centroid, invcovmx),  # noqa: B023
+            axis=1,
         )
 
         # Flag data outside the distance threshold

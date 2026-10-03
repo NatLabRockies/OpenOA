@@ -1,5 +1,4 @@
-"""
-This module provides functions for downloading files, including arbitrary files, files from Zenodo,
+"""This module provides functions for downloading files, including arbitrary files, files from Zenodo,
 and reanalysis data.
 
 It contains functions for downloading long-term historical atmospheric data from the MERRA2 and
@@ -33,7 +32,6 @@ In addition you can download reanalysis data directly from these source:
 
 from __future__ import annotations
 
-import os
 import re
 import hashlib
 import datetime
@@ -51,6 +49,7 @@ from requests.exceptions import SSLError
 from openoa.utils import met_data_processing as met
 from openoa.logging import logging
 
+
 logger = logging.getLogger()
 
 
@@ -58,8 +57,7 @@ BYTES_MB = 1024 * 104
 
 
 def download_file(url: str, outfile: str | Path) -> None:
-    """
-    Download a file from the web, based on its url, and save to the outfile.
+    """Download a file from the web, based on its url, and save to the outfile.
 
     Args:
         url(:obj:`str`): Url of data to download.
@@ -68,8 +66,8 @@ def download_file(url: str, outfile: str | Path) -> None:
     Raises:
         HTTPError: If unable to access url.
         Exception: If the request failed for another reason.
-    """
 
+    """
     outfile = Path(outfile).resolve()
     result = requests.get(url, stream=True)
 
@@ -97,8 +95,7 @@ def download_file(url: str, outfile: str | Path) -> None:
 
 
 def download_zenodo_data(record_id: int, outfile_path: str | Path) -> None:
-    """
-    Download data from Zenodo based on the Zenodo record_id.
+    """Download data from Zenodo based on the Zenodo record_id.
 
     The following files will be saved to the asset data folder:
 
@@ -110,7 +107,6 @@ def download_zenodo_data(record_id: int, outfile_path: str | Path) -> None:
         outfile_path(:obj:`str` | :obj:`Path`): Path to save files to.
 
     """
-
     url_zenodo = r"https://zenodo.org/api/records/"
     r = requests.get(f"{url_zenodo}{record_id}")
 
@@ -186,11 +182,10 @@ def get_era5_monthly(
     save_pathname: str | Path,
     save_filename: str,
     start_date: str = "2000-01",
-    end_date: str = None,
+    end_date: str | None = None,
 ) -> pd.DataFrame:
-    """
-    Get ERA5 data directly from the CDS service. This requires registration on the CDS service.
-    See registration details at: https://cds.climate.copernicus.eu/how-to-api
+    """Get ERA5 data directly from the CDS service. This requires registration on the CDS service.
+    See registration details at: https://cds.climate.copernicus.eu/how-to-api.
 
     This function returns monthly ERA5 data from the "ERA5 monthly averaged data on single levels
     from 1959 to present" dataset at the nearest grid point to the provided coordinates. See
@@ -225,8 +220,8 @@ def get_era5_monthly(
     Raises:
         ValueError: If the start_date is greater than the end_date.
         Exception: If unable to connect to the cdsapi client.
-    """
 
+    """
     logger.info("Please note access to ERA5 data requires registration")
     logger.info("Please see: https://cds.climate.copernicus.eu/api-how-to")
 
@@ -341,7 +336,7 @@ def get_era5_monthly(
 
     # delete downloaded NetCDF files
     for file in save_pathname.glob(f"{save_filename}*.nc"):
-        os.remove(file)
+        file.unlink()
 
     return df
 
@@ -352,13 +347,13 @@ def get_era5_hourly(
     save_pathname: str | Path,
     save_filename: str,
     start_date: str = "2000-01",
-    end_date: str = None,
+    end_date: str | None = None,
+    *,
     calc_derived_vars: bool = False,
 ) -> pd.DataFrame:
-    """
-    Get ERA5 data directly from the CDS service. This requires registration on the CDS service and
+    """Get ERA5 data directly from the CDS service. This requires registration on the CDS service and
     an API key to be saved. See registration and API setup details at:
-    https://cds.climate.copernicus.eu/how-to-api
+    https://cds.climate.copernicus.eu/how-to-api.
 
     This function returns hourly ERA5 data from the "ERA5 hourly data on single levels from 1940 to
     present" dataset at the nearest grid point to the provided coordinates. See further details
@@ -397,8 +392,8 @@ def get_era5_hourly(
 
     Raises:
         ValueError: If the start_date is greater than the end_date.
-    """
 
+    """
     logger.info("Please note access to ERA5 data requires registration")
     logger.info("Please see: https://cds.climate.copernicus.eu/api-how-to")
 
@@ -406,7 +401,7 @@ def get_era5_hourly(
     try:
         c = cdsapi.Client()
     except SSLError:
-        print("Skipping certificate verification")
+        print("Skipping certificate verification")  # noqa: T201
         c = cdsapi.Client(verify=False)  # verification error for self-signed certificate
 
     # create save_pathname if it does not exist
@@ -457,7 +452,6 @@ def get_era5_hourly(
         "month": None,
         "day": [f"{i:02d}" for i in range(1, 32)],
         "time": [f"{i:02d}:00" for i in range(24)],
-        "product_type": "reanalysis",
         "area": [
             lat_nearest,
             lon_nearest,
@@ -533,7 +527,7 @@ def get_era5_hourly(
 
     # delete downloaded NetCDF files
     for file in save_pathname.glob(f"{save_filename}*.nc"):
-        os.remove(file)
+        file.unlink()
 
     return df
 
@@ -544,10 +538,9 @@ def get_merra2_monthly(
     save_pathname: str | Path,
     save_filename: str,
     start_date: str = "2000-01",
-    end_date: str = None,
+    end_date: str | None = None,
 ) -> pd.DataFrame:
-    """
-    Get MERRA2 data directly from the NASA GES DISC service, which requires registration on the
+    """Get MERRA2 data directly from the NASA GES DISC service, which requires registration on the
     GES DISC service. See: https://disc.gsfc.nasa.gov/information/documents?title=Data%20Access#python-requests.
 
     This function returns monthly MERRA2 data from the "M2IMNXLFO" dataset at the nearest grid
@@ -580,8 +573,8 @@ def get_merra2_monthly(
 
     Raises:
         ValueError: If the start_year is greater than the end_year.
-    """
 
+    """
     logger.info("Please note access to MERRA2 data requires registration")
     logger.info(
         "Please see: https://disc.gsfc.nasa.gov/information/documents?title=Data%20Access#python-requests"
@@ -691,7 +684,7 @@ def get_merra2_monthly(
 
     # delete downloaded NetCDF files
     for file in save_pathname.glob(f"{save_filename}*.nc"):
-        os.remove(file)
+        file.unlink()
 
     return df
 
@@ -702,11 +695,11 @@ def get_merra2_hourly(
     save_pathname: str | Path,
     save_filename: str,
     start_date: str = "2000-01",
-    end_date: str = None,
+    end_date: str | None = None,
+    *,
     calc_derived_vars: bool = False,
 ) -> pd.DataFrame:
-    """
-    Get MERRA2 data directly from the NASA GES DISC service, which requires registration on the
+    """Get MERRA2 data directly from the NASA GES DISC service, which requires registration on the
     GES DISC service. See: https://disc.gsfc.nasa.gov/information/documents?title=Data%20Access#python-requests.
 
     This function returns hourly MERRA2 data from the "M2T1NXSLV" dataset at the nearest grid point
@@ -744,8 +737,8 @@ def get_merra2_hourly(
 
     Raises:
         ValueError: If the start_date is greater than the end_date.
-    """
 
+    """
     logger.info("Please note access to MERRA2 data requires registration")
     logger.info(
         "Please see: https://disc.gsfc.nasa.gov/information/documents?title=Data%20Access#python-requests"
@@ -877,6 +870,6 @@ def get_merra2_hourly(
 
     # delete downloaded NetCDF files
     for file in save_pathname.glob(f"{save_filename}*.nc"):
-        os.remove(file)
+        file.unlink()
 
     return df

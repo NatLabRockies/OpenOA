@@ -3,7 +3,6 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 import pytest
-from numpy import testing as nptest
 from pandas import testing as tm
 
 from openoa.utils._converters import (
@@ -15,6 +14,7 @@ from openoa.utils._converters import (
     convert_args_to_lists,
     multiple_df_to_single_df,
 )
+
 
 test_df1 = pd.DataFrame(
     np.arange(15).reshape(5, 3, order="F"), columns=["a", "b", "c"], dtype=float
@@ -58,7 +58,6 @@ def sample_df_handling_method(
 
 def test_list_of_len():
     """Tests the `_list_of_len` method."""
-
     # Test for a 1 element list
     x = [1]
     length = 4
@@ -83,7 +82,6 @@ def test_list_of_len():
 
 def test_convert_args_to_lists():
     """Tests the `convert_args_to_lists` method."""
-
     # Test for a list that already contains lists
     x = [["a"], [5, 6]]
     length = 2
@@ -108,27 +106,26 @@ def test_convert_args_to_lists():
 
 def test_df_to_series():
     """Tests the `df_to_series` method."""
-
     # Test that each column is returned correctly, in a few different order variations
     y = [test_series_a1, test_series_b1, test_series_c1]
     y_test = df_to_series(test_df1, "a", "b", "c")
-    for el, el_test in zip(y, y_test):
+    for el, el_test in zip(y, y_test, strict=True):
         tm.assert_series_equal(el, el_test)
 
     y = [test_series_c1, test_series_a1]
     y_test = df_to_series(test_df1, "c", "a")
-    for el, el_test in zip(y, y_test):
+    for el, el_test in zip(y, y_test, strict=True):
         tm.assert_series_equal(el, el_test)
 
     y = [test_series_b1]
     y_test = df_to_series(test_df1, "b")
-    for el, el_test in zip(y, y_test):
+    for el, el_test in zip(y, y_test, strict=True):
         tm.assert_series_equal(el, el_test)
 
     # Test that None is returned for a passed None value
     y = [None, test_series_a1, None, test_series_b1, test_series_c1, None]
     y_test = df_to_series(test_df1, None, "a", None, "b", "c", None)
-    for el, el_test in zip(y, y_test):
+    for el, el_test in zip(y, y_test, strict=True):
         if el is None:
             assert el_test is None
             continue
@@ -152,7 +149,6 @@ def test_df_to_series():
 
 def test_multiple_df_to_single_df():
     """Tests the `multiple_df_to_single_df` method."""
-
     # Test a basic working case with single column DataFrames
     y = test_df1
     y_test = multiple_df_to_single_df(*test_df_list1)
@@ -181,7 +177,6 @@ def test_multiple_df_to_single_df():
 
 def test_series_to_df():
     """Tests the `series_to_df` method."""
-
     # Test simple use case
     y = test_df1
     y_test, (y_test_a1, y_test_b1, y_test_c1) = series_to_df(
@@ -207,7 +202,7 @@ def test_series_to_df():
         series_to_df(test_series_a1, test_series_b1, "c")
 
     # Ensure one input series maps correctly
-    for x, y in zip([test_series_a1, test_series_b1, test_series_c1], test_df_list1):
+    for x, y in zip([test_series_a1, test_series_b1, test_series_c1], test_df_list1, strict=True):
         y_test, [name] = series_to_df(x)
         tm.assert_frame_equal(y, y_test)
         assert name == x.name
@@ -215,7 +210,6 @@ def test_series_to_df():
 
 def test_series_method():
     """Tests the `series_method` wrapper via `sample_series_handling_method()`."""
-
     # Ensure that the wrapper converts the string column names to series objects and the data kwarg to None
     y_test_a, y_test_c, y_test_df = sample_series_handling_method("a", 1.0, 2.0, "c", data=test_df1)
     tm.assert_series_equal(test_series_a1, y_test_a)
@@ -240,7 +234,6 @@ def test_series_method():
 
 def test_dataframe_method():
     """Tests the `series_method` wrapper via `sample_df_handling_method()`."""
-
     # Ensure that the wrapper converts the Series to column names and the data to a DataFrame
     y = test_df1[["c", "a"]]
     y_test_c, y_test_a, y_test_df = sample_df_handling_method(

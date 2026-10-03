@@ -1,6 +1,4 @@
-"""
-This module provides useful functions for processing timeseries data
-"""
+"""This module provides useful functions for processing timeseries data."""
 
 from __future__ import annotations
 
@@ -24,6 +22,7 @@ def offset_to_seconds(offset: int | float | str | np.datetime64) -> int | float:
 
     Returns:
         :obj:`int` | `float`: The number of seconds corresponding to :py:attr:`offset`.
+
     """
     try:
         seconds = pd.to_timedelta(offset).total_seconds()
@@ -43,6 +42,7 @@ def determine_frequency_seconds(data: pd.DataFrame, index_col: str | None = None
 
     Returns:
         :obj:`int` | `float`: The number of seconds corresponding to :py:attr:`offset`.
+
     """
     # Get the non-duplicated DatetimeIndex values from a single level, or multi-level index
     index = data.index if index_col is None else data.index.get_level_values(index_col)
@@ -63,6 +63,7 @@ def determine_frequency(data: pd.DataFrame, index_col: str | None = None) -> str
 
     Returns:
         :obj:`str` | :obj:`int` | :obj:`float`: The offset string or number of seconds between timestamps.
+
     """
     # Get the timetamp index values
     index = data.index if index_col is None else data.index.get_level_values(index_col)
@@ -80,16 +81,17 @@ def determine_frequency(data: pd.DataFrame, index_col: str | None = None) -> str
 
 
 def convert_local_to_utc(d: str | datetime.datetime, tz_string: str) -> datetime.datetime:
-    """
-    Convert timestamps in local time to UTC. The function can only act on a single timestamp at a time, so
+    """Convert timestamps in local time to UTC.
+
+    The function can only act on a single timestamp at a time, so
     for example use the .apply function in Pandas:
 
-        date_utc = df['time'].apply(convert_local_to_utc, args = ('US/Pacific',))
+        ``date_utc = df['time'].apply(convert_local_to_utc, args = ('US/Pacific',))``
 
     Also note that this function doesn't solve the end of DST when times between 1:00-2:00 are repeated
     in November. Those dates are left repeated in UTC time and need to be shifted manually.
 
-    The function does address the missing 2:00-3:00 times at the start of DST in March
+    The function does address the missing 2:00-3:00 times at the start of DST in March.
 
     Args:
         d(:obj:`datetime.datetime`): the local date, tzinfo must not be set
@@ -130,6 +132,7 @@ def convert_dt_to_utc(
 
     Returns:
         pd.Series: _description_
+
     """
     if isinstance(dt_col[0], str):
         dt_col = dt_col.apply(parse)
@@ -143,8 +146,7 @@ def convert_dt_to_utc(
 
 @series_method(data_cols=["dt_col"])
 def find_time_gaps(dt_col: pd.Series | str, freq: str, data: pd.DataFrame = None) -> pd.Series:
-    """
-    Finds gaps in `dt_col` based on the expected frequency, `freq`, and returns them.
+    """Finds gaps in `dt_col` based on the expected frequency, `freq`, and returns them.
 
     Args:
         dt_col(:obj:`pandas.Series`): Pandas ``Series`` of ``datetime.datetime`` objects or the name
@@ -156,6 +158,7 @@ def find_time_gaps(dt_col: pd.Series | str, freq: str, data: pd.DataFrame = None
 
     Returns:
         :obj:`pandas.Series`: Series of missing time stamps in ``datetime.datetime`` format
+
     """
     if isinstance(dt_col, pd.DatetimeIndex):
         dt_col = dt_col.to_series()
@@ -172,8 +175,7 @@ def find_time_gaps(dt_col: pd.Series | str, freq: str, data: pd.DataFrame = None
 
 @series_method(data_cols=["dt_col"])
 def find_duplicate_times(dt_col: pd.Series | str, data: pd.DataFrame = None):
-    """
-    Find duplicate input data and report them. The first duplicated item is not reported, only subsequent duplicates.
+    """Find duplicate input data and report them. The first duplicated item is not reported, only subsequent duplicates.
 
     Args:
         dt_col(:obj:`pandas.Series` | `str`): Pandas series of ``datetime.datetime`` objects or the name of the
@@ -183,6 +185,7 @@ def find_duplicate_times(dt_col: pd.Series | str, data: pd.DataFrame = None):
 
     Returns:
         :obj:`pandas.Series`: Duplicates from input data
+
     """
     if isinstance(dt_col, pd.DatetimeIndex):
         dt_col = dt_col.to_series()
@@ -191,8 +194,7 @@ def find_duplicate_times(dt_col: pd.Series | str, data: pd.DataFrame = None):
 
 
 def gap_fill_data_frame(data: pd.DataFrame, dt_col: str, freq: str) -> pd.DataFrame:
-    """
-    Insert any missing timestamps into :py:attr:`data` while filling the data columns with NaNs.
+    """Insert any missing timestamps into :py:attr:`data` while filling the data columns with NaNs.
 
     Args:
         data(:obj:`pandas.DataFrame`): The dataframe with potentially missing timestamps.
@@ -227,8 +229,7 @@ def gap_fill_data_frame(data: pd.DataFrame, dt_col: str, freq: str) -> pd.DataFr
 
 @series_method(data_cols=["col"])
 def percent_nan(col: pd.Series | str, data: pd.DataFrame = None):
-    """
-    Return percentage of data that are Nan or 1 if the series is empty.
+    """Return percentage of data that are Nan or 1 if the series is empty.
 
     Args:
         col(:obj:`pandas.Series`): The pandas `Series` to be checked for NaNs, or the name of the
@@ -238,14 +239,14 @@ def percent_nan(col: pd.Series | str, data: pd.DataFrame = None):
 
     Returns:
         :obj:`float`: Percentage of NaN data in the data series
+
     """
     return 1 if (denominator := float(col.size)) == 0 else np.isnan(col.values).sum() / denominator
 
 
 @series_method(data_cols=["dt_col"])
 def num_days(dt_col: pd.Series | str, data: pd.DataFrame = None) -> int:
-    """
-    Calculates the number of non-duplicate days in :py:attr:`dt_col`.
+    """Calculates the number of non-duplicate days in :py:attr:`dt_col`.
 
     Args:
         dt_col(:obj:`pandas.Series` | str): A pandas ``Series`` with a timeseries index to be checked
@@ -255,14 +256,14 @@ def num_days(dt_col: pd.Series | str, data: pd.DataFrame = None) -> int:
 
     Returns:
         :obj:`int`: Number of days in the data
+
     """
     return dt_col[~dt_col.index.duplicated()].resample("D").asfreq().index.size
 
 
 @series_method(data_cols=["dt_col"])
 def num_hours(dt_col: pd.Series | str, *, data: pd.DataFrame = None) -> int:
-    """
-    Calculates the number of non-duplicate hours in `dt_col`.
+    """Calculates the number of non-duplicate hours in `dt_col`.
 
     Args:
         dt_col(:obj:`pandas.Series` | str): A pandas ``Series`` of timeseries data to be checked for
@@ -272,5 +273,6 @@ def num_hours(dt_col: pd.Series | str, *, data: pd.DataFrame = None) -> int:
 
     Returns:
         :obj:`int`: Number of hours in the data
+
     """
     return dt_col[~dt_col.index.duplicated()].resample("h").asfreq().index.size

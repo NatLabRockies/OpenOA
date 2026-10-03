@@ -4,23 +4,18 @@ import unittest
 from pathlib import Path
 
 import yaml
-import pytest
-from numpy.testing import assert_array_equal
 from pandas.testing import assert_frame_equal
 
 from openoa import PlantData
 from openoa.schema import ANALYSIS_REQUIREMENTS, ReanalysisMetaData
 from openoa.schema.schema import create_schema, create_analysis_schema
 
+
 from test.conftest import project_ENGIE, example_data_path_str  # isort: skip
 
 
 class TestPlantData(unittest.TestCase):
-    """
-    TestPlantData
-
-    Tests the construction, validation, and methods of PlantData using La Haute Born wind plant data
-    """
+    """Tests the construction, validation, and methods of PlantData using La Haute Born wind plant data."""
 
     @classmethod
     def setUpClass(cls):
@@ -35,9 +30,7 @@ class TestPlantData(unittest.TestCase):
         )
 
     def setUp(self):
-        """
-        Create the plantdata object
-        """
+        """Create the plantdata object."""
         self.plant = PlantData(
             analysis_type=None,  # No validation desired at this point in time
             metadata=example_data_path_str + "/../plant_meta.yml",
@@ -49,10 +42,8 @@ class TestPlantData(unittest.TestCase):
         )
 
     def test_analysis_type_values(self):
-        """
-        Test the acceptance of the valid inputs, except None
-        """
-        valid = [*ANALYSIS_REQUIREMENTS] + ["all", None]
+        """Test the acceptance of the valid inputs, except None."""
+        valid = [*ANALYSIS_REQUIREMENTS, "all", None]
 
         self.plant.analysis_type = valid
         self.assertTrue(self.plant.analysis_type == valid)
@@ -67,9 +58,7 @@ class TestPlantData(unittest.TestCase):
             self.plant.analysis_type = "this is wrong"
 
     def test_validatePlantForAEP(self):
-        """
-        The example plant should validate for MonteCarloAEP analysis type
-        """
+        """The example plant should validate for MonteCarloAEP analysis type."""
         self.plant.analysis_type = "MonteCarloAEP"
         self.plant.validate()
 
@@ -77,17 +66,13 @@ class TestPlantData(unittest.TestCase):
         assert None not in self.plant.analysis_type
 
     def test_doesNotValidateForAll(self):
-        """
-        The example plant should not validate for MonteCarloAEP analysis type
-        """
+        """The example plant should not validate for MonteCarloAEP analysis type."""
         with self.assertRaises(ValueError):
             self.plant.analysis_type = "all"
             self.plant.validate()
 
     def test_update_columns(self):
-        """
-        Tests that the column names are successfully mapped to the standardized names.
-        """
+        """Tests that the column names are successfully mapped to the standardized names."""
         # Put the plant analysis type back in working order
         self.plant.analysis_type = "MonteCarloAEP"
         self.plant.validate()
@@ -112,9 +97,7 @@ class TestPlantData(unittest.TestCase):
             assert len(re_original.intersection(self.plant.reanalysis[name].columns)) == 0
 
     def test_toCSV(self):
-        """
-        Save this plant to a temporary directory, load it in, and make sure the data matches.
-        """
+        """Save this plant to a temporary directory, load it in, and make sure the data matches."""
         # Save
         data_path = tempfile.mkdtemp()
         self.plant.to_csv(save_path=data_path, with_openoa_col_names=True)
@@ -165,11 +148,7 @@ class TestPlantData(unittest.TestCase):
 
 
 class TestPlantDatPartial(unittest.TestCase):
-    """
-    TestPlantData
-
-    Tests the construction, validation, and methods of PlantData using La Haute Born wind plant data
-    """
+    """Tests the construction, validation, and methods of PlantData using La Haute Born wind plant data."""
 
     @classmethod
     def setUpClass(cls):
@@ -184,10 +163,8 @@ class TestPlantDatPartial(unittest.TestCase):
         )
 
     def setUp(self):
-        """
-        Create the plantdata object
-        """
-        with open(example_data_path_str + "/../plant_meta.yml") as f:
+        """Create the plantdata object."""
+        with Path(example_data_path_str + "/../plant_meta.yml").open() as f:
             meta_partial = yaml.safe_load(f)
         meta_partial.pop("reanalysis")
         self.plant = PlantData(
@@ -206,7 +183,7 @@ class TestPlantDatPartial(unittest.TestCase):
         """Tests that when there are missing products in the reanalysis metadata, that
         a KeyError is raised early.
         """
-        with open(example_data_path_str + "/../plant_meta.yml") as f:
+        with Path(example_data_path_str + "/../plant_meta.yml").open() as f:
             metadata = yaml.safe_load(f)
 
         # Raised when all missing
@@ -226,19 +203,19 @@ class TestSchema(unittest.TestCase):
     def setUp(self):
         schema_path = Path(__file__).resolve().parents[2] / "openoa/schema"
 
-        with open(schema_path / "full_schema.yml") as f:
+        with (schema_path / "full_schema.yml").open() as f:
             self.full_schema = yaml.safe_load(f)
 
-        with open(schema_path / "base_electrical_losses_schema.yml") as f:
+        with (schema_path / "base_electrical_losses_schema.yml").open() as f:
             self.el_schema = yaml.safe_load(f)
 
-        with open(schema_path / "base_monte_carlo_aep_schema.yml") as f:
+        with (schema_path / "base_monte_carlo_aep_schema.yml").open() as f:
             self.mc_aep_schema = yaml.safe_load(f)
 
-        with open(schema_path / "base_tie_schema.yml") as f:
+        with (schema_path / "base_tie_schema.yml").open() as f:
             self.tie_schema = yaml.safe_load(f)
 
-        with open(schema_path / "scada_wake_losses_schema.yml") as f:
+        with (schema_path / "scada_wake_losses_schema.yml").open() as f:
             self.wake_schema = yaml.safe_load(f)
 
     def test_full_schema(self):

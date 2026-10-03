@@ -1,4 +1,3 @@
-import sys
 import unittest
 
 import numpy as np
@@ -38,7 +37,7 @@ class TestMLToolkit(unittest.TestCase):
         }
 
         # Loop through algorithms
-        for a in required_metrics.keys():
+        for a in required_metrics:
             ml = MachineLearningSetup(a)  # Setup ML object
 
             # Perform randomized grid search only once for efficiency

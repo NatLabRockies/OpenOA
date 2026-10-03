@@ -1,12 +1,9 @@
-"""
-This module provides methods for filling in null data with interpolated (imputed) values.
-"""
+"""This module provides methods for filling in null data with interpolated (imputed) values."""
 
 from copy import deepcopy
 
 import numpy as np
 import pandas as pd
-from tqdm import tqdm
 from numpy.polynomial import Polynomial
 
 
@@ -22,6 +19,7 @@ def asset_correlation_matrix(data: pd.DataFrame, value_col: str) -> pd.DataFrame
 
     Returns:
         :obj:`pandas.DataFrame`: Correlation matrix with <id_col> as index and column names
+
     """
     corr_df = data.loc[:, [value_col]].unstack().corr(min_periods=2)
     corr_df = corr_df.droplevel(0).droplevel(0, axis=1)  # drop the added axes
@@ -36,7 +34,7 @@ def impute_data(
     reference_col: str,
     target_data: pd.DataFrame = None,
     reference_data: pd.DataFrame = None,
-    align_col: str = None,
+    align_col: str | None = None,
     method: str = "linear",
     degree: int = 1,
     data: pd.DataFrame = None,
@@ -61,9 +59,14 @@ def impute_data(
         target_data(:obj:`pandas.DataFrame`): the ``DataFrame`` with  NaN data to be imputed.
         reference_data(:obj:`pandas.DataFrame`): the ``DataFrame`` to be used in imputation
         align_col(:obj:`str`): the name of the column that to join :py:attr:`target_data` and :py:attr:`reference_data`.
+        degree (:obj:`int`): Degree of the polynomial fit when :py:attr:`method` is "polynomial".
+            Defaults to 1.
+        method (:obj:`str`): Imputation method. Only 1-d polynomials are currently allowed, so must
+            be one of "linear" or "polynomial". Defaults to "linear".
 
     Returns:
         :obj:`pandas.Series`: Copy of target_data_col series with NaN occurrences imputed where possible.
+
     """
     final_col_name = deepcopy(target_col)
     if data is None:

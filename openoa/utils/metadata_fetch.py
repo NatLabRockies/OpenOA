@@ -1,6 +1,4 @@
-"""
-This module fetches metadata of wind farms
-"""
+"""This module fetches metadata of wind farms."""
 
 from __future__ import annotations
 
@@ -12,6 +10,7 @@ import numpy as np
 import pandas as pd
 
 from openoa.utils import unit_conversion
+
 
 if TYPE_CHECKING:
     from openoa import PlantData
@@ -26,10 +25,10 @@ def fetch_eia(
     wind_file: str | Path,
     wind_sheet: str | Path,
 ):
-    """
-    Read in EIA data of wind farm of interest:
-     - from EIA API for monthly productions, return monthly net energy generation time series
-     - from local Excel files for wind farm metadata, return dictionary of metadata
+    """Read in EIA data of wind farm of interest.
+
+    - from EIA API for monthly productions, return monthly net energy generation time series
+    - from local Excel files for wind farm metadata, return dictionary of metadata
 
     Args:
         api_key(:obj:`str`): 32-character user-specific API key, obtained from EIA.
@@ -108,7 +107,7 @@ def fetch_eia(
 
     api = eia.API(api_key)  # get data from EIA
 
-    series_search_m = api.data_by_series(series="ELEC.PLANT.GEN.%s-ALL-ALL.M" % plant_id)
+    series_search_m = api.data_by_series(series=f"ELEC.PLANT.GEN.{plant_id}-ALL-ALL.M")
     eia_monthly = pd.DataFrame(series_search_m)  # net monthly energy generation of wind farm in MWh
     eia_monthly.columns = ["eia_monthly_mwh"]  # rename column
     eia_monthly = eia_monthly.set_index(
@@ -128,8 +127,7 @@ def attach_eia_data(
     wind_file: str | Path,
     wind_sheet: str | Path,
 ):
-    """
-    Assign EIA meta data to PlantData object, which is by default an empty dictionary.
+    """Assign EIA meta data to PlantData object, which is by default an empty dictionary.
 
     Args:
         project(:obj:`PlantData`): PlantData object for a particular project
@@ -145,6 +143,7 @@ def attach_eia_data(
 
     Returns:
         (None)
+
     """
     project.eia["api_key"] = api_key
     project.eia["data_dir"] = file_path

@@ -1,11 +1,10 @@
-"""
-This module holds ready-to-use power curve functions. They take windspeed and power columns as arguments and return a
+"""This module holds ready-to-use power curve functions. They take windspeed and power columns as arguments and return a
 python function which can be used to evaluate the power curve at arbitrary locations.
 """
 
 from __future__ import annotations
 
-from typing import Callable
+from collections.abc import Callable
 
 import numpy as np
 import pandas as pd
@@ -25,11 +24,11 @@ def IEC(
     bin_width: float = 0.5,
     windspeed_start: float = 0,
     windspeed_end: float = 30.0,
-    interpolate: bool = False,
     data: pd.DataFrame = None,
+    *,
+    interpolate: bool = False,
 ) -> Callable:
-    """
-    Use IEC 61400-12-1-2 method for creating a binned wind-speed power curve. Power is set to zero
+    """Use IEC 61400-12-1-2 method for creating a binned wind-speed power curve. Power is set to zero
     for values outside the cutoff range: [:py:attr:`windspeed_start`, :py:attr:`windspeed_end`].
 
     Args:
@@ -50,7 +49,6 @@ def IEC(
         :obj:`Callable`: Python function of type (Array[float] -> Array[float]) implementing the power curve.
 
     """
-
     # Set up evenly spaced bins of fixed width, with any value over the maximum getting np.inf
     n_bins = int(np.ceil((windspeed_end - windspeed_start) / bin_width)) + 1
     bins = np.append(np.linspace(windspeed_start, windspeed_end, n_bins), [np.inf])
@@ -59,7 +57,7 @@ def IEC(
     P_bin = np.ones(len(bins) - 1) * np.nan
 
     # Compute the mean of each bin and set corresponding P_bin
-    for ibin in range(0, len(bins) - 1):
+    for ibin in range(len(bins) - 1):
         indices = (windspeed_col >= bins[ibin]) & (windspeed_col < bins[ibin + 1])
         P_bin[ibin] = power_col.loc[indices].mean()
 
@@ -69,7 +67,7 @@ def IEC(
     # Create a closure over the computed bins which computes the power curve value for arbitrary array-like input
     def pc_iec_bin(x):
         P = np.zeros(np.shape(x))
-        for i in range(0, len(bins) - 1):
+        for i in range(len(bins) - 1):
             idx = np.where((x >= bins[i]) & (x < bins[i + 1]))
             P[idx] = P_bin[i]
         cutoff_idx = (x < windspeed_start) | (x > windspeed_end)
@@ -151,8 +149,7 @@ def gam(
     n_splines: int = 20,
     data: pd.DataFrame = None,
 ) -> Callable:
-    """
-    Use the generalized additive model, :py:class:`pygam.LinearGAM` to fit power to wind speed.
+    """Use the generalized additive model, :py:class:`pygam.LinearGAM` to fit power to wind speed.
 
     Args:
         windspeed_col(:obj:`str` | `pandas.Series`): Windspeed data, or the name of the column in
@@ -180,8 +177,7 @@ def gam_3param(
     n_splines: int = 20,
     data: pd.DataFrame = None,
 ) -> Callable:
-    """
-    Use a generalized additive model to fit power to wind speed, wind direction and air density.
+    """Use a generalized additive model to fit power to wind speed, wind direction and air density.
 
     Args:
         windspeed_col(:obj:`str` | `pandas.Series`): Windspeed data, or the name of the column in
@@ -199,6 +195,7 @@ def gam_3param(
 
     Returns:
         :obj:`Callable`: Python function of type (Array[float] -> Array[float]) implementing the power curve.
+
     """
     # create dataframe input to LinearGAM and predicted response variable
     X = data[[windspeed_col, wind_direction_col, air_density_col]]

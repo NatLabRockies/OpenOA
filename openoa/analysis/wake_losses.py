@@ -1,39 +1,40 @@
-# This class defines key analytical routines for estimating wake losses for an operating
-# wind plant using SCADA data. At a high level, for each SCADA time step, freestream wind
-# turbines are identified using the turbine coordinates and a reference wind direction
-# signal. The mean power production for all turbines in the wind plant is summed over all
-# time steps and compared to the mean power of the freestream turbines summed over all time
-# steps to estimate wake losses during the period of record. An optional correction can be applied
-# to the potential power of the wind plant to account for freestream wind speed heterogeneity
-# based on user-provided wind direction-dependent wind speedup factors at each turbine location.
-# Methods for calculating the long-term wake losses using reanalaysis data and quantifying
-# uncertainty are provided as well.
+"""This class defines key analytical routines for estimating wake losses for an operating
+wind plant using SCADA data. At a high level, for each SCADA time step, freestream wind
+turbines are identified using the turbine coordinates and a reference wind direction
+signal. The mean power production for all turbines in the wind plant is summed over all
+time steps and compared to the mean power of the freestream turbines summed over all time
+steps to estimate wake losses during the period of record. An optional correction can be applied
+to the potential power of the wind plant to account for freestream wind speed heterogeneity
+based on user-provided wind direction-dependent wind speedup factors at each turbine location.
+Methods for calculating the long-term wake losses using reanalaysis data and quantifying
+uncertainty are provided as well.
 
-# The general approach for estimating wake losses and quantifying uncertainty using bootstrapping
-# is based in part on the following publications:
-# 1. Barthelmie, R. J. and Jensen, L. E. Evaluation of wind farm efficiency and wind turbine wakes
-#    at the Nysted offshore wind farm, *Wind Energy* 13(6):573–586 (2010).
-#    https://doi.org/10.1002/we.408.
-# 2. Nygaard, N. G. Systematic quantification of wake model uncertainty. Proc. EWEA Offshore,
-#    Copenhagen, Denmark, March 10-12 (2015).
-# 3. Walker, K., Adams, N., Gribben, B., Gellatly, B., Nygaard, N. G., Henderson, A., Marchante
-#    Jimémez, M., Schmidt, S. R., Rodriguez Ruiz, J., Paredes, D., Harrington, G., Connell, N.,
-#    Peronne, O., Cordoba, M., Housley, P., Cussons, R., Håkansson, M., Knauer, A., and Maguire,
-#    E.: An evaluation of the predictive accuracy of wake effects models for offshore wind farms.
-#    *Wind Energy* 19(5):979–996 (2016). https://doi.org/10.1002/we.1871.
-#
-# The corrections for freestream wind speed heterogeneity are based in part on the approach
-# presented in:
-# 4. Kassebaum, J. Wake Validation Through SCADA Data Analysis. Proc. American Clean Power Resource
-#    & Project Energy Assessment Virtual Summit 2021 (2021).
+The general approach for estimating wake losses and quantifying uncertainty using bootstrapping
+is based in part on the following publications:
 
+1. Barthelmie, R. J. and Jensen, L. E. Evaluation of wind farm efficiency and wind turbine wakes
+   at the Nysted offshore wind farm, *Wind Energy* 13(6):573–586 (2010).
+   https://doi.org/10.1002/we.408.
+2. Nygaard, N. G. Systematic quantification of wake model uncertainty. Proc. EWEA Offshore,
+   Copenhagen, Denmark, March 10-12 (2015).
+3. Walker, K., Adams, N., Gribben, B., Gellatly, B., Nygaard, N. G., Henderson, A., Marchante
+   Jimémez, M., Schmidt, S. R., Rodriguez Ruiz, J., Paredes, D., Harrington, G., Connell, N.,
+   Peronne, O., Cordoba, M., Housley, P., Cussons, R., Håkansson, M., Knauer, A., and Maguire,
+   E.: An evaluation of the predictive accuracy of wake effects models for offshore wind farms.
+   *Wind Energy* 19(5):979–996 (2016). https://doi.org/10.1002/we.1871.
+
+The corrections for freestream wind speed heterogeneity are based in part on the approach
+presented in:
+4. Kassebaum, J. Wake Validation Through SCADA Data Analysis. Proc. American Clean Power Resource
+   & Project Energy Assessment Virtual Summit 2021 (2021).
+"""  # noqa: RUF002
 
 from __future__ import annotations
 
 import random
 import itertools
 from copy import deepcopy
-from typing import Callable
+from collections.abc import Callable
 
 import attrs
 import numpy as np
@@ -45,15 +46,11 @@ from scipy.interpolate import interp1d
 from sklearn.linear_model import LinearRegression
 
 from openoa.plant import PlantData, convert_to_list
-from openoa.utils import plot, filters, power_curve
-from openoa.utils import met_data_processing as met
+from openoa.utils import plot, filters, power_curve, met_data_processing as met
 from openoa.schema import FromDictMixin, ResetValuesMixin
 from openoa.logging import logging, logged_method_call
-from openoa.analysis._analysis_validators import (
-    validate_UQ_input,
-    validate_half_closed_0_1_right,
-    validate_reanalysis_selections,
-)
+from openoa.analysis._analysis_validators import validate_UQ_input, validate_reanalysis_selections
+
 
 logger = logging.getLogger(__name__)
 NDArrayFloat = npt.NDArray[np.float64]
@@ -62,8 +59,7 @@ plot.set_styling()
 
 @define(auto_attribs=True)
 class WakeLosses(FromDictMixin, ResetValuesMixin):
-    """
-    A serial implementation of a method for estimating wake losses from SCADA data. Wake losses are
+    """A serial implementation of a method for estimating wake losses from SCADA data. Wake losses are
     estimated for the entire wind plant as well as for each individual turbine for a) the period of
     record for which data are available, and b) the estimated long-term wind conditions the wind
     plant will experience based on historical reanalysis wind resource data.
@@ -242,6 +238,7 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
         bin_count_thresh_lin_reg (int, optional): The minimum number of samples required in a wind
             speed bin to include when finding linear regression from SCADA freestream wind speeds to
             reanalysis wind speeds. Defaults to 50.
+
     """
 
     plant: PlantData = field(converter=deepcopy, validator=attrs.validators.instance_of(PlantData))
@@ -362,15 +359,13 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
 
     @logged_method_call
     def __attrs_post_init__(self):
-        """
-        Initialize logging and post-initialization setup steps.
-        """
+        """Initialize logging and post-initialization setup steps."""
         logger.info("Initializing WakeLosses analysis object")
 
-        if self.wind_direction_data_type == "scada":
+        if self.wind_direction_data_type == "scada":  # noqa: SIM102
             if {"WakeLosses-scada", "all"}.intersection(self.plant.analysis_type) == set():
                 self.plant.analysis_type.append("WakeLosses-scada")
-        if self.wind_direction_data_type == "tower":
+        if self.wind_direction_data_type == "tower":  # noqa: SIM102
             if {"WakeLosses-tower", "all"}.intersection(self.plant.analysis_type) == set():
                 self.plant.analysis_type.append("WakeLosses-tower")
 
@@ -426,22 +421,22 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
         freestream_sector_width: float | None = None,
         freestream_power_method: str | None = None,
         freestream_wind_speed_method: str | None = None,
-        correct_for_derating: bool | None = None,
         derating_filter_wind_speed_start: float | None = None,
         max_power_filter: float | None = None,
         wind_bin_mad_thresh: float | None = None,
-        correct_for_ws_heterogeneity: bool | None = None,
         ws_speedup_factor_map: pd.DataFrame | str | None = None,
         wd_bin_width_LT_corr: float | None = None,
         ws_bin_width_LT_corr: float | None = None,
         num_years_LT: int | None = None,
-        assume_no_wakes_high_ws_LT_corr: bool | None = None,
         no_wakes_ws_thresh_LT_corr: float | None = None,
         min_ws_bin_lin_reg: float | None = None,
         bin_count_thresh_lin_reg: int | None = None,
+        *,
+        correct_for_derating: bool | None = None,
+        correct_for_ws_heterogeneity: bool | None = None,
+        assume_no_wakes_high_ws_LT_corr: bool | None = None,
     ):
-        """
-        Estimates wake losses by comparing wind plant energy production to energy production of the
+        """Estimates wake losses by comparing wind plant energy production to energy production of the
         turbines identified as operating in freestream conditions. Wake losses are expressed as a
         fractional loss (e.g., 0.05 indicates a wake loss values of 5%).
 
@@ -451,6 +446,9 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
         Args:
             num_sim (int, optional): Number of Monte Carlo iterations to perform. Only used if
                 :py:attr:`UQ` = True. Defaults to 100.
+            reanalysis_products (:obj:`list`, optional): List of reanalysis products to use for long-term
+                correction. If UQ = True, a single product will be selected form this list each Monte
+                Carlo iteration. Defaults to ["merra2", "era5"].
             wd_bin_width (float, optional): Wind direction bin size when identifying freestream wind
                 turbines (degrees). Defaults to 5 degrees.
             freestream_sector_width (tuple | float, optional): Wind direction sector size to use when
@@ -538,6 +536,7 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
             bin_count_thresh_lin_reg (int, optional): The minimum number of samples required in a
                 wind speed bin to include when finding linear regression from SCADA freestream wind
                 speeds to reanalysis wind speeds. Defaults to 50.
+
         """
         initial_parameters = {}
         # Assign default parameter values depending on whether UQ is performed
@@ -1097,11 +1096,9 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
 
     @logged_method_call
     def _setup_monte_carlo_inputs(self):
-        """
-        Create and populate the data frame defining the Monte Carlo simulation parameters. This
+        """Create and populate the data frame defining the Monte Carlo simulation parameters. This
         data frame is stored as ``self.inputs``.
         """
-
         if self.UQ:
             inputs = {
                 "reanalysis_product": random.choices(self.reanalysis_products, k=self.num_sim),
@@ -1187,12 +1184,10 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
 
     @logged_method_call
     def _calculate_aggregate_dataframe(self):
-        """
-        Creates a data frame with relevant scada columns, plant-level columns, and reanalysis
+        """Creates a data frame with relevant scada columns, plant-level columns, and reanalysis
         variables to be used for the wake loss analysis. The reference mean wind direction is then
         added to the data frame.
         """
-
         # keep relevant SCADA columns, create a unique time index and two-level turbine variable columns
         # (variable name and turbine asset_id)
 
@@ -1225,12 +1220,10 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
 
     @logged_method_call
     def _calculate_mean_wind_direction(self):
-        """
-        Calculates the mean wind direction at each time step using the specified wind direction column for the
+        """Calculates the mean wind direction at each time step using the specified wind direction column for the
         specified subset of turbines or met towers. This reference mean wind direction is added to the plant-level data
         frame.
         """
-
         if self.wind_direction_data_type == "scada":
             self.aggregate_df["wind_direction_ref"] = met.circular_mean(
                 self.aggregate_df[self.wind_direction_col][self.wind_direction_asset_ids], axis=1
@@ -1244,10 +1237,7 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
 
     @logged_method_call
     def _include_reanal_data(self):
-        """
-        Combines reanalysis data columns with the aggregate data frame for use in long-term correction.
-        """
-
+        """Combines reanalysis data columns with the aggregate data frame for use in long-term correction."""
         # combine all wind speed and wind direction reanalysis variables into aggregate data frame
 
         for product in self.reanalysis_products:
@@ -1261,16 +1251,14 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
             df_rean = df_rean.add_suffix(f"_{product}")
             df_rean = df_rean[df_rean.index.isin(self.aggregate_df.index)]
 
-            self.aggregate_df[[col for col in df_rean.columns]] = df_rean
+            self.aggregate_df[df_rean.columns] = df_rean
 
     @logged_method_call
     def _get_speedup_factors(self):
-        """
-        Loads table of wind speed speedup factors as a function of wind direction for each
+        """Loads table of wind speed speedup factors as a function of wind direction for each
         turbine, then creates a speedup factor column for each turbine by linearly
         interpolating the speedup factors using the reference wind direction.
         """
-
         if type(self.ws_speedup_factor_map) is str:
             df_ws_speedup_factor_map = pd.read_csv(self.ws_speedup_factor_map)
         else:
@@ -1286,15 +1274,15 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
         # 0 to 360 degrees
         if wd_last < 360:
             df_ws_speedup_factor_map = pd.concat([df_ws_speedup_factor_map, first_row], axis=0)
-            df_ws_speedup_factor_map.iloc[
-                -1, df_ws_speedup_factor_map.columns.get_loc("wd")
-            ] += 360.0
+            df_ws_speedup_factor_map.iloc[-1, df_ws_speedup_factor_map.columns.get_loc("wd")] += (
+                360.0
+            )
 
         if wd_first > 0:
             df_ws_speedup_factor_map = pd.concat([last_row, df_ws_speedup_factor_map], axis=0)
-            df_ws_speedup_factor_map.iloc[
-                0, df_ws_speedup_factor_map.columns.get_loc("wd")
-            ] -= 360.0
+            df_ws_speedup_factor_map.iloc[0, df_ws_speedup_factor_map.columns.get_loc("wd")] -= (
+                360.0
+            )
 
         df_ws_speedup_factor_map = df_ws_speedup_factor_map.reset_index(drop=True)
 
@@ -1307,11 +1295,9 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
 
     @logged_method_call
     def _identify_derating(self):
-        """
-        Estimates whether each turbine is derated, curtailed, or otherwise not operating for each time stamp based on
+        """Estimates whether each turbine is derated, curtailed, or otherwise not operating for each time stamp based on
         power curve filtering. A derated flag is then added to the aggregate data frame for each turbine.
         """
-
         for t in self.turbine_ids:
             # Apply window range filter to flag samples for which wind speed is greater than a threshold and power is
             # below 1% of rated power
@@ -1376,8 +1362,7 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
 
     @logged_method_call
     def _apply_LT_correction(self):
-        """
-        Estimates long term-corrected wake losses by binning wake losses by wind direction and wind
+        """Estimates long term-corrected wake losses by binning wake losses by wind direction and wind
         speed and weighting by bin frequencies from long-term historical reanalysis data.
 
         Returns:
@@ -1386,6 +1371,7 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
                 term-corrected wake losses, and arrays containing the long-term corrected plant and
                 turbine-level wake losses as well as the normalized wind plant energy production
                 binned by wind direction
+
         """
         # First, create hourly data frame for LT correction to match resolution of reanalysis data
         df_1hr = self.aggregate_df_sample[
@@ -1506,7 +1492,7 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
             )
             df_1hr_bin.loc[
                 fill_inds, [("actual_plant_power", ""), ("potential_plant_power", "")]
-            ] = (self.plant.metadata.capacity * 1e3)
+            ] = self.plant.metadata.capacity * 1e3
             df_1hr_bin.loc[
                 fill_inds,
                 [("WTUR_W", t) for t in self.turbine_ids]
@@ -1601,19 +1587,19 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
 
     def plot_wake_losses_by_wind_direction(
         self,
-        plot_norm_energy: bool = True,
-        turbine_id: str = None,
+        turbine_id: str | None = None,
         xlim: tuple[float, float] = (None, None),
         ylim_efficiency: tuple[float, float] = (None, None),
         ylim_energy: tuple[float, float] = (None, None),
-        return_fig: bool = False,
         figure_kwargs: dict | None = None,
         plot_kwargs_line: dict | None = None,
         plot_kwargs_fill: dict | None = None,
         legend_kwargs: dict | None = None,
+        *,
+        plot_norm_energy: bool = True,
+        return_fig: bool = False,
     ):
-        """
-        Plots wake losses in the form of wind farm efficiency as well as normalized wind plant energy
+        """Plots wake losses in the form of wind farm efficiency as well as normalized wind plant energy
         production for both the period of record and with the long-term correction as a function of
         wind direction.
 
@@ -1643,13 +1629,14 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
             legend_kwargs (:obj:`dict`, optional): Additional legend keyword arguments that are passed to
                 ``ax.legend()`` for the wind farm efficiency and, if `plot_norm_energy` is True, energy
                 distributions subplots. Defaults to None.
+
         Returns:
             None | tuple[matplotlib.pyplot.Figure, matplotlib.pyplot.Axes] | tuple[matplotlib.pyplot.Figure, tuple [matplotlib.pyplot.Axes, matplotlib.pyplot.Axes]]:
                 If :py:attr:`return_fig` is True, then the figure and axes object(s), corresponding to the wake
                 loss plot or, if :py:attr:`plot_norm_energy` is True, wake loss and normalized energy plots, are
                 returned for further tinkering/saving.
-        """
 
+        """
         if figure_kwargs is None:
             figure_kwargs = {}
         if plot_kwargs_line is None:
@@ -1702,19 +1689,19 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
 
     def plot_wake_losses_by_wind_speed(
         self,
-        plot_norm_energy: bool = True,
-        turbine_id: str = None,
+        turbine_id: str | None = None,
         xlim: tuple[float, float] = (None, None),
         ylim_efficiency: tuple[float, float] = (None, None),
         ylim_energy: tuple[float, float] = (None, None),
-        return_fig: bool = False,
         figure_kwargs: dict | None = None,
         plot_kwargs_line: dict | None = None,
         plot_kwargs_fill: dict | None = None,
         legend_kwargs: dict | None = None,
+        *,
+        plot_norm_energy: bool = True,
+        return_fig: bool = False,
     ):
-        """
-        Plots wake losses in the form of wind farm efficiency as well as normalized wind plant energy
+        """Plots wake losses in the form of wind farm efficiency as well as normalized wind plant energy
         production for both the period of record and with the long-term correction as a function of
         wind speed.
 
@@ -1744,13 +1731,14 @@ class WakeLosses(FromDictMixin, ResetValuesMixin):
             legend_kwargs (:obj:`dict`, optional): Additional legend keyword arguments that are passed to
                 ``ax.legend()`` for the wind farm efficiency and, if :py:attr:`plot_norm_energy` is True, energy
                 distributions subplots. Defaults to None.
+
         Returns:
             None | tuple[matplotlib.pyplot.Figure, matplotlib.pyplot.Axes] | tuple[matplotlib.pyplot.Figure, tuple [matplotlib.pyplot.Axes, matplotlib.pyplot.Axes]]:
                 If :py:attr:`return_fig` is True, then the figure and axes object(s), corresponding to the wake
                 loss plot or, if :py:attr:`plot_norm_energy` is True, wake loss and normalized energy plots, are
                 returned for further tinkering/saving.
-        """
 
+        """
         if figure_kwargs is None:
             figure_kwargs = {}
         if plot_kwargs_line is None:
@@ -1853,12 +1841,11 @@ __defaults_no_wakes_ws_thresh_LT_corr = (
 )
 
 
-def create_WakeLosses(
+def create_WakeLosses(  # ruff: ignore[D103]
     project: PlantData,
     wind_direction_col: str = __defaults_wind_direction_col,
     wind_direction_data_type: str = __defaults_wind_direction_data_type,
     wind_direction_asset_ids: list[str] = __defaults_wind_direction_asset_ids,
-    UQ: bool = __defaults_UQ,
     num_sim: int = __defaults_num_sim,
     start_date: str | pd.Timestamp = __defaults_start_date,
     end_date: str | pd.Timestamp = __defaults_end_date,
@@ -1868,15 +1855,17 @@ def create_WakeLosses(
     freestream_sector_width: float = __defaults_freestream_sector_width,
     freestream_power_method: str = __defaults_freestream_power_method,
     freestream_wind_speed_method: str = __defaults_freestream_wind_speed_method,
-    correct_for_derating: bool = __defaults_correct_for_derating,
-    derating_filter_wind_speed_start: float = __defaults_derating_filter_wind_speed_start,
     max_power_filter: float = __defaults_max_power_filter,
     wind_bin_mad_thresh: float = __defaults_wind_bin_mad_thresh,
     wd_bin_width_LT_corr: float = __defaults_wd_bin_width_LT_corr,
     ws_bin_width_LT_corr: float = __defaults_ws_bin_width_LT_corr,
     num_years_LT: int = __defaults_num_years_LT,
-    assume_no_wakes_high_ws_LT_corr: bool = __defaults_assume_no_wakes_high_ws_LT_corr,
     no_wakes_ws_thresh_LT_corr: float = __defaults_no_wakes_ws_thresh_LT_corr,
+    *,
+    UQ: bool = __defaults_UQ,
+    correct_for_derating: bool = __defaults_correct_for_derating,
+    derating_filter_wind_speed_start: float = __defaults_derating_filter_wind_speed_start,
+    assume_no_wakes_high_ws_LT_corr: bool = __defaults_assume_no_wakes_high_ws_LT_corr,
 ) -> WakeLosses:
     return WakeLosses(
         plant=project,

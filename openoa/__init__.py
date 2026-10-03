@@ -1,10 +1,9 @@
-__version__ = "3.2"
-
-"""
-When bumping version, please be sure to also update parameters in sphinx/conf.py
-"""
+# NOTE: When bumping version, please be sure to also update parameters in sphinx/conf.py.
 
 from openoa.plant import PlantData
+
+
+__version__ = "3.2"
 
 
 def __attach_methods():
@@ -15,12 +14,12 @@ def __attach_methods():
     from openoa.analysis.electrical_losses import create_ElectricalLosses
     from openoa.analysis.turbine_long_term_gross_energy import create_TurbineLongTermGrossEnergy
 
-    setattr(PlantData, "MonteCarloAEP", create_MonteCarloAEP)
-    setattr(PlantData, "WakeLosses", create_WakeLosses)
-    setattr(PlantData, "EYAGapAnalysis", create_EYAGapAnalysis)
-    setattr(PlantData, "ElectricalLosses", create_ElectricalLosses)
-    setattr(PlantData, "StaticYawMisalignment", create_StaticYawMisalignment)
-    setattr(PlantData, "TurbineLongTermGrossEnergy", create_TurbineLongTermGrossEnergy)
+    PlantData.MonteCarloAEP = create_MonteCarloAEP
+    PlantData.WakeLosses = create_WakeLosses
+    PlantData.EYAGapAnalysis = create_EYAGapAnalysis
+    PlantData.ElectricalLosses = create_ElectricalLosses
+    PlantData.StaticYawMisalignment = create_StaticYawMisalignment
+    PlantData.TurbineLongTermGrossEnergy = create_TurbineLongTermGrossEnergy
 
 
 __attach_methods()

@@ -1,4 +1,4 @@
-"""Methods to generate YAML and JSON schema files"""
+"""Methods to generate YAML and JSON schema files."""
 
 from __future__ import annotations
 
@@ -20,6 +20,7 @@ from openoa.schema.metadata import (
     ReanalysisMetaData,
     determine_analysis_requirements,
 )
+
 
 HERE = Path(__file__).resolve().parent
 
@@ -43,12 +44,11 @@ def _attrs_meta_filter(inst: Attribute, value: Any) -> bool:
 
     Returns:
         bool: False, if should not be serialized, and True, if it should be serialized.
+
     """
     if inst.name in ("col_map", "name", "col_map_reversed"):
         return False
-    if inst is None or value is None:
-        return False
-    return True
+    return not (inst is None or value is None)
 
 
 def _attrs_meta_serializer(inst: type, field: Attribute, value: Any) -> Any:
@@ -61,6 +61,7 @@ def _attrs_meta_serializer(inst: type, field: Attribute, value: Any) -> Any:
 
     Returns:
         Any: Reformatted data.
+
     """
     if field is None:
         return value
@@ -75,13 +76,14 @@ def create_schema() -> dict:
 
     Returns:
         dict: The compiled metadata dictionary specifying the required data definitions.
+
     """
     schema = {name: {} for name in meta_class_map}
     for name, meta in meta_class_map.items():
         meta_dict = asdict(
             meta(), filter=_attrs_meta_filter, value_serializer=_attrs_meta_serializer
         )
-        for key, value in meta_dict.items():
+        for key in meta_dict:
             if key in ("dtypes", "units"):
                 continue
             if key == "frequency":
@@ -100,6 +102,7 @@ def create_analysis_schema(analysis_types: str | list[str]) -> dict:
 
     Returns:
         dict: The compiled metadata dictionary specifying the required data definitions.
+
     """
     schema = create_schema()
     schema_copy = deepcopy(schema)
@@ -133,52 +136,52 @@ if __name__ == "__main__":
     base_yaw_misalignment_schema = create_analysis_schema("StaticYawMisalignment")
 
     # Save the analysis schemass
-    with open(HERE / "full_schema.yml", "w") as f:
+    with (HERE / "full_schema.yml", "w").open() as f:
         yaml.dump(full_schema, f, default_flow_style=False, sort_keys=False)
-    with open(HERE / "full_schema.json", "w") as f:
+    with (HERE / "full_schema.json", "w").open() as f:
         json.dump(full_schema, f, sort_keys=False, indent=2)
 
-    with open(HERE / "base_monte_carlo_aep_schema.yml", "w") as f:
+    with (HERE / "base_monte_carlo_aep_schema.yml", "w").open() as f:
         yaml.dump(base_mc_aep_schema, f, default_flow_style=False, sort_keys=False)
-    with open(HERE / "base_monte_carlo_aep_schema.json", "w") as f:
+    with (HERE / "base_monte_carlo_aep_schema.json", "w").open() as f:
         json.dump(base_mc_aep_schema, f, sort_keys=False, indent=2)
 
-    with open(HERE / "temperature_monte_carlo_aep_schema.yml", "w") as f:
+    with (HERE / "temperature_monte_carlo_aep_schema.yml", "w").open() as f:
         yaml.dump(temp_mc_aep_schema, f, default_flow_style=False, sort_keys=False)
-    with open(HERE / "temperature_monte_carlo_aep_schema.json", "w") as f:
+    with (HERE / "temperature_monte_carlo_aep_schema.json", "w").open() as f:
         json.dump(temp_mc_aep_schema, f, sort_keys=False, indent=2)
 
-    with open(HERE / "temperature_wind_direction_monte_carlo_aep_schema.yml", "w") as f:
+    with (HERE / "temperature_wind_direction_monte_carlo_aep_schema.yml", "w").open() as f:
         yaml.dump(temp_wd_mc_aep_schema, f, default_flow_style=False, sort_keys=False)
-    with open(HERE / "temperature_wind_direction_monte_carlo_aep_schema.json", "w") as f:
+    with (HERE / "temperature_wind_direction_monte_carlo_aep_schema.json", "w").open() as f:
         json.dump(temp_wd_mc_aep_schema, f, sort_keys=False, indent=2)
 
-    with open(HERE / "wind_direction_monte_carlo_aep_schema.yml", "w") as f:
+    with (HERE / "wind_direction_monte_carlo_aep_schema.yml", "w").open() as f:
         yaml.dump(wd_mc_aep_schema, f, default_flow_style=False, sort_keys=False)
-    with open(HERE / "wind_direction_monte_carlo_aep_schema.json", "w") as f:
+    with (HERE / "wind_direction_monte_carlo_aep_schema.json", "w").open() as f:
         json.dump(wd_mc_aep_schema, f, sort_keys=False, indent=2)
 
-    with open(HERE / "scada_wake_losses_schema.yml", "w") as f:
+    with (HERE / "scada_wake_losses_schema.yml", "w").open() as f:
         yaml.dump(scada_wake_schema, f, default_flow_style=False, sort_keys=False)
-    with open(HERE / "scada_wake_losses_schema.json", "w") as f:
+    with (HERE / "scada_wake_losses_schema.json", "w").open() as f:
         json.dump(scada_wake_schema, f, sort_keys=False, indent=2)
 
-    with open(HERE / "tower_wake_losses_schema.yml", "w") as f:
+    with (HERE / "tower_wake_losses_schema.yml", "w").open() as f:
         yaml.dump(tower_wake_schema, f, default_flow_style=False, sort_keys=False)
-    with open(HERE / "tower_wake_losses_schema.json", "w") as f:
+    with (HERE / "tower_wake_losses_schema.json", "w").open() as f:
         json.dump(tower_wake_schema, f, sort_keys=False, indent=2)
 
-    with open(HERE / "base_tie_schema.yml", "w") as f:
+    with (HERE / "base_tie_schema.yml", "w").open() as f:
         yaml.dump(base_tie_schema, f, default_flow_style=False, sort_keys=False)
-    with open(HERE / "base_tie_schema.json", "w") as f:
+    with (HERE / "base_tie_schema.json", "w").open() as f:
         json.dump(base_tie_schema, f, sort_keys=False, indent=2)
 
-    with open(HERE / "base_electrical_losses_schema.yml", "w") as f:
+    with (HERE / "base_electrical_losses_schema.yml", "w").open() as f:
         yaml.dump(base_electric_schema, f, default_flow_style=False, sort_keys=False)
-    with open(HERE / "base_electrical_losses_schema.json", "w") as f:
+    with (HERE / "base_electrical_losses_schema.json", "w").open() as f:
         json.dump(base_electric_schema, f, sort_keys=False, indent=2)
 
-    with open(HERE / "base_yaw_misalignmental_losses_schema.yml", "w") as f:
+    with (HERE / "base_yaw_misalignmental_losses_schema.yml", "w").open() as f:
         yaml.dump(base_yaw_misalignment_schema, f, default_flow_style=False, sort_keys=False)
-    with open(HERE / "base_yaw_misalignmental_losses_schema.json", "w") as f:
+    with (HERE / "base_yaw_misalignmental_losses_schema.json", "w").open() as f:
         json.dump(base_yaw_misalignment_schema, f, sort_keys=False, indent=2)

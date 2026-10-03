@@ -1,3 +1,7 @@
+"""Provides the metadata dataclasses for configuring the user data mappings to OpenOA
+naming conventions.
+"""
+
 from __future__ import annotations
 
 import re
@@ -16,6 +20,7 @@ from attrs import field, define
 from tabulate import tabulate
 
 from openoa.logging import logging, logged_method_call
+
 
 logger = logging.getLogger(__name__)
 warnings.filterwarnings("once", category=DeprecationWarning)
@@ -192,6 +197,7 @@ def convert_frequency(offset: str) -> str:
     Args:
         offset (str): The alphanumeric offset string. Must be one of: "MS", "ME", "W", "D", "h",
             "min", "s", "ms", "us", "ns", "M", "H", "T", "S", "L", "U", or "N".
+
     """
     # Separate leading digits and the offset code
     offset_digits = re.findall(r"\d+", offset)
@@ -210,8 +216,9 @@ def convert_frequency(offset: str) -> str:
         warnings.warn(
             f"Pandas 3.0 will deprecated the following codes, please use the following mapping {deprecated_offset_map}",
             DeprecationWarning,
+            stacklevel=2,
         )
-        offset_str = deprecated_offset_map.get(offset_str, None)
+        offset_str = deprecated_offset_map.get(offset_str)
 
     elif offset_str not in _at_least_monthly:
         raise ValueError(
@@ -238,6 +245,7 @@ def determine_analysis_requirements(
     Returns:
         dict | tuple[dict, dict]: The dictionary of column or frequency requirements, or if "both", then a tuple
             of each dictionary.
+
     """
     if isinstance(analysis_type, str):
         analysis_type = [analysis_type]
@@ -267,7 +275,7 @@ def determine_analysis_requirements(
                     frequency_requirements[name] = set(req)
                 else:
                     frequency_requirements[name] = reqs.intersection(req)
-    if which == "both":
+    if which == "both":  # noqa: SIM116
         return column_requirements, frequency_requirements
     elif which == "columns":
         return column_requirements
@@ -282,20 +290,24 @@ class FromDictMixin:
     have a specific parameter definied. This allows passing of larger dictionaries
     to a data class without throwing an error.
 
-    Raises
+    Raises:
     ------
     AttributeError
         Raised if the required class inputs are not provided.
+
     """
 
     @classmethod
     @logged_method_call
     def from_dict(cls, data: dict):
         """Maps a data dictionary to an `attrs`-defined class.
+
         Args:
             data (dict): The data dictionary to be mapped.
+
         Returns:
             (cls): An intialized object of the `attrs`-defined class (`cls`).
+
         """
         # Get all parameters from the input dictionary that map to the class initialization
         kwarg_names = [a.name for a in cls.__attrs_attrs__ if a.init]
@@ -320,8 +332,7 @@ class FromDictMixin:
 
 @define(auto_attribs=True)
 class ResetValuesMixin:
-    """
-    A MixinClass that provides the methods to reset initialized or default values for analysis
+    """A MixinClass that provides the methods to reset initialized or default values for analysis
     parameters.
     """
 
@@ -331,6 +342,7 @@ class ResetValuesMixin:
 
         Args:
             value_dict (dict): The parameter names (keys) and their values (values) as a dictionary.
+
         """
         for name, value in value_dict.items():
             logger.debug(f"{name} being set back to {value}")
@@ -346,6 +358,7 @@ class ResetValuesMixin:
 
         Raises:
             ValueError: Raised if any of :py:attr:`which` are not included in ``self.run_parameters``.
+
         """
         logger.info("Resetting run parameters back to the class defaults")
         # Define the analysis class run parameters
@@ -381,10 +394,7 @@ def _make_single_repr(name: str, meta_class) -> str:
         axis=1,
     )
 
-    if name == "ReanalysisMetaData":
-        repr = []
-    else:
-        repr = ["-" * len(name), name, "-" * len(name) + "\n"]
+    repr = [] if name == "ReanalysisMetaData" else ["-" * len(name), name, "-" * len(name) + "\n"]
 
     if name != "AssetMetaData":
         repr.append("frequency\n--------")
@@ -424,7 +434,7 @@ def _make_combined_repr(cls: PlantMetaData) -> str:
 
 
 @define(auto_attribs=True)
-class SCADAMetaData(FromDictMixin):  # noqa: F821
+class SCADAMetaData(FromDictMixin):
     """A metadata schematic to create the necessary column mappings and other validation
     components, or other data about the SCADA data, that will contribute to a larger
     plant metadata schema/routine.
@@ -480,57 +490,59 @@ class SCADAMetaData(FromDictMixin):  # noqa: F821
     col_map: dict = field(init=False)
     col_map_reversed: dict = field(init=False)
     dtypes: dict = field(
-        default=dict(
-            time=np.datetime64,
-            asset_id=str,
-            WTUR_W=float,
-            WMET_HorWdSpd=float,
-            WMET_HorWdDir=float,
-            WMET_HorWdDirRel=float,
-            WTUR_TurSt=str,
-            WROT_BlPthAngVal=float,
-            WMET_EnvTmp=float,
-            WTUR_SupWh=float,
-        ),
+        default={
+            "time": np.datetime64,
+            "asset_id": str,
+            "WTUR_W": float,
+            "WMET_HorWdSpd": float,
+            "WMET_HorWdDir": float,
+            "WMET_HorWdDirRel": float,
+            "WTUR_TurSt": str,
+            "WROT_BlPthAngVal": float,
+            "WMET_EnvTmp": float,
+            "WTUR_SupWh": float,
+        },
         init=False,  # don't allow for user input
     )
     units: dict = field(
-        default=dict(
-            time="datetim64[ns]",
-            asset_id=None,
-            WTUR_W="kW",
-            WMET_HorWdSpd="m/s",
-            WMET_HorWdDir="deg",
-            WMET_HorWdDirRel="deg",
-            WTUR_TurSt=None,
-            WROT_BlPthAngVal="deg",
-            WMET_EnvTmp="C",
-            WTUR_SupWh="kWh",
-        ),
+        default={
+            "time": "datetim64[ns]",
+            "asset_id": None,
+            "WTUR_W": "kW",
+            "WMET_HorWdSpd": "m/s",
+            "WMET_HorWdDir": "deg",
+            "WMET_HorWdDirRel": "deg",
+            "WTUR_TurSt": None,
+            "WROT_BlPthAngVal": "deg",
+            "WMET_EnvTmp": "C",
+            "WTUR_SupWh": "kWh",
+        },
         init=False,  # don't allow for user input
     )
 
     def __attrs_post_init__(self) -> None:
-        self.col_map = dict(
-            time=self.time,
-            asset_id=self.asset_id,
-            WTUR_W=self.WTUR_W,
-            WMET_HorWdSpd=self.WMET_HorWdSpd,
-            WMET_HorWdDir=self.WMET_HorWdDir,
-            WMET_HorWdDirRel=self.WMET_HorWdDirRel,
-            WTUR_TurSt=self.WTUR_TurSt,
-            WROT_BlPthAngVal=self.WROT_BlPthAngVal,
-            WMET_EnvTmp=self.WMET_EnvTmp,
-            WTUR_SupWh=self.WTUR_SupWh,
-        )
+        """Post initialization hook."""
+        self.col_map = {
+            "time": self.time,
+            "asset_id": self.asset_id,
+            "WTUR_W": self.WTUR_W,
+            "WMET_HorWdSpd": self.WMET_HorWdSpd,
+            "WMET_HorWdDir": self.WMET_HorWdDir,
+            "WMET_HorWdDirRel": self.WMET_HorWdDirRel,
+            "WTUR_TurSt": self.WTUR_TurSt,
+            "WROT_BlPthAngVal": self.WROT_BlPthAngVal,
+            "WMET_EnvTmp": self.WMET_EnvTmp,
+            "WTUR_SupWh": self.WTUR_SupWh,
+        }
         self.col_map_reversed = {v: k for k, v in self.col_map.items()}
 
     def __repr__(self):
+        """Custom ``__repr__``. See :py:func:`_make_single_repr`."""
         return _make_single_repr("SCADAMetaData", self)
 
 
 @define(auto_attribs=True)
-class MeterMetaData(FromDictMixin):  # noqa: F821
+class MeterMetaData(FromDictMixin):
     """A metadata schematic to create the necessary column mappings and other validation
     components, or other data about energy meter data, that will contribute to a larger
     plant metadata schema/routine.
@@ -562,32 +574,28 @@ class MeterMetaData(FromDictMixin):  # noqa: F821
     name: str = field(default="meter", init=False)
     col_map: dict = field(init=False)
     dtypes: dict = field(
-        default=dict(
-            time=np.datetime64,
-            MMTR_SupWh=float,
-        ),
+        default={"time": np.datetime64, "MMTR_SupWh": float},
         init=False,  # don't allow for user input
     )
     units: dict = field(
-        default=dict(
-            time="datetim64[ns]",
-            MMTR_SupWh="kWh",
-        ),
+        default={"time": "datetim64[ns]", "MMTR_SupWh": "kWh"},
         init=False,  # don't allow for user input
     )
 
     def __attrs_post_init__(self) -> None:
-        self.col_map = dict(
-            time=self.time,
-            MMTR_SupWh=self.MMTR_SupWh,
-        )
+        """Post initialization hook."""
+        self.col_map = {
+            "time": self.time,
+            "MMTR_SupWh": self.MMTR_SupWh,
+        }
 
     def __repr__(self):
+        """Custom ``__repr__``. See :py:func:`_make_single_repr`."""
         return _make_single_repr("MeterMetaData", self)
 
 
 @define(auto_attribs=True)
-class TowerMetaData(FromDictMixin):  # noqa: F821
+class TowerMetaData(FromDictMixin):
     """A metadata schematic to create the necessary column mappings and other validation
     components, or other data about meteorological tower (met tower) data, that will contribute to a
     larger plant metadata schema/routine.
@@ -627,41 +635,43 @@ class TowerMetaData(FromDictMixin):  # noqa: F821
     name: str = field(default="tower", init=False)
     col_map: dict = field(init=False)
     dtypes: dict = field(
-        default=dict(
-            time=np.datetime64,
-            asset_id=str,
-            WMET_HorWdSpd=float,
-            WMET_HorWdDir=float,
-            WMET_EnvTmp=float,
-        ),
+        default={
+            "time": np.datetime64,
+            "asset_id": str,
+            "WMET_HorWdSpd": float,
+            "WMET_HorWdDir": float,
+            "WMET_EnvTmp": float,
+        },
         init=False,  # don't allow for user input
     )
     units: dict = field(
-        default=dict(
-            time="datetim64[ns]",
-            asset_id=None,
-            WMET_HorWdSpd="m/s",
-            WMET_HorWdDir="deg",
-            WMET_EnvTmp="C",
-        ),
+        default={
+            "time": "datetim64[ns]",
+            "asset_id": None,
+            "WMET_HorWdSpd": "m/s",
+            "WMET_HorWdDir": "deg",
+            "WMET_EnvTmp": "C",
+        },
         init=False,  # don't allow for user input
     )
 
     def __attrs_post_init__(self) -> None:
-        self.col_map = dict(
-            time=self.time,
-            asset_id=self.asset_id,
-            WMET_HorWdSpd=self.WMET_HorWdSpd,
-            WMET_HorWdDir=self.WMET_HorWdDir,
-            WMET_EnvTmp=self.WMET_EnvTmp,
-        )
+        """Post initialization hook."""
+        self.col_map = {
+            "time": self.time,
+            "asset_id": self.asset_id,
+            "WMET_HorWdSpd": self.WMET_HorWdSpd,
+            "WMET_HorWdDir": self.WMET_HorWdDir,
+            "WMET_EnvTmp": self.WMET_EnvTmp,
+        }
 
     def __repr__(self):
+        """Custom ``__repr__``. See :py:func:`_make_single_repr`."""
         return _make_single_repr("TowerMetaData", self)
 
 
 @define(auto_attribs=True)
-class StatusMetaData(FromDictMixin):  # noqa: F821
+class StatusMetaData(FromDictMixin):
     """A metadata schematic to create the necessary column mappings and other validation
     components, or other data about the turbine status log data, that will contribute to a
     larger plant metadata schema/routine.
@@ -701,41 +711,43 @@ class StatusMetaData(FromDictMixin):  # noqa: F821
     name: str = field(default="status", init=False)
     col_map: dict = field(init=False)
     dtypes: dict = field(
-        default=dict(
-            time=np.datetime64,
-            asset_id=str,
-            status_id=np.int64,
-            status_code=np.int64,
-            status_text=str,
-        ),
+        default={
+            "time": np.datetime64,
+            "asset_id": str,
+            "status_id": np.int64,
+            "status_code": np.int64,
+            "status_text": str,
+        },
         init=False,  # don't allow for user input
     )
     units: dict = field(
-        default=dict(
-            time="datetim64[ns]",
-            asset_id=None,
-            status_id=None,
-            status_code=None,
-            status_text=None,
-        ),
+        default={
+            "time": "datetim64[ns]",
+            "asset_id": None,
+            "status_id": None,
+            "status_code": None,
+            "status_text": None,
+        },
         init=False,  # don't allow for user input
     )
 
     def __attrs_post_init__(self) -> None:
-        self.col_map = dict(
-            time=self.time,
-            asset_id=self.asset_id,
-            status_id=self.status_id,
-            status_code=self.status_code,
-            status_text=self.status_text,
-        )
+        """Post initialization hook."""
+        self.col_map = {
+            "time": self.time,
+            "asset_id": self.asset_id,
+            "status_id": self.status_id,
+            "status_code": self.status_code,
+            "status_text": self.status_text,
+        }
 
     def __repr__(self):
+        """Custom ``__repr__``. See :py:func:`_make_single_repr`."""
         return _make_single_repr("StatusMetaData", self)
 
 
 @define(auto_attribs=True)
-class CurtailMetaData(FromDictMixin):  # noqa: F821
+class CurtailMetaData(FromDictMixin):
     """A metadata schematic to create the necessary column mappings and other validation
     components, or other data about the plant curtailment data, that will contribute to a
     larger plant metadata schema/routine.
@@ -769,35 +781,37 @@ class CurtailMetaData(FromDictMixin):  # noqa: F821
     name: str = field(default="curtail", init=False)
     col_map: dict = field(init=False)
     dtypes: dict = field(
-        default=dict(
-            time=np.datetime64,
-            IAVL_ExtPwrDnWh=float,
-            IAVL_DnWh=float,
-        ),
+        default={
+            "time": np.datetime64,
+            "IAVL_ExtPwrDnWh": float,
+            "IAVL_DnWh": float,
+        },
         init=False,  # don't allow for user input
     )
     units: dict = field(
-        default=dict(
-            time="datetim64[ns]",
-            IAVL_ExtPwrDnWh="kWh",
-            IAVL_DnWh="kWh",
-        ),
+        default={
+            "time": "datetim64[ns]",
+            "IAVL_ExtPwrDnWh": "kWh",
+            "IAVL_DnWh": "kWh",
+        },
         init=False,  # don't allow for user input
     )
 
     def __attrs_post_init__(self) -> None:
-        self.col_map = dict(
-            time=self.time,
-            IAVL_ExtPwrDnWh=self.IAVL_ExtPwrDnWh,
-            IAVL_DnWh=self.IAVL_DnWh,
-        )
+        """Post initialization hook."""
+        self.col_map = {
+            "time": self.time,
+            "IAVL_ExtPwrDnWh": self.IAVL_ExtPwrDnWh,
+            "IAVL_DnWh": self.IAVL_DnWh,
+        }
 
     def __repr__(self):
+        """Custom ``__repr__``. See :py:func:`_make_single_repr`."""
         return _make_single_repr("CurtailMetaData", self)
 
 
 @define(auto_attribs=True)
-class AssetMetaData(FromDictMixin):  # noqa: F821
+class AssetMetaData(FromDictMixin):
     """A metadata schematic to create the necessary column mappings and other validation
     components, or other data about the site's asset metadata, that will contribute to a
     larger plant metadata schema/routine.
@@ -817,6 +831,7 @@ class AssetMetaData(FromDictMixin):  # noqa: F821
             by default "elevation". This data should be of type: ``float``.
         type (str): The type of asset column in the asset metadata, by default "type". This data
             should be of type: ``str``.
+
     """
 
     # DataFrame columns
@@ -834,54 +849,59 @@ class AssetMetaData(FromDictMixin):  # noqa: F821
     name: str = field(default="asset", init=False)
     col_map: dict = field(init=False)
     dtypes: dict = field(
-        default=dict(
-            asset_id=str,
-            latitude=float,
-            longitude=float,
-            rated_power=float,
-            hub_height=float,
-            rotor_diameter=float,
-            elevation=float,
-            type=str,
-        ),
+        default={
+            "asset_id": str,
+            "latitude": float,
+            "longitude": float,
+            "rated_power": float,
+            "hub_height": float,
+            "rotor_diameter": float,
+            "elevation": float,
+            "type": str,
+        },
         init=False,  # don't allow for user input
     )
     units: dict = field(
-        default=dict(
-            asset_id=None,
-            latitude="WGS84",
-            longitude="WGS84",
-            rated_power="kW",
-            hub_height="m",
-            rotor_diameter="m",
-            elevation="m",
-            type=None,
-        ),
+        default={
+            "asset_id": None,
+            "latitude": "WGS84",
+            "longitude": "WGS84",
+            "rated_power": "kW",
+            "hub_height": "m",
+            "rotor_diameter": "m",
+            "elevation": "m",
+            "type": None,
+        },
         init=False,  # don't allow for user input
     )
 
     def __attrs_post_init__(self) -> None:
-        self.col_map = dict(
-            asset_id=self.asset_id,
-            latitude=self.latitude,
-            longitude=self.longitude,
-            rated_power=self.rated_power,
-            hub_height=self.hub_height,
-            rotor_diameter=self.rotor_diameter,
-            elevation=self.elevation,
-            type=self.type,
-        )
+        """Post initialization hook."""
+        self.col_map = {
+            "asset_id": self.asset_id,
+            "latitude": self.latitude,
+            "longitude": self.longitude,
+            "rated_power": self.rated_power,
+            "hub_height": self.hub_height,
+            "rotor_diameter": self.rotor_diameter,
+            "elevation": self.elevation,
+            "type": self.type,
+        }
 
     def __repr__(self):
+        """Custom ``__repr__``. See :py:func:`_make_single_repr`."""
         return _make_single_repr("AssetMetaData", self)
 
 
 def convert_reanalysis(value: dict[str, dict]):
+    """Convert nested reanalysis configuration dictionaries into a dictionary of
+    :py:attr:class`ReanalysisMetaData` objects.
+    """
     return {k: ReanalysisMetaData.from_dict(v) for k, v in value.items()}
 
 
 @define(auto_attribs=True)
-class ReanalysisMetaData(FromDictMixin):  # noqa: F821
+class ReanalysisMetaData(FromDictMixin):
     """A metadata schematic for each of the reanalsis products to be used for operationa analyses
     to create the necessary column mappings and other validation components, or other data about
     the site's asset metadata, that will contribute to a larger plant metadata schema/routine.
@@ -906,6 +926,7 @@ class ReanalysisMetaData(FromDictMixin):  # noqa: F821
             default "WMETR_EnvPres".
         frequency (:obj:`str`): The frequency of the timestamps in the :py:attr:`time` column, by
             default "10min".
+
     """
 
     time: str = field(default="time")
@@ -925,50 +946,52 @@ class ReanalysisMetaData(FromDictMixin):  # noqa: F821
     name: str = field(default="reanalysis", init=False)
     col_map: dict = field(init=False)
     dtypes: dict = field(
-        default=dict(
-            time=np.datetime64,
-            WMETR_HorWdSpd=float,
-            WMETR_HorWdSpdU=float,
-            WMETR_HorWdSpdV=float,
-            WMETR_HorWdDir=float,
-            WMETR_EnvTmp=float,
-            WMETR_AirDen=float,
-            WMETR_EnvPres=float,
-        ),
+        default={
+            "time": np.datetime64,
+            "WMETR_HorWdSpd": float,
+            "WMETR_HorWdSpdU": float,
+            "WMETR_HorWdSpdV": float,
+            "WMETR_HorWdDir": float,
+            "WMETR_EnvTmp": float,
+            "WMETR_AirDen": float,
+            "WMETR_EnvPres": float,
+        },
         init=False,  # don't allow for user input
     )
     units: dict = field(
-        default=dict(
-            time="datetim64[ns]",
-            WMETR_HorWdSpd="m/s",
-            WMETR_HorWdSpdU="m/s",
-            WMETR_HorWdSpdV="m/s",
-            WMETR_HorWdDir="deg",
-            WMETR_EnvTmp="K",
-            WMETR_AirDen="kg/m^3",
-            WMETR_EnvPres="Pa",
-        ),
+        default={
+            "time": "datetim64[ns]",
+            "WMETR_HorWdSpd": "m/s",
+            "WMETR_HorWdSpdU": "m/s",
+            "WMETR_HorWdSpdV": "m/s",
+            "WMETR_HorWdDir": "deg",
+            "WMETR_EnvTmp": "K",
+            "WMETR_AirDen": "kg/m^3",
+            "WMETR_EnvPres": "Pa",
+        },
         init=False,  # don't allow for user input
     )
 
     def __attrs_post_init__(self) -> None:
-        self.col_map = dict(
-            time=self.time,
-            WMETR_HorWdSpd=self.WMETR_HorWdSpd,
-            WMETR_HorWdSpdU=self.WMETR_HorWdSpdU,
-            WMETR_HorWdSpdV=self.WMETR_HorWdSpdV,
-            WMETR_HorWdDir=self.WMETR_HorWdDir,
-            WMETR_EnvTmp=self.WMETR_EnvTmp,
-            WMETR_AirDen=self.WMETR_AirDen,
-            WMETR_EnvPres=self.WMETR_EnvPres,
-        )
+        """Post initialization hook."""
+        self.col_map = {
+            "time": self.time,
+            "WMETR_HorWdSpd": self.WMETR_HorWdSpd,
+            "WMETR_HorWdSpdU": self.WMETR_HorWdSpdU,
+            "WMETR_HorWdSpdV": self.WMETR_HorWdSpdV,
+            "WMETR_HorWdDir": self.WMETR_HorWdDir,
+            "WMETR_EnvTmp": self.WMETR_EnvTmp,
+            "WMETR_AirDen": self.WMETR_AirDen,
+            "WMETR_EnvPres": self.WMETR_EnvPres,
+        }
 
     def __repr__(self):
+        """Custom ``__repr__``. See :py:func:`_make_single_repr`."""
         return _make_single_repr("ReanalysisMetaData", self)
 
 
 @define(auto_attribs=True)
-class PlantMetaData(FromDictMixin):  # noqa: F821
+class PlantMetaData(FromDictMixin):
     """Composese the metadata/validation requirements from each of the individual data
     types that can compose a `PlantData` object.
 
@@ -1000,6 +1023,7 @@ class PlantMetaData(FromDictMixin):  # noqa: F821
             reanalysis type (as keys, such as "era5" or "merra2") and ``ReanalysisMetaData``
             column mapping and frequency parameters for each type of reanalysis data
             provided. See ``ReanalysisMetaData`` for more details.
+
     """
 
     latitude: float = field(default=0, converter=float)
@@ -1015,23 +1039,23 @@ class PlantMetaData(FromDictMixin):  # noqa: F821
     curtail: CurtailMetaData = field(default={}, converter=CurtailMetaData.from_dict)
     asset: AssetMetaData = field(default={}, converter=AssetMetaData.from_dict)
     reanalysis: dict[str, ReanalysisMetaData] = field(
-        default={"product": {}}, converter=convert_reanalysis  # noqa: F821
-    )  # noqa: F821
+        default={"product": {}}, converter=convert_reanalysis
+    )
 
     @property
     def column_map(self) -> dict[str, dict]:
         """Provides the column mapping for all of the available data types with
         the name of each data type as the key and the dictionary mapping as the values.
         """
-        values = dict(
-            scada=self.scada.col_map,
-            meter=self.meter.col_map,
-            tower=self.tower.col_map,
-            status=self.status.col_map,
-            asset=self.asset.col_map,
-            curtail=self.curtail.col_map,
-            reanalysis={},
-        )
+        values = {
+            "scada": self.scada.col_map,
+            "meter": self.meter.col_map,
+            "tower": self.tower.col_map,
+            "status": self.status.col_map,
+            "asset": self.asset.col_map,
+            "curtail": self.curtail.col_map,
+            "reanalysis": {},
+        }
         if self.reanalysis != {}:
             values["reanalysis"] = {k: v.col_map for k, v in self.reanalysis.items()}
         return values
@@ -1041,15 +1065,15 @@ class PlantMetaData(FromDictMixin):  # noqa: F821
         """Provides the column dtype matching for all of the available data types with
         the name of each data type as the keys, and the column dtype mapping as values.
         """
-        types = dict(
-            scada=self.scada.dtypes,
-            meter=self.meter.dtypes,
-            tower=self.tower.dtypes,
-            status=self.status.dtypes,
-            asset=self.asset.dtypes,
-            curtail=self.curtail.dtypes,
-            reanalysis={},
-        )
+        types = {
+            "scada": self.scada.dtypes,
+            "meter": self.meter.dtypes,
+            "tower": self.tower.dtypes,
+            "status": self.status.dtypes,
+            "asset": self.asset.dtypes,
+            "curtail": self.curtail.dtypes,
+            "reanalysis": {},
+        }
         if self.reanalysis != {}:
             types["reanalysis"] = {k: v.dtypes for k, v in self.reanalysis.items()}
         return types
@@ -1060,6 +1084,7 @@ class PlantMetaData(FromDictMixin):  # noqa: F821
 
         Returns:
             tuple[float, float]: The (latitude, longitude) pair
+
         """
         return self.latitude, self.longitude
 
@@ -1075,12 +1100,13 @@ class PlantMetaData(FromDictMixin):  # noqa: F821
 
         Returns:
             PlantMetaData
+
         """
         metadata_file = Path(metadata_file).resolve()
         if not metadata_file.is_file():
             raise FileExistsError(f"Input JSON file: {metadata_file} is an invalid input.")
 
-        with open(metadata_file) as f:
+        with metadata_file.open() as f:
             return cls.from_dict(json.load(f))
 
     @classmethod
@@ -1095,12 +1121,13 @@ class PlantMetaData(FromDictMixin):  # noqa: F821
 
         Returns:
             PlantMetaData
+
         """
         metadata_file = Path(metadata_file).resolve()
         if not metadata_file.is_file():
             raise FileExistsError(f"Input YAML file: {metadata_file} is an invalid input.")
 
-        with open(metadata_file) as f:
+        with metadata_file.open() as f:
             return cls.from_dict(yaml.safe_load(f))
 
     @classmethod
@@ -1108,7 +1135,7 @@ class PlantMetaData(FromDictMixin):  # noqa: F821
         """Loads the metadata from either a dictionary or file such as a JSON or YAML file.
 
         Args:
-            metadata_file (`str | Path | dict`): Either a pre-loaded dictionary or
+            data (`str | Path | dict`): Either a pre-loaded dictionary or
                 the full path and file name of the JSON or YAML file.
 
         Raises:
@@ -1117,6 +1144,7 @@ class PlantMetaData(FromDictMixin):  # noqa: F821
 
         Returns:
             PlantMetaData
+
         """
         if isinstance(data, PlantMetaData):
             return data
@@ -1148,6 +1176,7 @@ class PlantMetaData(FromDictMixin):  # noqa: F821
         Returns:
             dict[str, set[str]]: The dictionary of data type name and valid frequencies
                 for the datetime stamps.
+
         """
         if "all" in analysis_types:
             requirements = deepcopy(ANALYSIS_REQUIREMENTS)
@@ -1175,4 +1204,5 @@ class PlantMetaData(FromDictMixin):  # noqa: F821
         return frequency
 
     def __repr__(self):
+        """Custom repr. See :py:func:`_make_combined_repr`."""
         return _make_combined_repr(self)

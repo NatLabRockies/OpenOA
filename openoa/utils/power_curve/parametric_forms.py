@@ -1,5 +1,4 @@
-"""
-Power Curves
+"""Power Curves.
 
 These curve functions are written in the style of Scipy.optimize:
 
@@ -32,6 +31,7 @@ def _power_curve(x: np.ndarray | pd.Series, a: float, b: float, c: float, d: flo
 
     Returns:
         (:obj:`numpy.ndarray`): The converted power data.
+
     """
     if isinstance(x, pd.Series):
         x = x.values
@@ -39,7 +39,7 @@ def _power_curve(x: np.ndarray | pd.Series, a: float, b: float, c: float, d: flo
 
 
 def logistic5param(x: np.ndarray | pd.Series, a: float, b: float, c: float, d: float, g: float):
-    """Create and return a 5 parameter logistic function
+    """Create and return a 5 parameter logistic function.
 
     Args:
         x(:obj:`numpy.ndarray` | `pandas.Series`): Input data.
@@ -51,9 +51,7 @@ def logistic5param(x: np.ndarray | pd.Series, a: float, b: float, c: float, d: f
 
     Returns:
         Function[numpy.ndarray[real]] -> numpy.ndarray[real]
-
     """
-
     res = np.ones_like(x, dtype=np.float64)
     # In the case where b<0, x==0, there is a divide by zero error. The answer should be "d" when x==0 and b<0.
     if b < 0:

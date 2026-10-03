@@ -2,11 +2,11 @@ import random
 import unittest
 
 import numpy as np
-import pandas as pd
 import pytest
 from numpy import testing as nptest
 
 from openoa.analysis import yaw_misalignment
+
 
 from test.conftest import project_ENGIE, example_data_path_str  # isort: skip
 
@@ -18,8 +18,7 @@ def reset_prng():
 
 class TestStaticYawMisalignment(unittest.TestCase):
     def setUp(self):
-        """
-        Python Unittest setUp method.
+        """Python Unittest setUp method.
         Load data from disk into PlantData objects and prepare the data for testing the
         StaticYawMisalignment method.
         """

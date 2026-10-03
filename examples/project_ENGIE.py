@@ -1,8 +1,7 @@
 #################################################
 # Data import script for La Haute Borne Project #
 #################################################
-"""
-This is the import script for the example ENGIE La Haute Borne project. Below
+"""This is the import script for the example ENGIE La Haute Borne project. Below
 is a description of data quality for each data frame and an overview of the
 steps taken to correct the raw data for use in the PRUF OA code.
 
@@ -33,7 +32,6 @@ steps taken to correct the raw data for use in the PRUF OA code.
 
 from __future__ import annotations
 
-import re
 from pathlib import Path
 from zipfile import ZipFile
 
@@ -43,16 +41,15 @@ import pandas as pd
 import openoa.utils.unit_conversion as un
 import openoa.utils.met_data_processing as met
 from openoa.plant import PlantData
-from openoa.utils import filters, timeseries
+from openoa.utils import filters
 from openoa.logging import logging
+
 
 logger = logging.getLogger()
 
 
 def extract_data(path="data/la_haute_borne"):
-    """
-    Extract zip file containing project engie data.
-    """
+    """Extract zip file containing project ENGIE data."""
     path = Path(path).resolve()
     if not path.exists():
         logger.info("Extracting compressed data files")
@@ -61,13 +58,14 @@ def extract_data(path="data/la_haute_borne"):
 
 
 def clean_scada(scada_file: str | Path) -> pd.DataFrame:
-    """Reads in and cleans up the SCADA data
+    """Reads in and cleans up the SCADA data.
 
     Args:
         scada_file (:obj: `str` | `Path`): The file object corresponding to the SCADA data.
 
     Returns:
         pd.DataFrame: The cleaned up SCADA data that is ready for loading into a `PlantData` object.
+
     """
     scada_freq = "10min"
 
@@ -124,6 +122,7 @@ def load_cleansed_data(path: str | Path, return_value="plantdata") -> PlantData:
 
     Returns:
         PlantData | tuple[pandas.DataFrame, ...]
+
     """
     logger.info("Reading in the previously cleansed data")
 
@@ -132,10 +131,10 @@ def load_cleansed_data(path: str | Path, return_value="plantdata") -> PlantData:
     meter_df = pd.read_csv(path / "meter.csv")
     curtail_df = pd.read_csv(path / "curtail.csv")
     asset_df = pd.read_csv(path / "asset.csv")
-    reanalysis = dict(
-        era5=pd.read_csv(path / "reanalysis_era5.csv"),
-        merra2=pd.read_csv(path / "reanalysis_merra2.csv"),
-    )
+    reanalysis = {
+        "era5": pd.read_csv(path / "reanalysis_era5.csv"),
+        "merra2": pd.read_csv(path / "reanalysis_merra2.csv"),
+    }
 
     # Return the appropriate data format
     if return_value == "dataframes":
@@ -157,17 +156,19 @@ def load_cleansed_data(path: str | Path, return_value="plantdata") -> PlantData:
 
 
 def prepare(
-    path: str | Path = "data/la_haute_borne", return_value="plantdata", use_cleansed: bool = False
+    path: str | Path = "data/la_haute_borne",
+    return_value="plantdata",
+    *,
+    use_cleansed: bool = False,
 ):
-    """
-    Do all loading and preparation of the data for this plant.
-    args:
-    - path (str): Path to la_haute_borne data folder. If it doesn't exist, we will try to extract a zip file of the same name.
-    - scada_df (pandas.DataFrame): Override the scada dataframe with one provided by the user.
-    - return_value (str): "plantdata" will return a fully constructed PlantData object. "dataframes" will return a list of dataframes instead.
-    - use_cleansed (bool): Use previously prepared data if the the "cleansed" folder exists above the main `path`. Defaults to False.
-    """
+    """Do all loading and preparation of the data for this plant.
 
+    Args:
+        path (str): Path to la_haute_borne data folder. If it doesn't exist, we will try to extract a zip file of the same name.
+        return_value (str): "plantdata" will return a fully constructed PlantData object. "dataframes" will return a list of dataframes instead.
+        use_cleansed (bool): Use previously prepared data if the the "cleansed" folder exists above the main `path`. Defaults to False.
+
+    """
     if isinstance(path, str):
         path = Path(path).resolve()
 
@@ -283,7 +284,7 @@ def prepare(
             meter_df,
             curtail_df,
             asset_df,
-            dict(era5=reanalysis_era5_df, merra2=reanalysis_merra2_df),
+            {"era5": reanalysis_era5_df, "merra2": reanalysis_merra2_df},
         )
     elif return_value == "plantdata":
         # Build and return PlantData

@@ -10,19 +10,10 @@ import pandas as pd
 import pytest
 from attrs import field, define
 
-from openoa.plant import (  # , compose_error_message
-    PlantData,
-    load_to_pandas,
-    rename_columns,
-    convert_to_list,
-    dtype_converter,
-    column_validator,
-    frequency_validator,
-    load_to_pandas_dict,
-)
-from openoa.schema import (  # , compose_error_message
-    ANALYSIS_REQUIREMENTS,
-    AssetMetaData,
+from openoa.plant import rename_columns  # , compose_error_message
+from openoa.plant import convert_to_list, dtype_converter, column_validator, frequency_validator
+from openoa.schema import AssetMetaData  # , compose_error_message
+from openoa.schema import (
     FromDictMixin,
     MeterMetaData,
     PlantMetaData,
@@ -39,6 +30,7 @@ from openoa.schema.metadata import (
     deprecated_offset_map,
 )
 
+
 EXAMPLE_DATA_PATH = Path(__file__).resolve().parents[2] / "examples/data"
 
 
@@ -52,13 +44,13 @@ def test_convert_frequency():
     with pytest.warns(DeprecationWarning):
         convert_frequency(offset)
 
-    assert "ME" == convert_frequency("M")
-    assert "1h" == convert_frequency("1H")
-    assert "10min" == convert_frequency("10T")
-    assert "20s" == convert_frequency("20S")
-    assert "ms" == convert_frequency("L")
-    assert "us" == convert_frequency("U")
-    assert "ns" == convert_frequency("N")
+    assert convert_frequency("M") == "ME"
+    assert convert_frequency("1H") == "1h"
+    assert convert_frequency("10T") == "10min"
+    assert convert_frequency("20S") == "20s"
+    assert convert_frequency("L") == "ms"
+    assert convert_frequency("U") == "us"
+    assert convert_frequency("N") == "ns"
 
     with pytest.raises(ValueError):
         convert_frequency("10min1")
@@ -116,7 +108,6 @@ def test_frequency_validator() -> None:
     """Tests the `frequency_validator` method. All inputs are formatted to the desired input,
     so testing of the input types is not required.
     """
-
     # Test None as desired frequency returns True always
     assert frequency_validator("anything", None, exact=True)
     assert frequency_validator("anything", None, exact=False)
@@ -133,9 +124,9 @@ def test_frequency_validator() -> None:
     desired_valid_2 = ("10min", "h", "ns")  # set of options case
     desired_invalid = _at_least_hourly  # set of non exact matches
 
-    assert frequency_validator(actual, desired_valid_1, True)
-    assert frequency_validator(actual, desired_valid_2, True)
-    assert not frequency_validator(actual, desired_invalid, True)
+    assert frequency_validator(actual, desired_valid_1, exact=True)
+    assert frequency_validator(actual, desired_valid_2, exact=True)
+    assert not frequency_validator(actual, desired_invalid, exact=True)
 
     # Test for non-exact matches
     actual_1 = "10min"
@@ -150,19 +141,18 @@ def test_frequency_validator() -> None:
         "h",
     )  # set of greater than or equal to hourly frequency resolutions
 
-    assert frequency_validator(actual_1, desired_valid, False)
-    assert frequency_validator(actual_2, desired_valid, False)
-    assert frequency_validator(actual_3, desired_valid, False)
-    assert not frequency_validator(actual_1, desired_invalid, False)
-    assert not frequency_validator(actual_2, desired_invalid, False)
-    assert not frequency_validator(actual_3, desired_invalid, False)
+    assert frequency_validator(actual_1, desired_valid, exact=False)
+    assert frequency_validator(actual_2, desired_valid, exact=False)
+    assert frequency_validator(actual_3, desired_valid, exact=False)
+    assert not frequency_validator(actual_1, desired_invalid, exact=False)
+    assert not frequency_validator(actual_2, desired_invalid, exact=False)
+    assert not frequency_validator(actual_3, desired_invalid, exact=False)
 
 
 def test_convert_to_list():
     """Tests the converter function for turning single inputs into a list of input,
-    or applying a manipulation across a list of inputs
+    or applying a manipulation across a list of inputs.
     """
-
     # Test that a list of the value is returned
     assert convert_to_list(1) == [1]
     assert convert_to_list(None) == [None]
@@ -220,13 +210,24 @@ def test_dtype_converter():
     df.string_col = np.arange(7)
     df.problem_col = ["one", "two", "string", "invalid", 5, 6.0, 7]
 
-    column_types_invalid_1 = dict(
-        time=pd.DatetimeIndex, float_col=float, string_col=str, problem_col=float
-    )
-    column_types_invalid_2 = dict(
-        time=np.datetime64, float_col=float, string_col=str, problem_col=int
-    )
-    column_types_valid = dict(time=np.datetime64, float_col=float, string_col=str, problem_col=str)
+    column_types_invalid_1 = {
+        "time": pd.DatetimeIndex,
+        "float_col": float,
+        "string_col": str,
+        "problem_col": float,
+    }
+    column_types_invalid_2 = {
+        "time": np.datetime64,
+        "float_col": float,
+        "string_col": str,
+        "problem_col": int,
+    }
+    column_types_valid = {
+        "time": np.datetime64,
+        "float_col": float,
+        "string_col": str,
+        "problem_col": str,
+    }
 
     assert dtype_converter(df, column_types_invalid_1) == ["problem_col"]
     assert dtype_converter(df, column_types_invalid_2) == ["problem_col"]
@@ -274,18 +275,18 @@ def test_SCADAMetaData():
     # Tests the SCADAMetaData for defaults and user-provided values
 
     # Leaving asset_id and power as the default values
-    meta_dict = dict(
-        time="datetime",
-        WMET_HorWdSpd="ws_100",
-        WMET_HorWdDir="wd_100",
-        WMET_HorWdDirRel="wd_rel_100",
-        WTUR_TurSt="turb_stat",
-        WROT_BlPthAngVal="rotor_angle",
-        WMET_EnvTmp="temp",
-        frequency="h",
-    )
+    meta_dict = {
+        "time": "datetime",
+        "WMET_HorWdSpd": "ws_100",
+        "WMET_HorWdDir": "wd_100",
+        "WMET_HorWdDirRel": "wd_rel_100",
+        "WTUR_TurSt": "turb_stat",
+        "WROT_BlPthAngVal": "rotor_angle",
+        "WMET_EnvTmp": "temp",
+        "frequency": "h",
+    }
     valid_map = deepcopy(meta_dict)
-    valid_map.update(dict(asset_id="asset_id", WTUR_W="WTUR_W"))
+    valid_map.update({"asset_id": "asset_id", "WTUR_W": "WTUR_W"})
     valid_map.pop("frequency")
 
     meta = SCADAMetaData.from_dict(meta_dict)
@@ -310,11 +311,9 @@ def test_MeterMetaData():
     # Tests the MeterMetaData for defaults and user-provided values
 
     # Leaving time and energy as the default values
-    meta_dict = dict(
-        frequency="D",
-    )
+    meta_dict = {"frequency": "D"}
     valid_map = deepcopy(meta_dict)
-    valid_map.update(dict(time="time", MMTR_SupWh="MMTR_SupWh"))
+    valid_map.update({"time": "time", "MMTR_SupWh": "MMTR_SupWh"})
     valid_map.pop("frequency")
 
     meta = MeterMetaData.from_dict(meta_dict)
@@ -337,15 +336,15 @@ def test_TowerMetaData():
     # Tests the TowerMetaData for defaults and user-provided values
 
     # Leaving time as the default value
-    meta_dict = dict(
-        asset_id="the_IDs",
-        frequency="D",
-        WMET_HorWdSpd="windspeed",
-        WMET_HorWdDir="winddir",
-        WMET_EnvTmp="TempC",
-    )
+    meta_dict = {
+        "asset_id": "the_IDs",
+        "frequency": "D",
+        "WMET_HorWdSpd": "windspeed",
+        "WMET_HorWdDir": "winddir",
+        "WMET_EnvTmp": "TempC",
+    }
     valid_map = deepcopy(meta_dict)
-    valid_map.update(dict(time="time"))
+    valid_map.update({"time": "time"})
     valid_map.pop("frequency")
 
     meta = TowerMetaData.from_dict(meta_dict)
@@ -368,14 +367,14 @@ def test_StatusMetaData():
     # Tests the StatusMetaData for defaults and user-provided values
 
     # Leaving time and status_text as the default values
-    meta_dict = dict(
-        asset_id="the_IDs",
-        status_id="status_ids",
-        status_code="code",
-        frequency="h",
-    )
+    meta_dict = {
+        "asset_id": "the_IDs",
+        "status_id": "status_ids",
+        "status_code": "code",
+        "frequency": "h",
+    }
     valid_map = deepcopy(meta_dict)
-    valid_map.update(dict(time="time", status_text="status_text"))
+    valid_map.update({"time": "time", "status_text": "status_text"})
     valid_map.pop("frequency")
 
     meta = StatusMetaData.from_dict(meta_dict)
@@ -398,13 +397,13 @@ def test_CurtailMetaData():
     # Tests the CurtailMetaData for defaults and user-provided values
 
     # Leaving time and net_energy as the default values
-    meta_dict = dict(
-        IAVL_ExtPwrDnWh="curtail",
-        IAVL_DnWh="avail",
-        frequency="h",
-    )
+    meta_dict = {
+        "IAVL_ExtPwrDnWh": "curtail",
+        "IAVL_DnWh": "avail",
+        "frequency": "h",
+    }
     valid_map = deepcopy(meta_dict)
-    valid_map.update(dict(time="time"))
+    valid_map.update({"time": "time"})
     valid_map.pop("frequency")
 
     meta = CurtailMetaData.from_dict(meta_dict)
@@ -427,16 +426,16 @@ def test_AssetMetaData():
     # Tests the AssetMetaData for defaults and user-provided values
 
     # Leaving elevation and type as the default values
-    meta_dict = dict(
-        asset_id="asset_name",
-        latitude="lat",
-        longitude="lon",
-        rated_power="P",
-        hub_height="HH",
-        rotor_diameter="RD",
-    )
+    meta_dict = {
+        "asset_id": "asset_name",
+        "latitude": "lat",
+        "longitude": "lon",
+        "rated_power": "P",
+        "hub_height": "HH",
+        "rotor_diameter": "RD",
+    }
     valid_map = deepcopy(meta_dict)
-    valid_map.update(dict(elevation="elevation", type="type"))
+    valid_map.update({"elevation": "elevation", "type": "type"})
 
     meta = AssetMetaData.from_dict(meta_dict)
     assert meta.col_map == valid_map
@@ -457,16 +456,16 @@ def test_ReanalysisMetaData():
     # Tests the ReanalysisMetaData for defaults and user-provided values
 
     # Leaving temperature, density, and frequency as the default values
-    meta_dict = dict(
-        time="curtail",
-        WMETR_HorWdSpd="WS",
-        WMETR_HorWdSpdU="ws_U",
-        WMETR_HorWdSpdV="ws_V",
-        WMETR_HorWdDir="wdir",
-        WMETR_EnvPres="pressure",
-    )
+    meta_dict = {
+        "time": "curtail",
+        "WMETR_HorWdSpd": "WS",
+        "WMETR_HorWdSpdU": "ws_U",
+        "WMETR_HorWdSpdV": "ws_V",
+        "WMETR_HorWdDir": "wdir",
+        "WMETR_EnvPres": "pressure",
+    }
     valid_map = deepcopy(meta_dict)
-    valid_map.update(dict(WMETR_EnvTmp="WMETR_EnvTmp", WMETR_AirDen="WMETR_AirDen"))
+    valid_map.update({"WMETR_EnvTmp": "WMETR_EnvTmp", "WMETR_AirDen": "WMETR_AirDen"})
 
     meta = ReanalysisMetaData.from_dict(meta_dict)
     assert meta.col_map == valid_map
@@ -488,33 +487,33 @@ def test_convert_reanalysis_value():
     # Test the ReanalysisMetaData dictionary converter method
 
     # Leaving the merra2 key as all defaults
-    era5_meta_dict = dict(
-        time="curtail",
-        WMETR_HorWdSpd="WS",
-        WMETR_HorWdSpdU="ws_U",
-        WMETR_HorWdSpdV="ws_V",
-        WMETR_HorWdDir="wdir",
-        WMETR_EnvTmp="temps",
-        WMETR_AirDen="dens",
-        WMETR_EnvPres="pressure",
-        frequency="5min",
-    )
+    era5_meta_dict = {
+        "time": "curtail",
+        "WMETR_HorWdSpd": "WS",
+        "WMETR_HorWdSpdU": "ws_U",
+        "WMETR_HorWdSpdV": "ws_V",
+        "WMETR_HorWdDir": "wdir",
+        "WMETR_EnvTmp": "temps",
+        "WMETR_AirDen": "dens",
+        "WMETR_EnvPres": "pressure",
+        "frequency": "5min",
+    }
     valid_era5_map = deepcopy(era5_meta_dict)
     valid_era5_map.pop("frequency")
 
     # Copy of the defaults
-    valid_merra2_map = dict(
-        time="time",
-        WMETR_HorWdSpd="windspeed",
-        WMETR_HorWdSpdU="windspeed_u",
-        WMETR_HorWdSpdV="windspeed_v",
-        WMETR_HorWdDir="wind_direction",
-        WMETR_EnvTmp="temperature",
-        WMETR_AirDen="density",
-        WMETR_EnvPres="surface_pressure",
-    )
+    valid_merra2_map = {
+        "time": "time",
+        "WMETR_HorWdSpd": "windspeed",
+        "WMETR_HorWdSpdU": "windspeed_u",
+        "WMETR_HorWdSpdV": "windspeed_v",
+        "WMETR_HorWdDir": "wind_direction",
+        "WMETR_EnvTmp": "temperature",
+        "WMETR_AirDen": "density",
+        "WMETR_EnvPres": "surface_pressure",
+    }
 
-    meta = convert_reanalysis(value=dict(era5=era5_meta_dict, merra2=dict()))
+    meta = convert_reanalysis(value={"era5": era5_meta_dict, "merra2": {}})
     assert meta["era5"].col_map == valid_era5_map
     assert meta["era5"].frequency == era5_meta_dict["frequency"]
 
@@ -522,7 +521,7 @@ def test_convert_reanalysis_value():
     assert meta["era5"].units == attr.fields(ReanalysisMetaData).units.default
     assert meta["era5"].dtypes == attr.fields(ReanalysisMetaData).dtypes.default
 
-    meta = convert_reanalysis(value=dict(era5=dict(), merra2=valid_merra2_map))
+    meta = convert_reanalysis(value={"era5": {}, "merra2": valid_merra2_map})
     assert meta["merra2"].col_map == valid_merra2_map
     assert meta["merra2"].frequency == attr.fields(ReanalysisMetaData).frequency.default
     assert meta["merra2"].units == attr.fields(ReanalysisMetaData).units.default
@@ -558,8 +557,8 @@ def test_PlantMetaData_defaults():
     assert vals["reanalysis"] == {"product": ReanalysisMetaData().col_map}
 
     # Check the defaults for an empty reanalysis input
-    meta = PlantMetaData(reanalysis=dict(era5=ReanalysisMetaData().col_map))
-    assert meta.reanalysis == dict(era5=ReanalysisMetaData())
+    meta = PlantMetaData(reanalysis={"era5": ReanalysisMetaData().col_map})
+    assert meta.reanalysis == {"era5": ReanalysisMetaData()}
     vals = meta.column_map
     assert vals["reanalysis"]["era5"] == ReanalysisMetaData().col_map
 

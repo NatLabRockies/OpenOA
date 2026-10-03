@@ -1,3 +1,5 @@
+"""Provides standardized logging."""
+
 import os
 import json
 import logging
@@ -7,12 +9,13 @@ from functools import wraps
 
 
 def setup_logging(
-    console: bool = True,
     level: str = "WARNING",
     configuration: str = "logging.json",
     env_key="LOG_CFG",
+    *,
+    console: bool = True,
 ):
-    """Setup logging configuration"""
+    """Setup logging configuration."""
     if (value := os.getenv(env_key, None)) is not None:
         configuration = value
     configuration = Path(configuration).resolve()
@@ -22,10 +25,12 @@ def setup_logging(
     else:
         logging.basicConfig(level=level)
 
-    logging.captureWarnings(True)
+    logging.captureWarnings(capture=True)
 
 
 def logged_method_call(the_method, msg="call"):
+    """Logs a method call."""
+
     @wraps(the_method)
     def _wrapper(self, *args, **kwargs):
         logger = logging.getLogger(the_method.__module__)
@@ -37,6 +42,8 @@ def logged_method_call(the_method, msg="call"):
 
 
 def logged_function_call(the_function, msg="call"):
+    """Logs a function."""
+
     @wraps(the_function)
     def _wrapper(*args, **kwargs):
         logger = logging.getLogger(the_function.__module__)

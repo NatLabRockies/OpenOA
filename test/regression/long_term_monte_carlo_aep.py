@@ -9,6 +9,7 @@ from numpy import testing as nptest
 
 from openoa.analysis import MonteCarloAEP
 
+
 from test.conftest import project_ENGIE, example_data_path_str  # isort: skip
 
 
@@ -19,8 +20,7 @@ def reset_prng():
 
 class TestLongTermMonteCarloAEP(unittest.TestCase):
     def setUp(self):
-        """
-        Python Unittest setUp method.
+        """Python Unittest setUp method.
         Load data from disk into PlantData objects and prepare the data for testing the AEP method.
         """
         reset_prng()
@@ -39,9 +39,7 @@ class TestLongTermMonteCarloAEP(unittest.TestCase):
         ]
 
     def test_monthly_inputs(self):
-        """
-        Test inputs to the regression model, at monthly time resolution
-        """
+        """Test inputs to the regression model, at monthly time resolution."""
         reset_prng()
 
         self.analysis = MonteCarloAEP(
@@ -60,9 +58,7 @@ class TestLongTermMonteCarloAEP(unittest.TestCase):
         self.check_process_reanalysis_data_monthly(df, df_rean)
 
     def test_reanalysis_aggregate_monthly(self):
-        """
-        Test reanalysis start and end dates depending on time resolution and end date argument
-        """
+        """Test reanalysis start and end dates depending on time resolution and end date argument."""
         reset_prng()
         # ____________________________________________________________________
         # Test default aggregate reanalysis values and date range, at monthly time resolution
@@ -81,10 +77,10 @@ class TestLongTermMonteCarloAEP(unittest.TestCase):
         expected = {"merra2": [7.584891, 8.679547], "era5": [7.241081, 8.188632]}
         computed = {
             key: df_rean.loc[[df_rean.index[0], df_rean.index[-1]], key].to_numpy()
-            for key in expected.keys()
+            for key in expected
         }
 
-        for key in expected.keys():
+        for key in expected:
             nptest.assert_array_almost_equal(expected[key], computed[key])
 
         # ____________________________________________________________________
@@ -127,10 +123,10 @@ class TestLongTermMonteCarloAEP(unittest.TestCase):
         expected = {"merra2": [7.584891, 6.529796], "era5": [7.241081, 6.644804]}
         computed = {
             key: df_rean.loc[[df_rean.index[0], df_rean.index[-1]], key].to_numpy()
-            for key in expected.keys()
+            for key in expected
         }
 
-        for key in expected.keys():
+        for key in expected:
             nptest.assert_array_almost_equal(expected[key], computed[key])
 
     def test_reanalysis_aggregate_daily(self):
@@ -152,10 +148,10 @@ class TestLongTermMonteCarloAEP(unittest.TestCase):
         expected = {"merra2": [12.868168, 5.152958], "era5": [12.461761, 5.238968]}
         computed = {
             key: df_rean.loc[[df_rean.index[0], df_rean.index[-1]], key].to_numpy()
-            for key in expected.keys()
+            for key in expected
         }
 
-        for key in expected.keys():
+        for key in expected:
             nptest.assert_array_almost_equal(expected[key], computed[key])
 
         # ____________________________________________________________________
@@ -198,10 +194,10 @@ class TestLongTermMonteCarloAEP(unittest.TestCase):
         expected = {"merra2": [12.868168, 14.571084], "era5": [12.461761, 14.045798]}
         computed = {
             key: df_rean.loc[[df_rean.index[0], df_rean.index[-1]], key].to_numpy()
-            for key in expected.keys()
+            for key in expected
         }
 
-        for key in expected.keys():
+        for key in expected:
             nptest.assert_array_almost_equal(expected[key], computed[key])
 
     def test_reanalysis_aggregate_hourly(self):
@@ -223,10 +219,10 @@ class TestLongTermMonteCarloAEP(unittest.TestCase):
         expected = {"merra2": [10.509840, 9.096710], "era5": [9.202639, 9.486806]}
         computed = {
             key: df_rean.loc[[df_rean.index[0], df_rean.index[-1]], key].to_numpy()
-            for key in expected.keys()
+            for key in expected
         }
 
-        for key in expected.keys():
+        for key in expected:
             nptest.assert_array_almost_equal(expected[key], computed[key])
 
         # ____________________________________________________________________
@@ -269,10 +265,10 @@ class TestLongTermMonteCarloAEP(unittest.TestCase):
         expected = {"merra2": [10.509840, 16.985526], "era5": [9.202639, 15.608469]}
         computed = {
             key: df_rean.loc[[df_rean.index[0], df_rean.index[-1]], key].to_numpy()
-            for key in expected.keys()
+            for key in expected
         }
 
-        for key in expected.keys():
+        for key in expected:
             nptest.assert_array_almost_equal(expected[key], computed[key])
 
     def test_monthly_lin(self):
@@ -399,7 +395,7 @@ class TestLongTermMonteCarloAEP(unittest.TestCase):
         # Availablity, curtailment nan fields both 0, NaN flag is all False
         nptest.assert_array_equal(df["avail_nan_perc"].values, np.repeat(0.0, df.shape[0]))
         nptest.assert_array_equal(df["curt_nan_perc"].values, np.repeat(0.0, df.shape[0]))
-        nptest.assert_array_equal(df["nan_flag"].values, np.repeat(False, df.shape[0]))
+        nptest.assert_array_equal(df["nan_flag"].values, np.repeat(False, df.shape[0]))  # noqa: FBT003
 
         # Check a few reported availabilty and curtailment values
         expected_avail_gwh = pd.Series([0.029417, 0.021005, 0.000444])
@@ -425,11 +421,9 @@ class TestLongTermMonteCarloAEP(unittest.TestCase):
         }
 
         date_ind = pd.to_datetime(["2014-06-01", "2014-12-01", "2015-10-01"])
-        computed = {key: df.loc[date_ind, key].to_numpy() for key in expected.keys()}
+        computed = {key: df.loc[date_ind, key].to_numpy() for key in expected}
 
-        print(computed)
-
-        for key in expected.keys():
+        for key in expected:
             nptest.assert_array_almost_equal(expected[key], computed[key])
 
         # check that date range is truncated correctly
@@ -453,7 +447,7 @@ class TestLongTermMonteCarloAEP(unittest.TestCase):
         # Availablity, curtailment nan fields both 0, NaN flag is all False
         nptest.assert_array_equal(df["avail_nan_perc"].values, np.repeat(0.0, df.shape[0]))
         nptest.assert_array_equal(df["curt_nan_perc"].values, np.repeat(0.0, df.shape[0]))
-        nptest.assert_array_equal(df["nan_flag"].values, np.repeat(False, df.shape[0]))
+        nptest.assert_array_equal(df["nan_flag"].values, np.repeat(False, df.shape[0]))  # noqa: FBT003
 
         # Check a few reported availabilty and curtailment values
         expected_avail_gwh = pd.Series([0.0000483644, 0.000000, 0.000000])
@@ -479,11 +473,9 @@ class TestLongTermMonteCarloAEP(unittest.TestCase):
         }
 
         date_ind = pd.to_datetime(["2014-01-02", "2014-10-12", "2015-12-28"])
-        computed = {key: df.loc[date_ind, key].to_numpy() for key in expected.keys()}
+        computed = {key: df.loc[date_ind, key].to_numpy() for key in expected}
 
-        print(computed)
-
-        for key in expected.keys():
+        for key in expected:
             with self.subTest(f"checking {key}"):
                 nptest.assert_array_almost_equal(expected[key], computed[key])
 

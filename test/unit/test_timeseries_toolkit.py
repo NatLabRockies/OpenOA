@@ -30,7 +30,7 @@ class SimpleTimeseriesTests(unittest.TestCase):
 
     def test_convert_local_to_utc(self):
         # Pass in a localized datetime with matching tz string and make sure it throws an exception
-        self.assertRaises(
+        self.assertRaises(  # noqa: B017
             Exception,
             self.mountain_tz.localize(self.summer_midnight),
             "T1: No exception raised for a datetime object with baked in TZInfo",
@@ -156,7 +156,7 @@ class SimpleTimeseriesTests(unittest.TestCase):
 
         nan_values = {"a": 0.0, "b": 0.2, "c": 0.4}
 
-        for a, b in test_dict.items():
+        for a in test_dict:
             nptest.assert_almost_equal(
                 nan_values[a],
                 timeseries.percent_nan(test_dict[a]),

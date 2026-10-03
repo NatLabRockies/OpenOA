@@ -70,10 +70,8 @@ changelog = "https://github.com/NREL/OpenOA/blob/main/CHANGELOG.md"
 [project.optional-dependencies]
 develop = [
   "pre-commit",
-  "black",
+  "ruff",
   "isort",
-  "flake8",
-  "flake8-docstrings",
   "pytest>=9",
   "pytest-cov>=2.8.1",
 ]
@@ -139,40 +137,18 @@ filterwarnings = [
   "ignore::DeprecationWarning:pygam.*:",
 ]
 
-[tool.black]
-# https://github.com/psf/black
-line-length = 100
-target-version = ["py310", "py311", "py312", "py313"]
-include = '\.pyi?$'
-exclude = '''
-# A regex preceded with ^/ will apply only to files and directories
-# in the root of the project.
-^/(
-  (
-      \.eggs         # exclude a few common directories in the
-    | \.git          # root of the project
-    | \.hg
-    | \.mypy_cache
-    | \.tox
-    | \.venv
-    | _build
-    | buck-out
-    | build
-    | dist
-  )/
-  | foo.py           # also separately exclude a file named foo.py in
-                     # the root of the project
-)
-'''
-
 [tool.isort]
 # https://github.com/PyCQA/isort
-profile = "black"
 py_version = 310
 src_paths = ["isort", "test"]
-line_length = "100"
-length_sort = "True"
-length_sort_straight = "True"
+combine_as_imports = true
+multi_line_output = 3
+include_trailing_comma = true
+use_parentheses = true
+length_sort = true
+length_sort_straight = true
+lines_after_imports = 2
+line_length = 100
 sections = ["FUTURE", "STDLIB", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
 known_first_party = "openoa"
 known_third_party = [
@@ -188,3 +164,74 @@ known_third_party = [
     "pyproj",
     "shapely"
 ]
+
+
+[tool.ruff]
+src = ["openoa", "test"]
+line-length = 100
+target-version = "py310"
+fix = true
+
+[tool.ruff.lint]
+select = [
+  "F",
+  "E",
+  "W",
+  "C4",
+  "D",
+  "UP",
+  "NPY",
+  "PTH",
+  "RUF",
+  "FBT",
+  "B",
+  "PIE",
+  "T20",
+  "SIM",
+]
+
+# D205: not using summary lines and descriptions, just descriptions
+# D401: don't believe enough in imperative mode to make all the changes currently
+# E501: > 550 line length errors from comments and docs, only use to fix lines, then turn off
+# NPY002: Need to adopt NumPy >= 2 first
+ignore = ["D205", "D401", "NPY002", "E501"]
+
+# Allow autofix for all enabled rules (when `--fix`) is provided.
+fixable = ["F", "E", "W", "C4", "D", "UP", "NPY", "PTH", "RUF", "FBT", "B", "PIE", "T20", "SIM", ]
+unfixable = []
+
+# Exclude a variety of commonly ignored directories.
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".hg",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "venv",
+    "sphinx/examples/*.ipynb",
+    "examples/*.ipynb"
+]
+
+# Allow unused variables when underscore-prefixed.
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+[tool.ruff.lint.per-file-ignores]
+"*/__init__.py" = ["E501", "D104", "F401", "D415"]
+"test/*" = ["D100", "D101", "D102", "D103"]
+"examples/*.ipynb" = ["T201"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"

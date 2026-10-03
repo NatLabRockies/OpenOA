@@ -143,8 +143,8 @@ will need to accept the Contributor License Agreement(CLA).
 ## Coding Style
 
 This code uses a ``pre-commit`` workflow where code styling and linting is taken care of when a user
-commits their code. Specifically, this code utilizes ``black`` for automatic formatting (line length, quotation usage, hanging
-lines, etc.), ``isort`` for automatic import sorting, and ``flake8`` for linting.
+commits their code. Specifically, this code utilizes ``ruff`` for automatic formatting (line length,
+quotation usage, hanging lines, etc.) and linting and ``isort`` for automatic import sorting.
 
 To activate the ``pre-commit`` workflow, the user must install the develop version as outlined in the
 [Readme](https://github.com/NREL/OpenOA/tree/develop#Development), and run the following line:

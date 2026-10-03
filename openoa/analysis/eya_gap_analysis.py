@@ -1,5 +1,4 @@
-"""
-This class defines key analytical routines for performing a 'gap-analysis' on EYA-estimated annual
+"""This class defines key analytical routines for performing a 'gap-analysis' on EYA-estimated annual
 energy production (AEP) and that from operational data. Categories considered are availability,
 electrical losses, and long-term gross energy. The main output is a 'waterfall' plot linking the EYA-
 estimated and operational-estimated AEP values.
@@ -8,9 +7,6 @@ estimated and operational-estimated AEP values.
 from __future__ import annotations
 
 import attrs
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
 from attrs import field, define
 
 from openoa.plant import PlantData
@@ -18,6 +14,7 @@ from openoa.utils import plot
 from openoa.schema import FromDictMixin
 from openoa.logging import logging, logged_method_call
 from openoa.analysis._analysis_validators import validate_half_closed_0_1_left
+
 
 logger = logging.getLogger(__name__)
 plot.set_styling()
@@ -81,8 +78,7 @@ class OAResults(FromDictMixin):
 
 @define(auto_attribs=True)
 class EYAGapAnalysis(FromDictMixin):
-    """
-    Performs a gap analysis between the estimated annual energy production (AEP) from an energy
+    """Performs a gap analysis between the estimated annual energy production (AEP) from an energy
     yield estimate (EYA) and the actual AEP as measured from an operational assessment (OA).
 
     The gap analysis is based on comparing the following three key metrics:
@@ -106,6 +102,7 @@ class EYAGapAnalysis(FromDictMixin):
         plant(:obj:`PlantData object`): PlantData object from which EYAGapAnalysis should draw data.
         eya_estimates(:obj:`EYAEstimate`): Numpy array with EYA estimates listed in required order
         oa_results(:obj:`OAResults`): Numpy array with OA results listed in required order.
+
     """
 
     plant: PlantData = field(validator=attrs.validators.instance_of((PlantData, type(None))))
@@ -128,27 +125,26 @@ class EYAGapAnalysis(FromDictMixin):
 
     @logged_method_call
     def run(self):
-        """
-        Run the EYA Gap analysis functions in order by calling this function.
+        """Run the EYA Gap analysis functions in order by calling this function.
 
         Args:
             (None)
 
         Returns:
             (None)
-        """
 
+        """
         self.compiled_data = self.compile_data()  # Compile EYA and OA data
         logger.info("Gap analysis complete")
 
     @logged_method_call
     def compile_data(self):
-        """
-        Compiles the EYA and OA metrics, and computes the differences.
+        """Compiles the EYA and OA metrics, and computes the differences.
 
         Returns:
             :obj:`list[float]`: The list of EYA AEP, and differences in turbine gross energy,
                 availability losses, electrical losses, and unaccounted losses.
+
         """
         logger.info("Compiling EYA and OA data")
 
@@ -178,22 +174,15 @@ class EYAGapAnalysis(FromDictMixin):
 
     def plot_waterfall(
         self,
-        index: list[str] = [
-            "EYA AEP",
-            "TIE",
-            "Availability\nLosses",
-            "Electrical\nLosses",
-            "Unexplained",
-            "OA AEP",
-        ],
+        index: list[str] | None = None,
         ylabel: str = "Energy (GWh/yr)",
         ylim: tuple[float, float] = (None, None),
-        return_fig: bool = False,
         plot_kwargs: dict | None = None,
         figure_kwargs: dict | None = None,
-    ) -> None | tuple:
-        """
-        Produce a waterfall plot showing the progression from the EYA estimates to the calculated OA
+        *,
+        return_fig: bool = False,
+    ) -> tuple | None:
+        """Produce a waterfall plot showing the progression from the EYA estimates to the calculated OA
         estimates of AEP.
 
         Args:
@@ -216,7 +205,17 @@ class EYAGapAnalysis(FromDictMixin):
         Returns:
             None | tuple[plt.Figure, plt.Axes]: If :py:attr:`return_fig`, then return the figure
                 and axes objects in addition to showing the plot.
+
         """
+        if index is None:
+            index = [
+                "EYA AEP",
+                "TIE",
+                "Availability\nLosses",
+                "Electrical\nLosses",
+                "Unexplained",
+                "OA AEP",
+            ]
         return plot.plot_waterfall(
             self.compiled_data,
             index=index,
@@ -228,7 +227,7 @@ class EYAGapAnalysis(FromDictMixin):
         )
 
 
-def create_EYAGapAnalysis(
+def create_EYAGapAnalysis(  # ruff: ignore[D103]
     project: PlantData, eya_estimates: dict | EYAEstimate, oa_results: dict | OAResults
 ) -> EYAGapAnalysis:
     return EYAGapAnalysis(project, eya_estimates, oa_results)

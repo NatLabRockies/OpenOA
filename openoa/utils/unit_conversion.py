@@ -1,5 +1,5 @@
-"""
-This module provides basic methods for unit conversion and calculation of basic wind plant variables
+"""This module provides basic methods for unit conversion and calculation of basic wind plant
+variables.
 """
 
 from __future__ import annotations
@@ -14,8 +14,7 @@ from openoa.utils._converters import series_method
 def convert_power_to_energy(
     power_col: str | pd.Series, sample_rate_min="10min", data: pd.DataFrame = None
 ) -> pd.Series:
-    """
-    Compute energy [kWh] from power [kw] and return the data column
+    """Compute energy [kWh] from power [kw] and return the data column.
 
     Args:
         power_col(:obj:`str` | :obj:`pandas.Series`): The power data, in kW, or the name of the column
@@ -46,8 +45,7 @@ def compute_gross_energy(
     curtailment_type: str = "frac",
     data: str | pd.DataFrame = None,
 ):
-    """
-    Computes gross energy for a wind plant or turbine by adding reported :py:attr:`availability` and
+    """Computes gross energy for a wind plant or turbine by adding reported :py:attr:`availability` and
     :py:attr:`curtailment` losses to reported net energy.
 
     Args:
@@ -68,6 +66,7 @@ def compute_gross_energy(
 
     Returns:
         gross(:obj:`pandas.Series`): Calculated gross energy for wind plant or turbine
+
     """
     if np.any(availability < 0) | np.any(curtailment < 0):
         raise ValueError(
@@ -91,8 +90,7 @@ def compute_gross_energy(
 
 @series_method(data_cols=["variable"])
 def convert_feet_to_meter(variable: str | pd.Series, data: pd.DataFrame = None):
-    """
-    Compute variable in [meter] from [feet] and return the data column
+    """Compute variable in [meter] from [feet] and return the data column.
 
     Args:
         variable(:obj:`str` | `pandas.Series`): A pandas Series, the name of the columnn in
@@ -102,5 +100,6 @@ def convert_feet_to_meter(variable: str | pd.Series, data: pd.DataFrame = None):
 
     Returns:
         :obj:`pandas.Series`: :py:attr:`variable` in meters
+
     """
     return variable * 0.3048

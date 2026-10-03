@@ -1,7 +1,6 @@
-"""
-This is the import script for Cubico's Kelmarsh & Penmanshiel projects. These projects are
+"""This is the import script for Cubico's Kelmarsh & Penmanshiel projects. These projects are
 available under a Creative Commons Attribution 4.0 International license (CC-BY-4.0), and are cited
-below:
+below.
 
 *Kelmarsh*:
 
@@ -35,7 +34,6 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from zipfile import ZipFile
 
 import yaml
 import pandas as pd
@@ -44,14 +42,14 @@ import openoa.utils.downloader as downloader
 from openoa.plant import PlantData
 from openoa.logging import logging
 
+
 logger = logging.getLogger()
 
 
 def download_asset_data(
     asset: str = "kelmarsh", outfile_path: str | Path = "data/kelmarsh"
 ) -> None:
-    """
-    Simplify downloading of known open data assets from Zenodo.
+    """Simplify downloading of known open data assets from Zenodo.
 
     Saves the following files to the outfile_path:
           1. "record_details.json", which details the Zenodo API details.
@@ -67,8 +65,8 @@ def download_asset_data(
 
     Raises:
         NameError: if `asset` is not kelmarsh or penmanshiel.
-    """
 
+    """
     if asset.lower() == "kelmarsh":
         record_id = 7212475
     elif asset.lower() == "penmanshiel":
@@ -80,16 +78,15 @@ def download_asset_data(
 
 
 def get_scada_headers(scada_files: list[str]) -> pd.DataFrame:
-    """
-    Get just the headers from the SCADA files.
+    """Get just the headers from the SCADA files.
 
     Args:
         scada_files(obj:`list[str]`): List of SCADA file paths.
 
     Returns:
         scada_headers(:obj:`dataframe`): Dataframe containing details of all the SCADA files.
-    """
 
+    """
     csv_params = {
         "index_col": 0,
         "skiprows": 2,
@@ -111,18 +108,17 @@ def get_scada_headers(scada_files: list[str]) -> pd.DataFrame:
 
 
 def get_scada_df(scada_headers: pd.DataFrame, use_columns: list[str] | None = None) -> pd.DataFrame:
-    """
-    Extract the desired SCADA data.
+    """Extract the desired SCADA data.
 
     Args:
         scada_headers(:obj:`dataframe`): Dataframe containing details of all SCADA files.
-        usecolumns(obj:`list[str]`): Selection of columns to be imported from the SCADA files.
+        use_columns(obj:`list[str]`): Selection of columns to be imported from the SCADA files.
             Defaults to None.
 
     Returns:
         scada(:obj:`dataframe`): Dataframe with SCADA data.
-    """
 
+    """
     if use_columns is None:
         use_columns = [
             "# Date and time",
@@ -141,7 +137,7 @@ def get_scada_df(scada_headers: pd.DataFrame, use_columns: list[str] | None = No
         "usecols": use_columns,
     }
 
-    scada_lst = list()
+    scada_lst = []
     for turbine in scada_headers["Turbine"].unique():
         scada_wt = pd.concat(
             pd.read_csv(f, **csv_params)
@@ -158,16 +154,15 @@ def get_scada_df(scada_headers: pd.DataFrame, use_columns: list[str] | None = No
 
 
 def get_curtailment_df(scada_headers: pd.DataFrame) -> pd.DataFrame:
-    """
-    Get the curtailment and availability data.
+    """Get the curtailment and availability data.
 
     Args:
         scada_headers(:obj:`dataframe`): Dataframe containing details of all SCADA files.
 
     Returns:
         curtailment_df(:obj:`dataframe`): Dataframe with curtailment data.
-    """
 
+    """
     # Curtailment data is available as a subset of the SCADA data
     use_columns = [
         "# Date and time",
@@ -181,16 +176,15 @@ def get_curtailment_df(scada_headers: pd.DataFrame) -> pd.DataFrame:
 
 
 def get_meter_data(path: str = "data/kelmarsh") -> pd.DataFrame:
-    """
-    Get the PMU meter data.
+    """Get the PMU meter data.
 
     Args:
         path(:obj:`str`): Path to meter data. Defaults to "data/kelmarsh".
 
     Returns:
         meter_df(:obj:`dataframe`): Dataframe with meter data.
-    """
 
+    """
     use_columns = ["# Date and time", "GMS Energy Export (kWh)"]
 
     csv_params = {
@@ -210,8 +204,7 @@ def get_meter_data(path: str = "data/kelmarsh") -> pd.DataFrame:
 
 
 def prepare(asset: str = "kelmarsh", return_value: str = "plantdata") -> PlantData | pd.DataFrame:
-    """
-    Do all loading and preparation of the data for this plant.
+    """Do all loading and preparation of the data for this plant.
 
     Args:
         asset(:obj:`str`): Asset name, currently either "kelmarsh" or "penmanshiel". Defaults
@@ -224,8 +217,8 @@ def prepare(asset: str = "kelmarsh", return_value: str = "plantdata") -> PlantDa
 
     Returns:
         Either PlantData object or Dataframes dependent upon return_value.
-    """
 
+    """
     # Set the path to store and access all the data
     path = f"data/{asset}"
 
@@ -278,20 +271,20 @@ def prepare(asset: str = "kelmarsh", return_value: str = "plantdata") -> PlantDa
     logger.info("Reading in the reanalysis data")
 
     # reanalysis datasets are held in a dictionary
-    reanalysis_dict = dict()
+    reanalysis_dict = {}
 
     # MERRA2 from Zenodo
     asset_path = Path(path).resolve()
     if (asset_path / f"{asset}_merra2.csv").exists():
         logger.info("Reading MERRA2")
         reanalysis_merra2_df = pd.read_csv(f"{path}/{asset}_merra2.csv")
-        reanalysis_dict.update(dict(merra2=reanalysis_merra2_df))
+        reanalysis_dict.update({"merra2": reanalysis_merra2_df})
 
     # ERA5 from Zenodo
     if (asset_path / f"{asset}_era5.csv").exists():
         logger.info("Reading ERA5")
         reanalysis_era5_df = pd.read_csv(f"{path}/{asset}_era5.csv")
-        reanalysis_dict.update(dict(era5=reanalysis_era5_df))
+        reanalysis_dict.update({"era5": reanalysis_era5_df})
 
     # ERA5 monthly 10m from CDS
     if Path(f"{path}/era5_monthly_10m/{asset}_era5_monthly_10m.csv").exists():
@@ -312,7 +305,7 @@ def prepare(asset: str = "kelmarsh", return_value: str = "plantdata") -> PlantDa
         reanalysis_era5_monthly_df = pd.read_csv(
             f"{path}/era5_monthly_10m/{asset}_era5_monthly_10m.csv"
         )
-    reanalysis_dict.update(dict(era5_monthly=reanalysis_era5_monthly_df))
+    reanalysis_dict.update({"era5_monthly": reanalysis_era5_monthly_df})
 
     # MERRA2 monthly 10m from GES DISC
     if Path(f"{path}/merra2_monthly_10m/{asset}_merra2_monthly_10m.csv").exists():
@@ -333,7 +326,7 @@ def prepare(asset: str = "kelmarsh", return_value: str = "plantdata") -> PlantDa
         reanalysis_merra2_monthly_df = pd.read_csv(
             f"{path}/merra2_monthly_10m/{asset}_merra2_monthly_10m.csv"
         )
-    reanalysis_dict.update(dict(merra2_monthly=reanalysis_merra2_monthly_df))
+    reanalysis_dict.update({"merra2_monthly": reanalysis_merra2_monthly_df})
 
     ###################
     # PLANT DATA #
@@ -408,10 +401,10 @@ def prepare(asset: str = "kelmarsh", return_value: str = "plantdata") -> PlantDa
         },
     }
 
-    with open(f"{path}/plant_meta.json", "w") as outfile:
+    with Path(f"{path}/plant_meta.json").open("w") as outfile:
         json.dump(asset_json, outfile, indent=2)
 
-    with open(f"{path}/plant_meta.yml", "w") as outfile:
+    with Path(f"{path}/plant_meta.yml").open("w") as outfile:
         yaml.dump(asset_json, outfile, default_flow_style=False)
 
     # Return the appropriate data format

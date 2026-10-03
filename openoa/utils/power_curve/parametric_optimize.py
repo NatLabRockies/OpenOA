@@ -1,14 +1,13 @@
-"""
-Curve fitting routines
+"""Curve fitting routines.
 
-curve + bounds
-optimization algorithm
-cost function
+- curve + bounds
+- optimization algorithm
+- cost function
 """
 
 from __future__ import annotations
 
-from typing import Callable
+from collections.abc import Callable
 
 import numpy as np
 import pandas as pd
@@ -27,16 +26,16 @@ def fit_parametric_power_curve(
         tuple[float, float],
         tuple[float, float],
     ],
+    *,
     return_params: bool = False,
 ):
-    """
-    Fit curve to filtered power-windspeed data.
+    """Fit curve to filtered power-wind speed data.
 
     Args:
         x(:obj:`numpy.ndarray` | `pandas.Series`): independent variable
         y(:obj:`numpy.ndarray` | `pandas.Series`): dependent variable
         curve(:obj:`Callable`): function/lambda name for power curve desired default is curves.logistic5param
-            optimization_algorithm(Function): scipy.optimize style optimization algorithm
+        optimization_algorithm(Callable): scipy.optimize style optimization algorithm
         cost_function(:obj:`Callable`): Python function that takes two np.array 1D of real numbers and returns a real numeric
             cost.
         bounds(:obj:`tuple[tuple[float, float], tuple[float, float], tuple[float, float], tuple[float, float], tuple[float, float]]`):
@@ -46,6 +45,7 @@ def fit_parametric_power_curve(
 
     Returns:
         Callable(np.array -> np.array): function handle to optimized power curve
+
     """
 
     # Build opt function as a closure on "x" and "y"
@@ -72,7 +72,7 @@ Cost Functions
 
 
 def least_squares(x: np.ndarray | pd.Series, y: np.ndarray | pd.Series):
-    """Least Squares loss function
+    """Least Squares loss function.
 
     Args:
         x(:obj:`np.ndarray` | `pandas.Series`): 1-D array of numbers representing x
@@ -80,5 +80,6 @@ def least_squares(x: np.ndarray | pd.Series, y: np.ndarray | pd.Series):
 
     Returns:
         The least square of x and y.
+
     """
     return np.sum((x - y) ** 2)

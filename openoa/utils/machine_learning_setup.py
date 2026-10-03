@@ -1,5 +1,4 @@
-"""
-This module is a library of machine learning algorithms and associated hyperparameter ranges
+"""This module is a library of machine learning algorithms and associated hyperparameter ranges
 suitable for wind energy analysis. This module allow for simple implementation of hyperparameter
 optimization and the application of the best hyperparameter combinations for use in the predictive
 model.
@@ -72,6 +71,7 @@ def _algorithm_map(
 
     Returns:
         GAM | ExtraTreesRegressor | GradientBoostingRegressor: The actual model.
+
     """
     if abbreviation == "etr":
         return ExtraTreesRegressor()
@@ -98,6 +98,7 @@ class MachineLearningSetup:
             :py:class:`pygam.GAM` model, respectively.
         params(:obj:`dict`): Custom hyperparameter settings to be used for the passed
             :py:attr:`algorithm`.
+
     """
 
     algorithm: str = field(converter=(str.lower, _algorithm_map))
@@ -111,17 +112,8 @@ class MachineLearningSetup:
     opt_model: Any = field(init=False)
 
     def __attrs_post_init__(self):
-        """
-        Initialize the hyperparameter ranges and scorer object
-        """
-        if isinstance(self.algorithm, ExtraTreesRegressor):
-            self.hyper_range = {
-                "max_depth": [4, 8, 12, 16, 20],
-                "min_samples_split": np.arange(2, 11),
-                "min_samples_leaf": np.arange(1, 11),
-                "n_estimators": np.arange(10, 801, 40),
-            }
-        elif isinstance(self.algorithm, GradientBoostingRegressor):
+        """Initialize the hyperparameter ranges and scorer object."""
+        if isinstance(self.algorithm, (ExtraTreesRegressor, GradientBoostingRegressor)):
             self.hyper_range = {
                 "max_depth": [4, 8, 12, 16, 20],
                 "min_samples_split": np.arange(2, 11),
@@ -137,8 +129,7 @@ class MachineLearningSetup:
         self.my_scorer = make_scorer(r2_score, greater_is_better=True)
 
     def hyper_report(self, results: dict, n_top: int = 5) -> None:
-        """
-        Output hyperparameter optimization results into terminal window in order of mean validation score.
+        """Output hyperparameter optimization results into terminal window in order of mean validation score.
 
         Args:
             results(:obj:'dict'): Dictionary containg cross-validation results
@@ -146,37 +137,37 @@ class MachineLearningSetup:
 
         Returns:
             (none): Top :py:param:`n_top` results are printed.
-        """
 
+        """
         # Loop through cross validation results and output to terminal
         for i in range(1, n_top + 1):
             candidates = np.flatnonzero(results["rank_test_score"] == i)
             for candidate in candidates:
-                print(f"Model with rank: {i}\n")
+                print(f"Model with rank: {i}\n")  # noqa: T201
                 message = (
                     f"Mean validation score: {results['mean_test_score'][candidate]:.3f} "
                     f"(std: {results['std_test_score'][candidate]:.3f})\n"
                 )
-                print(message)
-                print(f"Parameters: {results['params'][candidate]}\n")
-                print("")
+                print(message)  # noqa: T201
+                print(f"Parameters: {results['params'][candidate]}\n")  # noqa: T201
+                print("")  # noqa: T201
 
     def hyper_optimize(
         self,
         X: np.ndarray | pd.DataFrame,
         y: np.ndarray | pd.Series,
-        cv: sklearn.model_selection._split = KFold(n_splits=5),
+        cv: sklearn.model_selection._split | None = None,
         n_iter_search: int = 20,
-        report: bool = True,
         verbose: int = 0,
         n_jobs: int | None = None,
+        *,
+        report: bool = True,
     ) -> None:
-        """
-        Optimize hyperparameters through cross-validation
+        """Optimize hyperparameters through cross-validation.
 
         Args:
             X(:obj:'numpy.ndarray` | `pandas.DataFrame`): The inputs or features.
-            Y(:obj:'numpy.ndarray` | `pandas.Series`): The target or to-be-predicted data.
+            y(:obj:'numpy.ndarray` | `pandas.Series`): The target or to-be-predicted data.
             cv(:obj:'sklearn.model_selection._split'): The train/test splitting method. Defaults to
                 :py:class:`KFold(n_splits=5)`.
             n_iter_search(:obj:'int'): The number of random hyperparmeter samples to use. Defaults
@@ -195,7 +186,10 @@ class MachineLearningSetup:
 
         Returns:
             (none)
+
         """
+        if cv is None:
+            cv = KFold(n_splits=5)
         # Setup randomized cross-validated grid search
         self.random_search = RandomizedSearchCV(
             self.algorithm,

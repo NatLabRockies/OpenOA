@@ -8,7 +8,7 @@ The utils subpackage provides module-level methods that operate on Pandas `DataF
 be imported and used individually into your own scripts.
 
 Downloader
-*******
+**********
 
 .. automodule:: openoa.utils.downloader
     :members:

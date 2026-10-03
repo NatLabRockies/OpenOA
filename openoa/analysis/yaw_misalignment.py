@@ -1,36 +1,37 @@
-# This class contains analytical routines for estimating static yaw misalignment for a list of
-# specified wind turbines. For a series of wind speed bins, the yaw misalignment is estimated for
-# each turbine by identifying the difference between the wind vane angle where power performance
-# (either power or normalized coefficient of power) is maximized and the mean wind vane angle for
-# the turbine. The wind vane angle where power is maximized is found by fitting a cosine exponent
-# curve to the binned power performance values as a function of wind vane angle. The offset of the
-# best-fit cosine curve is treated as the wind vane angle where power is maximized. In addition to
-# static yaw misalignment estimates for each wind speed bin, the mean yaw misalignment value
-# averaged over all wind speed bins is calculated.
-#
-# Many parts of this method are based on or inspired by the following publications:
+"""This class contains analytical routines for estimating static yaw misalignment for a list of
+specified wind turbines. For a series of wind speed bins, the yaw misalignment is estimated for
+each turbine by identifying the difference between the wind vane angle where power performance
+(either power or normalized coefficient of power) is maximized and the mean wind vane angle for
+the turbine. The wind vane angle where power is maximized is found by fitting a cosine exponent
+curve to the binned power performance values as a function of wind vane angle. The offset of the
+best-fit cosine curve is treated as the wind vane angle where power is maximized. In addition to
+static yaw misalignment estimates for each wind speed bin, the mean yaw misalignment value
+averaged over all wind speed bins is calculated.
 
-# 1. Bao, Y., Yang, Q., Fu, L., Chen, Q., Cheng, C., and Sun, Y. Identification of Yaw Error
-#    Inherent Misalignment for Wind Turbine Based on SCADA Data: A Data Mining Approach. Proc. 12th
-#    Asian Control Conference (ASCC), Kitakyushu, Japan, June 9-12 (2019). 1095-1100.
-# 2. Xue, J. and Wang, L. Online data-driven approach of yaw error estimation and correction of
-#    horizontal axis wind turbine. *IET J. Eng.* 2019(18):4937–4940 (2019).
-#    https://doi.org/10.1049/joe.2018.9293.
-# 3. Astolfi, D., Castellani, F., and Terzi, L. An Operation Data-Based Method for the Diagnosis of
-#    Zero-Point Shift of Wind Turbines Yaw Angle. *J. Solar Energy Engineering* 142(2):024501
-#    (2020). https://doi.org/10.1115/1.4045081.
-# 4. Jing, B., Qian, Z., Pei, Y., Zhang, L., and Yang, T. Improving wind turbine efficiency through
-#    detection and calibration of yaw misalignment. *Renewable Energy* 160:1217-1227 (2020).
-#    https://doi.org/10.1016/j.renene.2020.07.063.
-# 5. Gao, L. and Hong, J. Data-driven yaw misalignment correction for utility-scale wind turbines.
-#    *J. Renewable Sustainable Energy* 13(6):063302 (2021). https://doi.org/10.1063/5.0056671.
+Many parts of this method are based on or inspired by the following publications:
 
-# WARNING: This is a relatively simple method that has not yet been validated using data from wind
-# turbines with known static yaw misalignments. Therefore, the results should be treated with
-# caution. One known issue is that the method currently relies on nacelle wind speed measurements
-# to determine the power performance as a function of wind vane angle. If the measured wind speed
-# is affected by the amount of yaw misalignment, potential biases can exist in the estimated static
-# yaw misalignment values.
+1. Bao, Y., Yang, Q., Fu, L., Chen, Q., Cheng, C., and Sun, Y. Identification of Yaw Error
+   Inherent Misalignment for Wind Turbine Based on SCADA Data: A Data Mining Approach. Proc. 12th
+   Asian Control Conference (ASCC), Kitakyushu, Japan, June 9-12 (2019). 1095-1100.
+2. Xue, J. and Wang, L. Online data-driven approach of yaw error estimation and correction of
+   horizontal axis wind turbine. *IET J. Eng.* 2019(18):4937–4940 (2019).
+   https://doi.org/10.1049/joe.2018.9293.
+3. Astolfi, D., Castellani, F., and Terzi, L. An Operation Data-Based Method for the Diagnosis of
+   Zero-Point Shift of Wind Turbines Yaw Angle. *J. Solar Energy Engineering* 142(2):024501
+   (2020). https://doi.org/10.1115/1.4045081.
+4. Jing, B., Qian, Z., Pei, Y., Zhang, L., and Yang, T. Improving wind turbine efficiency through
+   detection and calibration of yaw misalignment. *Renewable Energy* 160:1217-1227 (2020).
+   https://doi.org/10.1016/j.renene.2020.07.063.
+5. Gao, L. and Hong, J. Data-driven yaw misalignment correction for utility-scale wind turbines.
+   *J. Renewable Sustainable Energy* 13(6):063302 (2021). https://doi.org/10.1063/5.0056671.
+
+WARNING: This is a relatively simple method that has not yet been validated using data from wind
+turbines with known static yaw misalignments. Therefore, the results should be treated with
+caution. One known issue is that the method currently relies on nacelle wind speed measurements
+to determine the power performance as a function of wind vane angle. If the measured wind speed
+is affected by the amount of yaw misalignment, potential biases can exist in the estimated static
+yaw misalignment values.
+"""  # noqa: RUF002
 
 from __future__ import annotations
 
@@ -50,6 +51,7 @@ from openoa.schema import FromDictMixin, ResetValuesMixin
 from openoa.logging import logging, logged_method_call
 from openoa.analysis._analysis_validators import validate_UQ_input, validate_half_closed_0_1_right
 
+
 logger = logging.getLogger(__name__)
 NDArrayFloat = npt.NDArray[np.float64]
 plot.set_styling()
@@ -64,16 +66,17 @@ def cos_curve(x, A, Offset, cos_exp):
         Offset (:obj:`float`): The yaw misaligment offset at which the cosine exponent curve is
             maximized in degrees.
         cos_exp (:obj:`float`): The exponent to which the cosine curve is raised.
+
     Returns:
         :obj:`float`: The value of the cosine exponent curve for the provided yaw misalignment.
+
     """
     return A * np.cos((np.pi / 180) * (x - Offset)) ** cos_exp
 
 
 @define(auto_attribs=True)
 class StaticYawMisalignment(FromDictMixin, ResetValuesMixin):
-    """
-    A method for estimating static yaw misalignment for different wind speed bins for each specified
+    """A method for estimating static yaw misalignment for different wind speed bins for each specified
     wind turbine as well as the average static yaw misalignment over all wind speed bins using
     turbine-level SCADA data.
 
@@ -155,6 +158,7 @@ class StaticYawMisalignment(FromDictMixin, ResetValuesMixin):
         use_power_coeff (bool, optional): If True, power performance as a function of wind vane
             angle will be quantified by normalizing power by the cube of the wind speed,
             approximating the power coefficient. If False, only power will be used. Defaults to False.
+
     """
 
     plant: PlantData = field(converter=deepcopy, validator=attrs.validators.instance_of(PlantData))
@@ -223,9 +227,7 @@ class StaticYawMisalignment(FromDictMixin, ResetValuesMixin):
 
     @logged_method_call
     def __attrs_post_init__(self):
-        """
-        Initialize logging and post-initialization setup steps.
-        """
+        """Initialize logging and post-initialization setup steps."""
         if {"StaticYawMisalignment", "all"}.intersection(self.plant.analysis_type) == set():
             self.plant.analysis_type.append("StaticYawMisalignment")
 
@@ -257,10 +259,10 @@ class StaticYawMisalignment(FromDictMixin, ResetValuesMixin):
         min_power_filter: float | None = None,
         max_power_filter: float | None = None,
         power_bin_mad_thresh: float | None = None,
+        *,
         use_power_coeff: bool | None = None,
     ):
-        """
-        Estimates static yaw misalignment for each wind speed bin for each specified wind turbine.
+        """Estimates static yaw misalignment for each wind speed bin for each specified wind turbine.
         After performing power curve filtering to remove timestamps when pitch angle is above a
         threshold or the turbine is operating abnormally, best-fit cosine curves are found for
         binned power performance vs. wind vane angle for each wind speed bin and turbine. The
@@ -305,6 +307,7 @@ class StaticYawMisalignment(FromDictMixin, ResetValuesMixin):
             use_power_coeff (bool, optional): If True, power performance as a function of wind vane
                 angle will be quantified by normalizing power by the cube of the wind speed,
                 approximating the power coefficient. If False, only power will be used. Defaults to False.
+
         """
         initial_parameters = {}
         if num_sim is not None:
@@ -422,12 +425,10 @@ class StaticYawMisalignment(FromDictMixin, ResetValuesMixin):
 
     @logged_method_call
     def _setup_monte_carlo_inputs(self):
-        """
-        Create and populate the data frame defining the Monte Carlo simulation parameters. This
+        """Create and populate the data frame defining the Monte Carlo simulation parameters. This
         data frame is stored as self.inputs. Variables used to save intermediate variables and
         final results are also initiated.
         """
-
         if self.UQ:
             inputs = {
                 "power_bin_mad_thresh": np.random.randint(
@@ -494,8 +495,7 @@ class StaticYawMisalignment(FromDictMixin, ResetValuesMixin):
 
     @logged_method_call
     def _remove_power_curve_outliers(self, turbine_id):
-        """
-        Removes power curve outliers for a specific turbine by removing timestamps where the pitch
+        """Removes power curve outliers for a specific turbine by removing timestamps where the pitch
         angle is above a threshold and timestamps where the wind speed is more than a specific
         threshold from the median wind speed in each power bin. The filtered turbine data frame is
         meant to include timestamps when the turbine is operating normally in below-rated
@@ -503,8 +503,8 @@ class StaticYawMisalignment(FromDictMixin, ResetValuesMixin):
 
         Args:
             turbine_id (str): The name of the turbine for which power curve outlier removal will be performed.
-        """
 
+        """
         # Limit to pitch angles below the specified threshold
         self._df_turb = self._df_turb.loc[self._df_turb["WROT_BlPthAngVal"] <= self.pitch_thresh]
 
@@ -528,8 +528,7 @@ class StaticYawMisalignment(FromDictMixin, ResetValuesMixin):
 
     @logged_method_call
     def _estimate_static_yaw_misalignment(self):
-        """
-        Estimates static yaw misalignment for a single turbine and wind speed bin by fitting a
+        """Estimates static yaw misalignment for a single turbine and wind speed bin by fitting a
         cosine curve to the binned power performance vs. wind vane angle. Yaw misalignment is
         estimated as the difference between the wind vane angle where power is maximized based on
         the best-fit cosine curve and the mean wind vane angle.
@@ -539,8 +538,8 @@ class StaticYawMisalignment(FromDictMixin, ResetValuesMixin):
                 mean wind vane angle, and arrays containing the best-fit cosine curve parameters
                 (magnitude, offset (degrees), and cosine exponent) and power performance values
                 binned by wind vane angle.
-        """
 
+        """
         self._df_turb_ws["vane_bin"] = self.vane_bin_width * np.round(
             self._df_turb_ws["WMET_HorWdDirRel"].values / self.vane_bin_width
         )
@@ -583,15 +582,16 @@ class StaticYawMisalignment(FromDictMixin, ResetValuesMixin):
 
     def plot_yaw_misalignment_by_turbine(
         self,
-        turbine_ids: list[str] = None,
+        turbine_ids: list[str] | None = None,
         xlim: tuple[float, float] = (None, None),
         ylim: tuple[float, float] = (None, None),
-        return_fig: bool = False,
         figure_kwargs: dict | None = None,
         plot_kwargs_curve: dict | None = None,
         plot_kwargs_line: dict | None = None,
         plot_kwargs_fill: dict | None = None,
         legend_kwargs: dict | None = None,
+        *,
+        return_fig: bool = False,
     ):
         """Plots power performance vs. wind vane angle along with the best-fit cosine curve for
         each wind speed bin for each turbine specified. The mean wind vane angle and the wind vane
@@ -622,14 +622,15 @@ class StaticYawMisalignment(FromDictMixin, ResetValuesMixin):
                 intervals for power performance vs. wind vane. Defaults to None.
             legend_kwargs (:obj:`dict`, optional): Additional legend keyword arguments that are passed to
                 ``ax.legend()`` for the power performance vs. wind vane plots. Defaults to None.
+
         Returns:
             None | dict of tuple[matplotlib.pyplot.Figure, matplotlib.pyplot.Axes]:
                 If :py:attr:`return_fig` is True, then a dictionary containing the figure and axes object(s)
                 corresponding to the yaw misalignment plots for each turbine are returned for further
                 tinkering/saving. The turbine names in the `turbine_ids` aregument are the dicitonary
                 keys.
-        """
 
+        """
         if self.use_power_coeff:
             power_performance_label = "Normalized Cp (-)"
         else:
@@ -703,10 +704,9 @@ __defaults_power_bin_mad_thresh = StaticYawMisalignment.__attrs_attrs__.power_bi
 __defaults_use_power_coeff = StaticYawMisalignment.__attrs_attrs__.use_power_coeff.default
 
 
-def create_StaticYawMisalignment(
+def create_StaticYawMisalignment(  # ruff: ignore[D103]
     project: PlantData,
     turbine_ids: list[str] = __defaults_turbine_ids,
-    UQ: bool = __defaults_UQ,
     num_sim: int = __defaults_num_sim,
     ws_bins: list[float] = __defaults_ws_bins,
     ws_bin_width: float = __defaults_ws_bin_width,
@@ -718,6 +718,8 @@ def create_StaticYawMisalignment(
     min_power_filter: float = __defaults_min_power_filter,
     max_power_filter: float | tuple[float, float] = __defaults_max_power_filter,
     power_bin_mad_thresh: float | tuple[float, float] = __defaults_power_bin_mad_thresh,
+    *,
+    UQ: bool = __defaults_UQ,
     use_power_coeff: bool = __defaults_use_power_coeff,
 ) -> StaticYawMisalignment:
     return StaticYawMisalignment(

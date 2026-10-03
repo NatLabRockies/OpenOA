@@ -11,6 +11,7 @@ def validate_UQ_input(cls, attribute: attrs.Attribute, value: float | tuple) -> 
     when :py:attr:`UQ` is False.
 
     Args:
+        cls: An OpenOA analysis class object.
         attribute (attrs.Attribute): The attrs Attribute information for the class attribute being
             validated.
         value (float | tuple): The user input to the class attribute.
@@ -21,6 +22,7 @@ def validate_UQ_input(cls, attribute: attrs.Attribute, value: float | tuple) -> 
              - If UQ is True, and value is not a length-2 tuple
              - If UQ is True, and each value is not a float
              - If UQ is False, and the value is not a float.
+
     """
     if cls.UQ:
         if not isinstance(value, tuple):
@@ -46,6 +48,7 @@ def validate_half_closed_0_1_right(cls, attribute: attrs.Attribute, value: float
     """Validates that the value, or tuple of values is in the half-closed range of (0, 1].
 
     Args:
+        cls: An OpenOA analysis class object.
         attribute (attrs.Attribute): The attrs Attribute information for the class attribute being
             validated.
         value (float | tuple): The user input to the class attribute.
@@ -53,6 +56,7 @@ def validate_half_closed_0_1_right(cls, attribute: attrs.Attribute, value: float
     Raises:
         ValueError: Raised if a single input is passed and outside the range of (0, 1].
         ValueError: Raised if any of the inputs in the input tuple are outside the range of (0, 1].
+
     """
     if isinstance(value, float):
         if not 0.0 < value <= 1.0:
@@ -70,6 +74,7 @@ def validate_half_closed_0_1_left(cls, attribute: attrs.Attribute, value: float 
     """Validates that the value, or tuple of values is in the half-closed range of [0, 1).
 
     Args:
+        cls: An OpenOA analysis class object.
         attribute (attrs.Attribute): The attrs Attribute information for the class attribute being
             validated.
         value (float | tuple): The user input to the class attribute.
@@ -77,6 +82,7 @@ def validate_half_closed_0_1_left(cls, attribute: attrs.Attribute, value: float 
     Raises:
         ValueError: Raised if a single input is passed and outside the range of [0, 1).
         ValueError: Raised if any of the inputs in the input tuple are outside the range of [0, 1).
+
     """
     if isinstance(value, float):
         if not 0.0 <= value < 1.0:
@@ -97,6 +103,7 @@ def validate_reanalysis_selections(
     ``PlantData`` object's available reanalyis products are provided.
 
     Args:
+        cls: An OpenOA analysis class object.
         attribute (attrs.Attribute): The attribute data for :py:attr:`value`.
         value (list[str] | None): The user-provided values to the class attribute.
 
@@ -104,6 +111,7 @@ def validate_reanalysis_selections(
         ValueError: Raised if "prodcut" is used in :py:attr:`reanalysis_products`.
         ValueError: Raised if a reanalysis product key that doesn't exist in the base ``PlantData``
             object is provided.
+
     """
     valid = [*cls.plant.reanalysis]
     if None in value or value is None:

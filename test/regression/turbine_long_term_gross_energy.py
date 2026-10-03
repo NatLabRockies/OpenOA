@@ -6,6 +6,7 @@ import numpy.testing as npt
 
 from openoa.analysis import TurbineLongTermGrossEnergy
 
+
 from test.conftest import project_ENGIE, example_data_path_str  # isort: skip
 
 

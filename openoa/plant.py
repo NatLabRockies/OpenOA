@@ -1,10 +1,12 @@
+"""Provides the :py:class:`PlantData` object and primary setup routines."""
+
 from __future__ import annotations
 
 import sys
 import logging
 import itertools
-from typing import Callable, Optional, Sequence
 from pathlib import Path
+from collections.abc import Callable, Sequence
 
 import yaml
 import attrs
@@ -23,6 +25,7 @@ from openoa.schema.metadata import ANALYSIS_REQUIREMENTS, PlantMetaData
 from openoa.utils.metadata_fetch import attach_eia_data
 from openoa.utils.unit_conversion import convert_power_to_energy
 
+
 setup_logging(level="WARNING")
 logger = logging.getLogger(__name__)
 
@@ -34,7 +37,7 @@ logger = logging.getLogger(__name__)
 
 @logged_method_call
 def _analysis_filter(
-    error_dict: dict, metadata: PlantMetaData, analysis_types: list[str] = ["all"]
+    error_dict: dict, metadata: PlantMetaData, analysis_types: list[str] | None = None
 ) -> dict:
     """Filters the errors found by the analysis requirements  provided by the
     :py:attr:`analysis_types`.
@@ -53,7 +56,10 @@ def _analysis_filter(
     Returns:
         dict: The missing column, bad dtype, and incorrect timestamp frequency errors
             corresponding to the user's analysis types.
+
     """
+    if analysis_types is None:
+        analysis_types = ["all"]
     if "all" in analysis_types:
         return error_dict
 
@@ -101,7 +107,7 @@ def _analysis_filter(
 
 @logged_method_call
 def _compose_error_message(
-    error_dict: dict, metadata: PlantMetaData, analysis_types: list[str] = ["all"]
+    error_dict: dict, metadata: PlantMetaData, analysis_types: list[str] | None = None
 ) -> str:
     """Takes a dictionary of error messages from the ``PlantData`` validation routines,
     filters out errors unrelated to the intended analysis types, and creates a
@@ -116,7 +122,10 @@ def _compose_error_message(
 
     Returns:
         str: The human-readable error message breakdown.
+
     """
+    if analysis_types is None:
+        analysis_types = ["all"]
     if analysis_types == [None]:
         return ""
 
@@ -148,6 +157,7 @@ def _compose_error_message(
 def frequency_validator(
     actual_freq: str | int | float | None,
     desired_freq: str | set[str] | None,
+    *,
     exact: bool,
 ) -> bool:
     """Helper function to check if the actual datetime stamp frequency is valid compared
@@ -164,6 +174,7 @@ def frequency_validator(
 
     Returns:
         (:obj:`bool`): If the actual datetime frequency is sufficient, per the match requirements.
+
     """
     if desired_freq is None:
         return True
@@ -190,7 +201,7 @@ def frequency_validator(
     return actual_freq < max(desired_freq)
 
 
-def convert_to_list(
+def convert_to_list(  # ruff: ignore[D417]  <- "manipulation" is registering as "ma\nipulation"
     value: Sequence | str | int | float | None,
     manipulation: Callable | None = None,
 ) -> list:
@@ -198,14 +209,15 @@ def convert_to_list(
     to a list of elements.
 
     Args:
-        value(:obj:`Sequence` | :obj:`str` | :obj:`int` | :obj:`float`): The unknown element to be
+        value (:obj:`Sequence` | :obj:`str` | :obj:`int` | :obj:`float`): The unknown element to be
             converted to a list of element(s).
-        manipulation(:obj:`Callable` | :obj:`None`) A function to be performed upon the individual elements, by default None.
+        manipulation (:obj:`Callable` | :obj:`None`) A function to be performed upon the individual
+            elements, by default None.
 
     Returns:
-        (:ojb:`list`): The new list of elements.
-    """
+        (:obj:`list`): The new list of elements.
 
+    """
     if isinstance(value, (str, int, float)) or value is None:
         value = [value]
     if manipulation is not None:
@@ -214,7 +226,7 @@ def convert_to_list(
 
 
 @logged_method_call
-def column_validator(df: pd.DataFrame, column_names={}) -> None | list[str]:
+def column_validator(df: pd.DataFrame, column_names: dict | None = None) -> list[str] | None:
     """Validates that the column names exist as provided for each expected column.
 
     Args:
@@ -225,7 +237,10 @@ def column_validator(df: pd.DataFrame, column_names={}) -> None | list[str]:
     Returns:
         None | list[str]: A list of error messages that can be raised at a later step
             in the validation process.
+
     """
+    if column_names is None:
+        column_names = {}
     try:
         missing = set(column_names.values()).difference(df.columns)
     except AttributeError:
@@ -237,7 +252,7 @@ def column_validator(df: pd.DataFrame, column_names={}) -> None | list[str]:
 
 
 @logged_method_call
-def dtype_converter(df: pd.DataFrame, column_types={}) -> list[str]:
+def dtype_converter(df: pd.DataFrame, column_types: dict | None = None) -> list[str]:
     """Converts the columns provided in :py:attr:`column_types` of :py:attr:`df` to the appropriate
     data type.
 
@@ -249,18 +264,21 @@ def dtype_converter(df: pd.DataFrame, column_types={}) -> list[str]:
     Returns:
         None | list[str]: List of error messages that were encountered in the conversion
             process that will be raised at another step of the data validation.
+
     """
+    if column_types is None:
+        column_types = {}
     errors = []
     for column, new_type in column_types.items():
         if new_type in (np.datetime64, pd.DatetimeIndex):
             try:
                 df[column] = pd.DatetimeIndex(df[column])
-            except Exception as e:  # noqa: disable=E722
+            except Exception:
                 errors.append(column)
             continue
         try:
             df[column] = df[column].astype(new_type)
-        except:  # noqa: disable=E722
+        except:  # ruff: ignore[E722]
             errors.append(column)
 
     return errors
@@ -278,6 +296,7 @@ def load_to_pandas(data: str | Path | pd.DataFrame) -> pd.DataFrame | None:
 
     Returns:
         pd.DataFrame | None: The passed ``None`` or the converted pandas DataFrame object.
+
     """
     if data is None:
         return data
@@ -302,6 +321,7 @@ def load_to_pandas_dict(
     Returns:
         dict[str, pd.DataFrame] | None: The passed ``None`` or the converted ``pd.DataFrame``
             object.
+
     """
     if data is None:
         return data
@@ -311,19 +331,20 @@ def load_to_pandas_dict(
 
 
 @logged_method_call
-def rename_columns(df: pd.DataFrame, col_map: dict, reverse: bool = True) -> pd.DataFrame:
+def rename_columns(df: pd.DataFrame, col_map: dict, *, reverse: bool = True) -> pd.DataFrame:
     """Renames the pandas DataFrame columns using col_map. Intended to be used in
     conjunction with the a data objects meta data column mapping (``reverse=True``).
 
-        Args:
+    Args:
             df (pd.DataFrame): The DataFrame to have its columns remapped.
             col_map (dict): Dictionary of existing column names and new column names.
             reverse (bool, optional): True, if the new column names are the keys (using the
                 xxMetaData.col_map as input), or False, if the current column names are the
                 values (original column names). Defaults to True.
 
-        Returns:
+    Returns:
             pd.DataFrame: Input DataFrame with remapped column names.
+
     """
     if reverse:
         col_map = {v: k for k, v in col_map.items()}
@@ -406,6 +427,7 @@ class PlantData:
     Raises:
         ValueError: Raised if any analysis specific validation checks don't pass with an
             error message highlighting the appropriate issues.
+
     """
 
     log_level: str = field(default="WARNING", converter=set_log_level)
@@ -417,22 +439,20 @@ class PlantData:
     )
     analysis_type: list[str] | None = field(
         default=None,
-        converter=convert_to_list,  # noqa: F821
+        converter=convert_to_list,
         validator=attrs.validators.deep_iterable(
             iterable_validator=attrs.validators.instance_of(list),
-            member_validator=attrs.validators.in_([*ANALYSIS_REQUIREMENTS] + ["all", None]),
+            member_validator=attrs.validators.in_([*ANALYSIS_REQUIREMENTS, "all", None]),
         ),
         on_setattr=[attrs.setters.convert, attrs.setters.validate],
     )
-    scada: pd.DataFrame | None = field(default=None, converter=load_to_pandas)  # noqa: F821
-    meter: pd.DataFrame | None = field(default=None, converter=load_to_pandas)  # noqa: F821
-    tower: pd.DataFrame | None = field(default=None, converter=load_to_pandas)  # noqa: F821
-    status: pd.DataFrame | None = field(default=None, converter=load_to_pandas)  # noqa: F821
-    curtail: pd.DataFrame | None = field(default=None, converter=load_to_pandas)  # noqa: F821
-    asset: pd.DataFrame | None = field(default=None, converter=load_to_pandas)  # noqa: F821
-    reanalysis: dict[str, pd.DataFrame] | None = field(
-        default=None, converter=load_to_pandas_dict  # noqa: F821
-    )
+    scada: pd.DataFrame | None = field(default=None, converter=load_to_pandas)
+    meter: pd.DataFrame | None = field(default=None, converter=load_to_pandas)
+    tower: pd.DataFrame | None = field(default=None, converter=load_to_pandas)
+    status: pd.DataFrame | None = field(default=None, converter=load_to_pandas)
+    curtail: pd.DataFrame | None = field(default=None, converter=load_to_pandas)
+    asset: pd.DataFrame | None = field(default=None, converter=load_to_pandas)
+    reanalysis: dict[str, pd.DataFrame] | None = field(default=None, converter=load_to_pandas_dict)
 
     # No user initialization required for attributes defined below here
     # Error catching in validation
@@ -490,6 +510,7 @@ class PlantData:
             instance (:obj:`attrs.Attribute`): The ``attrs.Attribute`` details
             value (:obj:`pd.DataFrame | None`): The attribute's user-provided value. A
                 dictionary of dataframes is expected for reanalysis data only.
+
         """
         name = instance.name
         if self.analysis_type == [None]:
@@ -519,6 +540,7 @@ class PlantData:
             instance (:obj:`attrs.Attribute`): The :py:attr:`attrs.Attribute` details.
             value (:obj:`dict[str, pd.DataFrame]` | None): The attribute's user-provided value. A
                 dictionary of dataframes is expected for reanalysis data only.
+
         """
         name = instance.name
         if value is not None:
@@ -704,7 +726,7 @@ class PlantData:
     def _unset_index_columns(self) -> None:
         """Resets the index for each of the data types. This is intended solely for the use with
         the :py:meth:`validate` to ensure the validation methods are able to find the index columns
-        in the column space
+        in the column space.
         """
         if self.scada is not None:
             self.scada.reset_index(drop=False, inplace=True)
@@ -728,23 +750,23 @@ class PlantData:
 
         Returns:
             (:obj:`dict[str, pd.DataFrame]`): A mapping of the data type's name and the ``DataFrame``.
+
         """
-        values = dict(
-            scada=self.scada,
-            meter=self.meter,
-            tower=self.tower,
-            asset=self.asset,
-            status=self.status,
-            curtail=self.curtail,
-            reanalysis=self.reanalysis,
-        )
+        values = {
+            "scada": self.scada,
+            "meter": self.meter,
+            "tower": self.tower,
+            "asset": self.asset,
+            "status": self.status,
+            "curtail": self.curtail,
+            "reanalysis": self.reanalysis,
+        }
         return values
 
     @logged_method_call
     def to_csv(
         self,
         save_path: str | Path,
-        with_openoa_col_names: bool = True,
         metadata: str = "metadata",
         scada: str = "scada",
         meter: str = "meter",
@@ -753,6 +775,8 @@ class PlantData:
         status: str = "status",
         curtail: str = "curtail",
         reanalysis: str = "reanalysis",
+        *,
+        with_openoa_col_names: bool = True,
     ) -> None:
         """Saves all of the dataframe objects to a CSV file in the provided `save_path` directory.
 
@@ -777,6 +801,7 @@ class PlantData:
             reanalysis (str, optional): Base file name (without extension) to be used for the
                 reanalysis data, where each dataset will use the name provided to form the following
                 file name: {save_path}/{reanalysis}_{name}. Defaults to "reanalysis".
+
         """
         save_path = Path(save_path).resolve()
         if not save_path.exists():
@@ -800,7 +825,7 @@ class PlantData:
                     col_map["frequency"] = meta_obj.frequency
                 meta[name] = col_map
 
-        with open((save_path / metadata).with_suffix(".yml"), "w") as f:
+        with (save_path / metadata).with_suffix(".yml").open("w") as f:
             yaml.safe_dump(meta, f, default_flow_style=False, sort_keys=False)
 
         if self.scada is not None:
@@ -849,6 +874,7 @@ class PlantData:
 
         Returns:
             dict[str, list[str]]: _description_
+
         """
         column_map = self.metadata.column_map
 
@@ -860,12 +886,12 @@ class PlantData:
             if name == "reanalysis":
                 # If no reanalysis data, get the default key from ReanalysisMetaData
                 if df is None:
-                    sub_name = [*column_map[name]][0]
+                    sub_name = next(iter(column_map[name]))
                     missing_cols[f"{name}-{sub_name}"] = column_validator(
                         df, column_names=column_map[name][sub_name]
                     )
                     continue
-                for sub_name, df in df.items():
+                for sub_name, df in df.items():  # noqa: B020
                     logger.info(f"Validating column names in the {sub_name} {name} data")
                     missing_cols[f"{name}-{sub_name}"] = column_validator(
                         df, column_names=column_map[name][sub_name]
@@ -887,6 +913,7 @@ class PlantData:
             (`dict[str, list[str]]`): A dictionary of each data type and any
                 columns that  don't match the required dtype and can't be converted to
                 it successfully.
+
         """
         # Create a new mapping of the data's column names to the expected dtype
         # TODO: Consider if this should be a encoded in the metadata/plantdata object elsewhere
@@ -901,11 +928,14 @@ class PlantData:
                         zip(
                             column_name_map[name][sub_name].values(),
                             column_dtype_map[name][sub_name].values(),
+                            strict=True,
                         )
                     )
             else:
                 column_map[name] = dict(
-                    zip(column_name_map[name].values(), column_dtype_map[name].values())
+                    zip(
+                        column_name_map[name].values(), column_dtype_map[name].values(), strict=True
+                    )
                 )
 
         error_cols = {}
@@ -917,12 +947,12 @@ class PlantData:
             if name == "reanalysis":
                 if df is None:
                     # If no reanalysis data, get the default key from ReanalysisMetaData
-                    sub_name = [*column_map[name]][0]
+                    sub_name = next(iter(column_map[name]))
                     error_cols[f"{name}-{sub_name}"] = dtype_converter(
                         df, column_types=column_map[name][sub_name]
                     )
                     continue
-                for sub_name, df in df.items():
+                for sub_name, df in df.items():  # noqa: B020
                     logger.info(f"Validating the data types in the {sub_name} {name} data")
                     error_cols[f"{name}-{sub_name}"] = dtype_converter(
                         df, column_types=column_map[name][sub_name]
@@ -943,6 +973,7 @@ class PlantData:
 
         Returns:
             list[str]: The list of data types that don't meet the required datetime frequency.
+
         """
         frequency_requirements = self.metadata.frequency_requirements(self.analysis_type)
 
@@ -969,16 +1000,20 @@ class PlantData:
                 # If only checking one data type, then skip all others
                 continue
             if name == "reanalysis":
-                for sub_name, freq in freq.items():
+                for sub_name, freq in freq.items():  # noqa: B020
                     logger.info(f"Validating the frequency of the {sub_name} {name} data")
-                    is_valid = frequency_validator(freq, frequency_requirements.get(name), True)
-                    is_valid |= frequency_validator(freq, frequency_requirements.get(name), False)
+                    is_valid = frequency_validator(
+                        freq, frequency_requirements.get(name), exact=True
+                    )
+                    is_valid |= frequency_validator(
+                        freq, frequency_requirements.get(name), exact=False
+                    )
                     if not is_valid:
                         invalid_freq.update({f"{name}-{sub_name}": freq})
             else:
                 logger.info(f"Validating the frequency of the {name} data")
-                is_valid = frequency_validator(freq, frequency_requirements.get(name), True)
-                is_valid |= frequency_validator(freq, frequency_requirements.get(name), False)
+                is_valid = frequency_validator(freq, frequency_requirements.get(name), exact=True)
+                is_valid |= frequency_validator(freq, frequency_requirements.get(name), exact=False)
                 if not is_valid:
                     invalid_freq.update({name: freq})
 
@@ -987,7 +1022,7 @@ class PlantData:
     @logged_method_call
     def validate(self, metadata: dict | str | Path | PlantMetaData | None = None) -> None:
         """Secondary method to validate the plant data objects after loading or changing
-        data with option to provide an updated `metadata` object/file as well
+        data with option to provide an updated `metadata` object/file as well.
 
         Args:
             metadata (Optional[dict]): Updated metadata object, dictionary, or file to
@@ -996,6 +1031,7 @@ class PlantData:
 
         Raises:
             ValueError: Raised at the end if errors are caught in the validation steps.
+
         """
         logger.info("Post-intialization data validation")
         # Put the index columns back into the column space to ensure success of re-validation
@@ -1088,6 +1124,7 @@ class PlantData:
 
         Returns: None
             Sets the asset "geometry" column.
+
         """
         # Check for metadata inputs
         if utm_zone is None:
@@ -1111,16 +1148,17 @@ class PlantData:
             self.asset[self.metadata.asset.longitude].values,
         )
 
-        self.asset["geometry"] = [Point(lat, lon) for lat, lon in zip(lats, lons)]
+        self.asset["geometry"] = [Point(lat, lon) for lat, lon in zip(lats, lons, strict=True)]
 
     @logged_method_call
-    def update_column_names(self, to_original: bool = False) -> None:
+    def update_column_names(self, *, to_original: bool = False) -> None:
         """Renames the columns of each dataframe to the be the keys from the
         `metadata.xx.col_map` that was passed during initialization.
 
         Args:
             to_original (bool, optional): An indicator to map the column names back to
                 the originally passed values. Defaults to False.
+
         """
         meta = self.metadata
         reverse = not to_original  # flip the boolean to correctly map between the col_map entries
@@ -1153,6 +1191,7 @@ class PlantData:
 
     @logged_method_call
     def calculate_turbine_energy(self) -> None:
+        """Calculate the turbine energy generation from each time step from the power data."""
         energy_col = self.metadata.scada.WTUR_SupWh
         power_col = self.metadata.scada.WTUR_W
         frequency = self.metadata.scada.frequency
@@ -1180,6 +1219,7 @@ class PlantData:
 
         Returns:
             pd.DataFrame: The turbine-specific SCADA data frame.
+
         """
         if self.scada is None:
             raise AttributeError("This method can't be used unless `scada` data is provided.")
@@ -1207,6 +1247,7 @@ class PlantData:
 
         Returns:
             pd.DataFrame: The met tower-specific data frame.
+
         """
         if self.tower is None:
             raise AttributeError("This method can't be used unless `tower` data is provided.")
@@ -1230,6 +1271,7 @@ class PlantData:
 
         Returns:
             pd.DataFrame: Dataframe containing distances between each pair of assets
+
         """
         ix = self.asset.index.values
         distance = (
@@ -1254,7 +1296,7 @@ class PlantData:
         distance.loc[:, :] = distance_array
         self.asset_distance_matrix = distance
 
-    def turbine_distance_matrix(self, turbine_id: str = None) -> pd.DataFrame:
+    def turbine_distance_matrix(self, turbine_id: str | None = None) -> pd.DataFrame:
         """Returns the distances between all turbines in the plant with `np.inf` for the distance
         between a turbine and itself.
 
@@ -1262,8 +1304,10 @@ class PlantData:
             turbine_id (str, optional): Specific turbine ID for which the distances to other turbines
                 are returned. If None, a matrix containing the distances between all pairs of turbines
                 is returned. Defaults to None.
+
         Returns:
             pd.DataFrame: Dataframe containing distances between each pair of turbines
+
         """
         if self.asset_distance_matrix.size == 0:
             self.calculate_asset_distance_matrix()
@@ -1271,7 +1315,7 @@ class PlantData:
         row_ix = self.turbine_ids if turbine_id is None else turbine_id
         return self.asset_distance_matrix.loc[row_ix, self.turbine_ids]
 
-    def tower_distance_matrix(self, tower_id: str = None) -> pd.DataFrame:
+    def tower_distance_matrix(self, tower_id: str | None = None) -> pd.DataFrame:
         """Returns the distances between all towers in the plant with `np.inf` for the distance
         between a tower and itself.
 
@@ -1279,8 +1323,10 @@ class PlantData:
             tower_id (str, optional): Specific tower ID for which the distances to other towers
                 are returned. If None, a matrix containing the distances between all pairs of towers
                 is returned. Defaults to None.
+
         Returns:
             pd.DataFrame: Dataframe containing distances between each pair of towers
+
         """
         if self.asset_distance_matrix.size == 0:
             self.calculate_asset_distance_matrix()
@@ -1296,6 +1342,7 @@ class PlantData:
         Returns:
             pd.DataFrame: Dataframe containing directions between each pair of assets (defined as the direction
                 from the asset given by the row index to the asset given by the column index, relative to north)
+
         """
         ix = self.asset.index.values
         direction = (
@@ -1334,7 +1381,7 @@ class PlantData:
         direction.loc[:, :] = direction_array
         self.asset_direction_matrix = direction
 
-    def turbine_direction_matrix(self, turbine_id: str = None) -> pd.DataFrame:
+    def turbine_direction_matrix(self, turbine_id: str | None = None) -> pd.DataFrame:
         """Returns the directions between all turbines in the plant with `np.inf` for the direction
         between a turbine and itself.
 
@@ -1342,10 +1389,12 @@ class PlantData:
             turbine_id (str, optional): Specific turbine ID for which the directions to other turbines
                 are returned. If None, a matrix containing the directions between all pairs of turbines
                 is returned. Defaults to None.
+
         Returns:
             pd.DataFrame: Dataframe containing directions between each pair of turbines (defined as the
                 direction from the turbine given by the row index to the turbine given by the column
                 index, relative to north)
+
         """
         if self.asset_direction_matrix.size == 0:
             self.calculate_asset_direction_matrix()
@@ -1353,7 +1402,7 @@ class PlantData:
         row_ix = self.turbine_ids if turbine_id is None else turbine_id
         return self.asset_direction_matrix.loc[row_ix, self.turbine_ids]
 
-    def tower_direction_matrix(self, tower_id: str = None) -> pd.DataFrame:
+    def tower_direction_matrix(self, tower_id: str | None = None) -> pd.DataFrame:
         """Returns the directions between all towers in the plant with `np.inf` for the direction
         between a tower and itself.
 
@@ -1361,10 +1410,12 @@ class PlantData:
             tower_id (str, optional): Specific tower ID for which the directions to other towers
                 are returned. If None, a matrix containing the directions between all pairs of towers
                 is returned. Defaults to None.
+
         Returns:
             pd.DataFrame: Dataframe containing directions between each pair of towers (defined as the
                 direction from the tower given by the row index to the tower given by the column
                 index, relative to north)
+
         """
         if self.asset_direction_matrix.size == 0:
             self.calculate_asset_direction_matrix()
@@ -1374,7 +1425,7 @@ class PlantData:
 
     def calculate_asset_geometries(self) -> None:
         """Calculates the asset distances and parses the asset geometries. This is intended for use
-        during initialization and for when asset data is added after initialization
+        during initialization and for when asset data is added after initialization.
         """
         if self.asset is not None:
             self.parse_asset_geometry()
@@ -1384,8 +1435,7 @@ class PlantData:
     def get_freestream_turbines(
         self, wd: float, freestream_method: str = "sector", sector_width: float = 90.0
     ):
-        """
-        Returns a list of freestream (unwaked) turbines for a given wind direction. Freestream turbines can be
+        """Returns a list of freestream (unwaked) turbines for a given wind direction. Freestream turbines can be
         identified using different methods ("sector" or "IEC" methods). For the sector method, if there are any
         turbines upstream of a turbine within a fixed wind direction sector centered on the wind direction of interest,
         defined by the sector_width argument, the turbine is considered waked. The IEC method uses the freestream
@@ -1399,8 +1449,10 @@ class PlantData:
                 interest used to determine whether a turbine is waked for the "sector" method (degrees). For a given
                 turbine, if any other upstream turbines are located within the sector, then the turbine is considered
                 waked. Defaults to 90 degrees.
+
         Returns:
             list: List of freestream turbine asset IDs
+
         """
         turbine_direction_matrix = self.turbine_direction_matrix()
 
@@ -1461,8 +1513,8 @@ class PlantData:
 
         Returns: None
             Creates the "nearest_turbine_id" and "nearest_tower_id" column in `asset`.
-        """
 
+        """
         # Get the valid IDs for both the turbines and towers
         ix_turb = self.turbine_ids if turbine_ids is None else np.array(turbine_ids)
         ix_tower = self.tower_ids if tower_ids is None else np.array(tower_ids)
@@ -1491,6 +1543,7 @@ class PlantData:
 
         Returns:
             str: The turbine `asset_id` closest to the provided `asset_id`.
+
         """
         if "nearest_turbine_id" not in self.asset.columns:
             self.calculate_nearest_neighbor()
@@ -1504,6 +1557,7 @@ class PlantData:
 
         Returns:
             str: The tower `asset_id` closest to the provided `asset_id`.
+
         """
         if "nearest_tower_id" not in self.asset.columns:
             self.calculate_nearest_neighbor()
@@ -1511,12 +1565,15 @@ class PlantData:
 
     @classmethod
     def from_entr(cls, *args, **kwargs):
+        """Create a :py:class:`PlantData` object from an ENTR data base."""
         try:
             from entr.plantdata import from_entr
-        except ModuleNotFoundError:
-            raise NotImplementedError(
-                "The entr python package was not found. Please install py-entr by visiting https://github.com/entralliance/py-entr and following the instructions."
+        except ModuleNotFoundError as e:
+            msg = (
+                "The entr python package was not found. Please install py-entr by visiting"
+                " https://github.com/entralliance/py-entr and following the instructions."
             )
+            raise NotImplementedError(msg) from e
 
         return from_entr(*args, **kwargs)
 
@@ -1526,4 +1583,4 @@ class PlantData:
 # **********************************************************
 
 # Add the method for fetching and attaching the EIA plant data to the project
-setattr(PlantData, "attach_eia_data", attach_eia_data)
+PlantData.attach_eia_data = attach_eia_data

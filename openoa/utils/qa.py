@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Tuple, Union
+import contextlib
 from datetime import datetime
 
 import pytz
@@ -15,10 +15,11 @@ from pyproj import Proj
 from dateutil import tz
 
 from openoa.utils import timeseries as ts
-from openoa.logging import logging, logged_method_call
+from openoa.logging import logging
 from openoa.utils.plot import set_styling
 
-Number = Union[int, float]
+
+Number = int | float
 logger = logging.getLogger(__name__)
 set_styling()
 
@@ -38,6 +39,7 @@ def _remove_tz(df: pd.DataFrame, t_local_column: str) -> tuple[np.ndarray, np.nd
     Returns:
         :obj:`numpy.ndarray`: Truth array that can be used to filter the timestamps and subsequent values.
         :obj:`numpy.ndarray`: Array of timezone-naive python `datetime` objects.
+
     """
     arr = np.array(
         [
@@ -70,6 +72,7 @@ def _get_time_window(df, ix, hour_window, time_col, local_time_col, utc_time_col
 
     Returns:
         (:obj:`pandas.DataFrame`): The filtered DataFrame object
+
     """
     if ix.tz is None:
         col = time_col
@@ -93,6 +96,7 @@ def determine_offset_dst(df: pd.DataFrame, local_tz: str) -> pd.DataFrames:
 
     Returns:
         (:obj:`pd.DataFrame`): The updated dataframe with "utc_offset" and "is_dst" columns created.
+
     """
     # The new column names
     _offset = "utc_offset"
@@ -114,7 +118,7 @@ def determine_offset_dst(df: pd.DataFrame, local_tz: str) -> pd.DataFrames:
 
 
 def convert_datetime_column(
-    df: pd.DataFrame, time_col: str, local_tz: str, tz_aware: bool
+    df: pd.DataFrame, time_col: str, local_tz: str, *, tz_aware: bool
 ) -> pd.DataFrame:
     """Converts the passed timestamp data to a pandas-encoded Datetime, and creates a
     corresponding localized and UTC timestamp using the :py:attr:`time_field` column name with either
@@ -137,6 +141,7 @@ def convert_datetime_column(
             - :py:attr:`time_col`_localized: The fully converted and localized timestamp column
             - utc_offset: The difference, in hours between the localized and UTC time
             - is_dst: Indicator for whether of not the timestamp is considered to be DST (``True``) or not (``False``)
+
     """
     # Create the necessary columns for processing
     t_utc = f"{time_col}_utc"
@@ -178,7 +183,7 @@ def convert_datetime_column(
 
 def duplicate_time_identification(
     df: pd.DataFrame, time_col: str, id_col: str
-) -> tuple[pd.Series, None | pd.Series, None | pd.Series]:
+) -> tuple[pd.Series, pd.Series | None, pd.Series | None]:
     """Identifies the time duplications on the modified SCADA data frame to highlight the
     duplications from the original time data (:py:attr:`time_col`), the UTC timestamps, and the localized
     timestamps, if the latter are available.
@@ -195,6 +200,7 @@ def duplicate_time_identification(
             timestamps based on the original timestamp column, the localized timestamp column (``None``
             if the column does not exist), and the UTC-converted timestamp column (``None`` if the
             column does not exist).
+
     """
     # Create the necessary columns for processing
     t_utc = f"{time_col}_utc"
@@ -215,7 +221,7 @@ def duplicate_time_identification(
 
 def gap_time_identification(
     df: pd.DataFrame, time_col: str, freq: str
-) -> tuple[pd.Series, None | pd.Series, None | pd.Series]:
+) -> tuple[pd.Series, pd.Series | None, pd.Series | None]:
     """Identifies the time gaps on the modified SCADA data frame to highlight the missing timestamps
     from the original time data (`time_col`), the UTC timestamps, and the localized timestamps, if
     the latter are available.
@@ -232,6 +238,7 @@ def gap_time_identification(
             timestamps based on the original timestamp column, the localized timestamp column (``None``
             if the column does not exist), and the UTC-converted timestamp column (``None`` if the
             column does not exist).
+
     """
     # Create the necessary columns for processing
     t_utc = f"{time_col}_utc"
@@ -260,6 +267,7 @@ def describe(df: pd.DataFrame, **kwargs) -> pd.DataFrame:
 
     Returns:
         pd.DataFrame: The results of ``df.describe().T``.
+
     """
     return df.describe(**kwargs).T
 
@@ -290,6 +298,7 @@ def daylight_savings_plot(
             the pandas timestamp conventions (https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#timeseries-offset-aliases).
         hour_window(:obj: 'int'): number of hours, before and after the Daylight Savings Time
             transitions to view in the plot, by default 3.
+
     """
     # Create the necessary columns for processing
     _dst = "is_dst"
@@ -299,10 +308,8 @@ def daylight_savings_plot(
     # Get data for one of the turbines
     df_dst = df.loc[df[id_col] == df[id_col].unique()[0]]
     df_full = df_dst.copy()
-    try:
+    with contextlib.suppress(TypeError):
         df_full = df_full.tz_convert(local_tz)
-    except TypeError:
-        pass
 
     time_duplications, time_duplications_utc, _ = duplicate_time_identification(
         df, time_col, id_col
@@ -313,7 +320,7 @@ def daylight_savings_plot(
 
     j = 0
     fig = plt.figure(figsize=(20, 24))
-    axes = axes = fig.subplots(num_years, 2, gridspec_kw=dict(wspace=0.15, hspace=0.3))
+    axes = axes = fig.subplots(num_years, 2, gridspec_kw={"wspace": 0.15, "hspace": 0.3})
     for i, year in enumerate(years):
         year_data = df_full.loc[df_full[time_col].dt.year == year]
         dst_dates = np.where(year_data[_dst].values)[0]
@@ -482,6 +489,7 @@ def wtk_coordinate_indices(
     Returns:
         tuple[float, float]: The nearest valid x and y coordinates to the provided `latitude` and
             `longitude`.
+
     """
     coordinates = fn["coordinates"]
     project_coord_string = """
@@ -495,7 +503,7 @@ def wtk_coordinate_indices(
 
     project_coords = projectLcc(longitude, latitude)
     delta = np.subtract(project_coords, origin)
-    xy = reversed([int(round(x / 2000)) for x in delta])
+    xy = reversed([round(x / 2000) for x in delta])
     return tuple(xy)
 
 
@@ -521,6 +529,7 @@ def wtk_diurnal_prep(
 
     Returns:
         pd.Series: The diurnal hourly average wind speed.
+
     """
     # Startup the API and grab the database
     f = h5pyd.File(fn, "r")
@@ -535,9 +544,9 @@ def wtk_diurnal_prep(
     project_ix = wtk_coordinate_indices(f, latitude, longitude)
     try:
         _ = wtk_coordinates[project_ix[0]][project_ix[1]]
-    except ValueError:
+    except ValueError as e:
         msg = f"Project Coordinates (lat, long) = ({latitude}, {longitude}) are outside the WIND Toolkit domain."
-        raise IndexError(msg)
+        raise IndexError(msg) from e
 
     window_ix = dt.loc[(dt.datetime >= start_date) & (dt.datetime <= end_date)].index
     ws = pd.DataFrame(
@@ -562,7 +571,7 @@ def wtk_diurnal_plot(
     end_date: str = "2013-12-31",
     return_fig: bool = False,
 ) -> None:
-    """Plots the WTK diurnal wind profile alongside the hourly power averages from the :py:attr:`scada_df`
+    """Plots the WTK diurnal wind profile alongside the hourly power averages from the :py:attr:`scada_df`.
 
     Args:
         wtk_df (:obj: `pd.DataFrame` | `None`): The WTK diurnal profile data produced in
@@ -581,6 +590,7 @@ def wtk_diurnal_plot(
             uses the ending date of :py:attr:`scada_df`. Defaults to None.
         return_fig(:obj:`String`): Indicator for if the figure and axes objects should be returned,
             by default False.
+
     """
     # Get the WTK data if needed
     if wtk_df is None:

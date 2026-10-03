@@ -1,7 +1,8 @@
-# This class defines key analytical routines for calculating electrical losses for
-# a wind plant using operational data. Electrical loss is calculated per month and on
-# an average annual basis by comparing monthly energy production from the turbines
-# and the revenue meter
+"""This class defines key analytical routines for calculating electrical losses for
+a wind plant using operational data. Electrical loss is calculated per month and on
+an average annual basis by comparing monthly energy production from the turbines
+and the revenue meter.
+"""
 
 from __future__ import annotations
 
@@ -23,6 +24,7 @@ from openoa.logging import logging, logged_method_call
 from openoa.utils.plot import set_styling
 from openoa.analysis._analysis_validators import validate_UQ_input, validate_half_closed_0_1_right
 
+
 logger = logging.getLogger(__name__)
 set_styling()
 
@@ -34,8 +36,7 @@ HOURS_PER_DAY = 24
 
 @define(auto_attribs=True)
 class ElectricalLosses(FromDictMixin, ResetValuesMixin):
-    """
-    A serial implementation of calculating the average monthly and annual electrical losses at a
+    """A serial implementation of calculating the average monthly and annual electrical losses at a
     wind power plant, and the associated uncertainty. Energy output from the turbine SCADA meter and
     the wind plant revenue meter are used to estimate electrical losses.
 
@@ -69,6 +70,7 @@ class ElectricalLosses(FromDictMixin, ResetValuesMixin):
             the range of (0, 1), under which months should be eliminated. If :py:attr:`UQ` = True,
             then a 2-element tuple containing an upper and lower bound for a randomly selected value
             should be given, otherwise, a scalar value should be provided.
+
     """
 
     plant: PlantData = field(converter=deepcopy, validator=attrs.validators.instance_of(PlantData))
@@ -104,9 +106,7 @@ class ElectricalLosses(FromDictMixin, ResetValuesMixin):
 
     @logged_method_call
     def __attrs_post_init__(self):
-        """
-        Initialize logging and post-initialization setup steps.
-        """
+        """Initialize logging and post-initialization setup steps."""
         if {"ElectricalLosses", "all"}.intersection(self.plant.analysis_type) == set():
             self.plant.analysis_type.append("ElectricalLosses")
 
@@ -136,8 +136,7 @@ class ElectricalLosses(FromDictMixin, ResetValuesMixin):
         uncertainty_scada: NDArrayFloat | float = None,
         uncertainty_correction_threshold: NDArrayFloat | tuple[float, float] | float = None,
     ):
-        """
-        Run the electrical losses calculation.
+        """Run the electrical losses calculation.
 
         .. note:: If None is provided to any of the inputs, then the last used input value will be
             used for the analysis, and if no prior values were set, then this is the model's defaults.
@@ -152,6 +151,7 @@ class ElectricalLosses(FromDictMixin, ResetValuesMixin):
                 the range of (0, 1], under which months should be eliminated. If :py:attr:`UQ` = True,
                 then a 2-element tuple containing an upper and lower bound for a randomly selected value
                 should be given, otherwise, a scalar value should be provided.
+
         """
         initial_parameters = {}
         if num_sim is not None:
@@ -183,8 +183,7 @@ class ElectricalLosses(FromDictMixin, ResetValuesMixin):
 
     @logged_method_call
     def setup_inputs(self):
-        """
-        Create and populate the data frame defining the simulation parameters.
+        """Create and populate the data frame defining the simulation parameters.
         This data frame is stored as self.inputs.
         """
         if self.UQ:
@@ -215,8 +214,7 @@ class ElectricalLosses(FromDictMixin, ResetValuesMixin):
 
     @logged_method_call
     def process_scada(self):
-        """
-        Calculate daily sum of turbine energy only for days when all turbines are reporting
+        """Calculate daily sum of turbine energy only for days when all turbines are reporting
         at all time steps.
         """
         logger.info("Processing SCADA data")
@@ -251,9 +249,7 @@ class ElectricalLosses(FromDictMixin, ResetValuesMixin):
 
     @logged_method_call
     def process_meter(self):
-        """
-        Calculate daily sum of meter energy only for days when meter data is reporting at all time steps.
-        """
+        """Calculate daily sum of meter energy only for days when meter data is reporting at all time steps."""
         logger.info("Processing meter data")
 
         meter_df = self.plant.meter.copy()
@@ -274,8 +270,7 @@ class ElectricalLosses(FromDictMixin, ResetValuesMixin):
 
     @logged_method_call
     def calculate_electrical_losses(self):
-        """
-        Apply Monte Carlo approach to calculate electrical losses and their uncertainty based on the
+        """Apply Monte Carlo approach to calculate electrical losses and their uncertainty based on the
         difference in the sum of turbine and metered energy over the compiled days.
         """
         logger.info("Calculating electrical losses")
@@ -332,11 +327,12 @@ class ElectricalLosses(FromDictMixin, ResetValuesMixin):
         self,
         xlim: tuple[datetime.datetime | None, datetime.datetime | None] = (None, None),
         ylim: tuple[float | None, float | None] = (None, None),
-        return_fig: bool = False,
         figure_kwargs: dict | None = None,
         legend_kwargs: dict | None = None,
         plot_kwargs: dict | None = None,
-    ) -> None | tuple[plt.Figure, plt.Axes]:
+        *,
+        return_fig: bool = False,
+    ) -> tuple[plt.Figure, plt.Axes] | None:
         """Plots the monthly timeseries of electrical losses as a percent.
 
         Args:
@@ -356,6 +352,7 @@ class ElectricalLosses(FromDictMixin, ResetValuesMixin):
         Returns:
             None | tuple[plt.Figure, plt.Axes]: If :py:attr:`return_fig`, then return the figure
                 and axes objects in addition to showing the plot.
+
         """
         if figure_kwargs is None:
             figure_kwargs = {}
@@ -377,7 +374,7 @@ class ElectricalLosses(FromDictMixin, ResetValuesMixin):
         std = losses.std()
         ax.plot(
             losses * 100,
-            label=f"Electrical Losses\n$\\mu$={mean:.2%}, $\\sigma$={std:.2%}",  # noqa: W605
+            label=f"Electrical Losses\n$\\mu$={mean:.2%}, $\\sigma$={std:.2%}",
             **plot_kwargs,
         )
 
@@ -403,15 +400,16 @@ __defaults_uncertainty_meter = ElectricalLosses.__attrs_attrs__.uncertainty_mete
 __defaults_uncertainty_scada = ElectricalLosses.__attrs_attrs__.uncertainty_scada.default
 
 
-def create_ElectricalLosses(
+def create_ElectricalLosses(  # ruff: ignore[D103]
     project: PlantData,
-    UQ: bool = __defaults_UQ,
     num_sim: int = __defaults_num_sim,
     uncertainty_correction_threshold: (
         NDArrayFloat | tuple[float, float] | float
     ) = __defaults_uncertainty_correction_threshold,
     uncertainty_meter: NDArrayFloat | tuple[float, float] | float = __defaults_uncertainty_meter,
     uncertainty_scada: NDArrayFloat | tuple[float, float] | float = __defaults_uncertainty_scada,
+    *,
+    UQ: bool = __defaults_UQ,
 ) -> ElectricalLosses:
     return ElectricalLosses(
         plant=project,

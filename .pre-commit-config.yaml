@@ -1,14 +1,6 @@
 repos:
-  - repo: https://github.com/psf/black
-    rev: 26.1.0
-    hooks:
-        - id: black
-          name: black
-          stages: [pre-commit]
-          language_version: python3
-
   - repo: https://github.com/pycqa/isort
-    rev: 7.0.0
+    rev: 9.0.2
     hooks:
       - id: isort
         additional_dependencies: [toml]
@@ -22,11 +14,14 @@ repos:
         additional_dependencies: [toml]
         types: [pyi]
 
-  - repo: https://github.com/asottile/pyupgrade
-    rev: v3.21.2
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.16.10
     hooks:
-    - id: pyupgrade
-      args: [--py38-plus]
+      - id: ruff-check
+        types_or: [python, pyi, jupyter]
+        args: [--fix]
+      - id: ruff-format
+        types_or: [python, pyi, jupyter]
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
@@ -40,8 +35,3 @@ repos:
     -   id: mixed-line-ending
     -   id: pretty-format-json
         args: [--autofix]
-
-  -   repo: https://github.com/pycqa/flake8
-      rev: '7.3.0'
-      hooks:
-      -   id: flake8

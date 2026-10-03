@@ -1,6 +1,4 @@
-"""
-This module provides methods for processing meteorological data.
-"""
+"""This module provides methods for processing meteorological data."""
 
 from __future__ import annotations
 
@@ -12,21 +10,23 @@ import scipy.constants as const
 
 from openoa.utils._converters import df_to_series, series_method
 
+
 # Define constants used in some of the methods
 R = 287.058  # Gas constant for dry air, units of J/kg/K
 Rw = 461.5  # Gas constant of water vapour, unit J/kg/K
 
 
 def wrap_180(x: float | np.ndarray | pd.Series | pd.DataFrame):
-    """
-    Converts an angle, an array of angles, or a pandas Series or DataFrame of angles in degrees to
+    """Converts an angle, an array of angles, or a pandas Series or DataFrame of angles in degrees to
     the range -180 to +180 degrees.
 
     Args:
         x (float | np.ndarray | pd.Series | pd.DataFrame): Input angle(s) (degrees)
+
     Returns:
         float | np.ndarray: The input angle(s) converted to the range -180 to +180 degrees, returned
             as a float or numpy array (degrees)
+
     """
     input_type = type(x)
     if (input_type == pd.core.series.Series) | (input_type == pd.core.frame.DataFrame):
@@ -41,9 +41,8 @@ def wrap_180(x: float | np.ndarray | pd.Series | pd.DataFrame):
 
 
 def circular_mean(x: pd.DataFrame | pd.Series | np.ndarray, axis: int = 0):
-    """
-    Compute circular mean of wind direction data for a pandas Series or 1-dimensional numpy array,
-    or along any dimension of a multi-dimensional pandas DataFrame or numpy array
+    """Compute circular mean of wind direction data for a pandas Series or 1-dimensional numpy array,
+    or along any dimension of a multi-dimensional pandas DataFrame or numpy array.
 
     Args:
         x(pd.DataFrame | pd.Series | np.ndarray): A pandas DataFrame or Series, or a numpy array
@@ -54,6 +53,7 @@ def circular_mean(x: pd.DataFrame | pd.Series | np.ndarray, axis: int = 0):
     Returns:
         pd.Series | float | np.ndarray: The circular mean of the wind directions along the specified
             axis between 0 and 360 degrees (degrees).
+
     """
     if axis >= x.ndim:
         raise ValueError("The axis argument cannot be greater than the dimension of the data (x).")
@@ -93,6 +93,7 @@ def compute_wind_speed(
 
     Returns:
         :obj:`pandas.Series` | :obj:`numpy.ndarray`: wind speed, in m/s.
+
     """
     return np.sqrt(u**2 + v**2)
 
@@ -101,7 +102,7 @@ def compute_wind_speed(
 def compute_wind_direction(
     u: pd.Series | str, v: pd.Series | str, data: pd.DataFrame = None
 ) -> pd.Series:
-    """Compute wind direction given u and v wind vector components
+    """Compute wind direction given u and v wind vector components.
 
     Args:
         u(:obj:`pandas.Series` | `str`): A pandas ``Series`` of the zonal component of the wind,
@@ -112,6 +113,7 @@ def compute_wind_direction(
 
     Returns:
         :obj:`pandas.Series`: wind direction; units of degrees
+
     """
     wd = 180 + np.arctan2(u, v) * 180 / np.pi  # Calculate wind direction in degrees
     return pd.Series(np.where(wd != 360, wd, 0))
@@ -121,7 +123,7 @@ def compute_wind_direction(
 def compute_u_v_components(
     wind_speed: pd.Series | str, wind_dir: pd.Series | str, data: pd.DataFrame = None
 ) -> pd.Series:
-    """Compute vector components of the horizontal wind given wind speed and direction
+    """Compute vector components of the horizontal wind given wind speed and direction.
 
     Args:
         wind_speed(:obj:`pandas.Series` | `str`): A pandas ``Series`` of the horizontal wind speed, in
@@ -138,6 +140,7 @@ def compute_u_v_components(
         (tuple):
             u(pandas.Series): the zonal component of the wind; units of m/s.
             v(pandas.Series): the meridional component of the wind; units of m/s
+
     """
     if np.any(wind_speed < 0):
         raise ValueError("Negative values exist in the `wind_speed` data.")
@@ -157,8 +160,7 @@ def compute_air_density(
     humi_col: pd.Series | str = None,
     data: pd.DataFrame = None,
 ):
-    """
-    Calculate air density from the ideal gas law based on the definition provided by IEC 61400-12
+    """Calculate air density from the ideal gas law based on the definition provided by IEC 61400-12
     given pressure, temperature and relative humidity.
 
     This function assumes temperature and pressure are reported in standard units of measurement
@@ -182,6 +184,7 @@ def compute_air_density(
 
     Returns:
         :obj:`pandas.Series`: Rho, calcualted air density; units of kg/m3
+
     """
     if data is not None:
         temp_col, pres_col, humi_col = df_to_series(data, temp_col, pres_col, humi_col)
@@ -210,8 +213,7 @@ def pressure_vertical_extrapolation(
     z1: pd.Series | str,
     data: pd.DataFrame = None,
 ) -> pd.Series:
-    """
-    Extrapolate pressure from height z0 to height z1 given the average temperature in the layer.
+    """Extrapolate pressure from height z0 to height z1 given the average temperature in the layer.
     The hydostatic equation is used to peform the extrapolation.
 
     Args:
@@ -231,6 +233,7 @@ def pressure_vertical_extrapolation(
 
     Returns:
         :obj:`pandas.Series`: :py:attr:`p1`, extrapolated pressure at :py:attr:`z1`, in Pascals
+
     """
     if np.any(p0 < 0):
         raise ValueError("Negative values exist in the `p0` data.")
@@ -244,8 +247,7 @@ def pressure_vertical_extrapolation(
 def air_density_adjusted_wind_speed(
     wind_col: pd.Series | str, density_col: pd.Series | str, data: pd.DataFrame = None
 ) -> pd.Series:
-    """
-    Apply air density correction to wind speed measurements following IEC-61400-12-1 standard
+    """Apply air density correction to wind speed measurements following IEC-61400-12-1 standard.
 
     Args:
         wind_col(:obj:`pandas.Series` | `str`): A pandas `Series` containing the wind speed data,
@@ -257,6 +259,7 @@ def air_density_adjusted_wind_speed(
 
     Returns:
         :obj:`pandas.Series`: density-adjusted wind speeds, in m/s
+
     """
     return wind_col * np.power(density_col / density_col.mean(), 1.0 / 3)
 
@@ -265,8 +268,7 @@ def air_density_adjusted_wind_speed(
 def compute_turbulence_intensity(
     mean_col: pd.Series | str, std_col: pd.Series | str, data: pd.DataFrame = None
 ) -> pd.Series:
-    """
-    Compute turbulence intensity
+    """Compute turbulence intensity.
 
     Args:
         mean_col(:obj:`pandas.Series` | `str`): A pandas ``Series`` containing the wind speed mean
@@ -278,6 +280,7 @@ def compute_turbulence_intensity(
 
     Returns:
         :obj:`pd.Series`: turbulence intensity, (unitless ratio)
+
     """
     if data is not None:
         mean_col, std_col = df_to_series(data, mean_col, std_col)
@@ -285,10 +288,9 @@ def compute_turbulence_intensity(
 
 
 def compute_shear(
-    data: pd.DataFrame, ws_heights: dict[str, float], return_reference_values: bool = False
+    data: pd.DataFrame, ws_heights: dict[str, float], *, return_reference_values: bool = False
 ) -> pd.Series | tuple[pd.Series, float, pd.Series]:
-    """
-    Computes shear coefficient between wind speed measurements using the power law.
+    """Computes shear coefficient between wind speed measurements using the power law.
     The shear coefficient is obtained by evaluating the expression for an OLS regression coefficient.
 
     Args:
@@ -306,8 +308,8 @@ def compute_shear(
             :py:attr:`return_reference_values` is False, return just the shear coefficient
             (unitless), else return the shear coefficent (unitless), reference height (m), and
             reference wind speed (m/s).
-    """
 
+    """
     # Extract the wind speed columns from `data` and create "u" 2-D array; where element
     # [i,j] is the wind speed measurement at the ith timestep and jth sensor height
     u: np.ndarray = np.column_stack(df_to_series(data, *ws_heights))
@@ -358,8 +360,7 @@ def compute_shear(
 def extrapolate_windspeed(
     v1: pd.Series | str, z1: float, z2: float, shear: pd.Series | str, data: pd.DataFrame = None
 ):
-    """
-    Extrapolates wind speed vertically using the Power Law.
+    """Extrapolates wind speed vertically using the Power Law.
 
     Args:
         v1(:obj: `pandas.Series` | `float` | `str`): A pandas ``Series`` of the wind
@@ -372,6 +373,7 @@ def extrapolate_windspeed(
 
     Returns:
         :obj: (`pandas.Series` | `numpy.array` | `float`): Wind speed extrapolated to target height.
+
     """
     return v1 * (z2 / z1) ** shear
 
@@ -384,8 +386,7 @@ def compute_veer(
     height_b: float,
     data: pd.DataFrame = None,
 ):
-    """
-    Compute veer between wind direction measurements
+    """Compute veer between wind direction measurements.
 
     Args:
         wind_a(:obj:`pandas.Series` | `str`): A pandas ``Series`` containing the wind direction mean
@@ -399,6 +400,7 @@ def compute_veer(
 
     Returns:
         veer(:obj:`array`): veer (deg/m)
+
     """
     # Calculate wind direction change
     delta_dir = wind_b - wind_a

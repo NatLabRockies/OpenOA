@@ -1,5 +1,4 @@
-"""
-This class defines key analytical routines for performing a gap analysis on
+"""This class defines key analytical routines for performing a gap analysis on
 EYA-estimated annual energy production (AEP) and that from operational data. Categories
 considered are availability, electrical losses, and long-term gross energy. The main
 output is a 'waterfall' plot linking the EYA-estimated and operational-estiamted AEP values.
@@ -9,7 +8,7 @@ from __future__ import annotations
 
 import random
 from copy import deepcopy
-from typing import Callable
+from collections.abc import Callable
 
 import attrs
 import numpy as np
@@ -21,9 +20,7 @@ from attrs import field, define
 from matplotlib.ticker import StrMethodFormatter
 
 from openoa.plant import PlantData, convert_to_list
-from openoa.utils import plot, filters, imputing
-from openoa.utils import timeseries as ts
-from openoa.utils import met_data_processing as met
+from openoa.utils import plot, filters, imputing, timeseries as ts, met_data_processing as met
 from openoa.schema import FromDictMixin, ResetValuesMixin
 from openoa.logging import logging, logged_method_call
 from openoa.utils.power_curve import functions
@@ -32,6 +29,7 @@ from openoa.analysis._analysis_validators import (
     validate_half_closed_0_1_right,
     validate_reanalysis_selections,
 )
+
 
 logger = logging.getLogger(__name__)
 plot.set_styling()
@@ -44,8 +42,7 @@ HOURS_PER_DAY = 24
 
 @define(auto_attribs=True)
 class TurbineLongTermGrossEnergy(FromDictMixin, ResetValuesMixin):
-    """
-    Calculates long-term gross energy for each turbine in a wind farm using methods implemented in
+    """Calculates long-term gross energy for each turbine in a wind farm using methods implemented in
     the utils subpackage for data processing and analysis.
 
     The method proceeds as follows:
@@ -92,6 +89,7 @@ class TurbineLongTermGrossEnergy(FromDictMixin, ResetValuesMixin):
             scada energy data should be corrected. When :py:attr:`UQ` is True, then this should be a
             tuple of the lower and upper limits of this threshold, otherwise a single value should
             be used. Defaults to (0.85, 0.95)
+
     """
 
     plant: PlantData = field(converter=deepcopy, validator=attrs.validators.instance_of(PlantData))
@@ -151,9 +149,7 @@ class TurbineLongTermGrossEnergy(FromDictMixin, ResetValuesMixin):
 
     @logged_method_call
     def __attrs_post_init__(self):
-        """
-        Runs any non-automated setup steps for the analysis class.
-        """
+        """Runs any non-automated setup steps for the analysis class."""
         if {"TurbineLongTermGrossEnergy", "all"}.intersection(self.plant.analysis_type) == set():
             self.plant.analysis_type.append("TurbineLongTermGrossEnergy")
 
@@ -188,8 +184,7 @@ class TurbineLongTermGrossEnergy(FromDictMixin, ResetValuesMixin):
         max_power_filter: float | tuple[float, float] | None = None,
         correction_threshold: float | tuple[float, float] | None = None,
     ) -> None:
-        """
-        Pre-process the run-specific data settings for each simulation, then fit and apply the
+        """Pre-process the run-specific data settings for each simulation, then fit and apply the
         model for each simualtion.
 
         .. note:: If None is provided to any of the inputs, then the last used input value will be
@@ -215,6 +210,7 @@ class TurbineLongTermGrossEnergy(FromDictMixin, ResetValuesMixin):
                 scada energy data should be corrected. When :py:attr:`UQ` is True, then this should be a
                 tuple of the lower and upper limits of this threshold, otherwise a single value should
                 be used. Defaults to (0.85, 0.95)
+
         """
         initial_parameters = {}
         if num_sim is not None:
@@ -261,9 +257,8 @@ class TurbineLongTermGrossEnergy(FromDictMixin, ResetValuesMixin):
         self.set_values(initial_parameters)
 
     def setup_inputs(self) -> None:
-        """
-        Create and populate the data frame defining the simulation parameters.
-        This data frame is stored as self._inputs
+        """Create and populate the data frame defining the simulation parameters.
+        This data frame is stored as :py:attr:`_inputs`.
         """
         if self.UQ:
             reanal_list = list(
@@ -307,10 +302,7 @@ class TurbineLongTermGrossEnergy(FromDictMixin, ResetValuesMixin):
         self._inputs = pd.DataFrame(inputs)
 
     def sort_scada_by_turbine(self) -> None:
-        """
-        Sorts the SCADA DataFrame by the asset_id and timestamp index columns, respectively.
-        """
-
+        """Sorts the SCADA DataFrame by the asset_id and timestamp index columns, respectively."""
         df = self.plant.scada.copy()
         dic = self.scada_dict
 
@@ -324,19 +316,18 @@ class TurbineLongTermGrossEnergy(FromDictMixin, ResetValuesMixin):
 
     @logged_method_call
     def filter_turbine_data(self) -> None:
-        """
-        Apply a set of filtering algorithms to the turbine wind speed vs power curve to flag
-        data not representative of normal turbine operation
+        """Apply a set of filtering algorithms to the turbine wind speed vs power curve to flag
+        data not representative of normal turbine operation.
 
         Performs the following manipulations:
-         1. Drops any scada rows that don't have any windspeed or energy data
-         2. Flags windspeed values outside the range [0, 40]
-         3. Flags windspeed values that have stayed the same for at least 3 straight readings
-         4. Flags power values less than 2% of turbine capacity when wind speed above cut-in
-         5. Flags windspeed and power values that don't mutually coincide within a reasonable range
-         6. Combine the flags using an "or" combination to be a new column in scada: "flag_final"
-        """
 
+        1. Drops any scada rows that don't have any windspeed or energy data
+        2. Flags windspeed values outside the range [0, 40]
+        3. Flags windspeed values that have stayed the same for at least 3 straight readings
+        4. Flags power values less than 2% of turbine capacity when wind speed above cut-in
+        5. Flags windspeed and power values that don't mutually coincide within a reasonable range
+        6. Combine the flags using an "or" combination to be a new column in scada: "flag_final"
+        """
         dic = self.scada_dict
 
         # Loop through turbines
@@ -386,9 +377,7 @@ class TurbineLongTermGrossEnergy(FromDictMixin, ResetValuesMixin):
 
     @logged_method_call
     def setup_daily_reanalysis_data(self) -> None:
-        """
-        Process reanalysis data to daily means for later use in the GAM model.
-        """
+        """Process reanalysis data to daily means for later use in the GAM model."""
         # Memoize the function so you don't have to recompute the same reanalysis product twice
         if (df_daily := self.reanalysis_memo.get(self._run.reanalysis_product, None)) is not None:
             self.daily_reanalysis = df_daily.copy()
@@ -415,13 +404,10 @@ class TurbineLongTermGrossEnergy(FromDictMixin, ResetValuesMixin):
 
     @logged_method_call
     def filter_sum_impute_scada(self) -> None:
-        """
-        Filter SCADA data for unflagged data, gather SCADA energy data into daily sums, and correct daily summed
+        """Filter SCADA data for unflagged data, gather SCADA energy data into daily sums, and correct daily summed
         energy based on amount of missing data and a threshold limit. Finally impute missing data for each turbine
-        based on reported energy data from other highly correlated turbines.
-        threshold
+        based on reported energy data from other highly correlated turbines threshold.
         """
-
         scada = self.scada_dict
         expected_count = (
             HOURS_PER_DAY
@@ -504,7 +490,6 @@ class TurbineLongTermGrossEnergy(FromDictMixin, ResetValuesMixin):
         """Fit the daily turbine energy sum and atmospheric variable averages using a GAM model
         using wind speed, wind direction, and air density.
         """
-
         mod_dict = self.turbine_model_dict
         mod_results = self._model_results
 
@@ -526,11 +511,11 @@ class TurbineLongTermGrossEnergy(FromDictMixin, ResetValuesMixin):
 
     @logged_method_call
     def apply_model(self, i: int) -> None:
-        """
-        Apply the model to the reanalysis data to calculate long-term gross energy for each turbine.
+        """Apply the model to the reanalysis data to calculate long-term gross energy for each turbine.
 
         Args:
             i(:obj:`int`): The Monte Carlo iteration number.
+
         """
         turb_gross = self.turb_lt_gross
         mod_results = self._model_results
@@ -566,15 +551,16 @@ class TurbineLongTermGrossEnergy(FromDictMixin, ResetValuesMixin):
     def plot_filtered_power_curves(
         self,
         turbines: list[str] | None = None,
-        flag_labels: tuple[str, str] = None,
+        flag_labels: tuple[str, str] | None = None,
         max_cols: int = 3,
         xlim: tuple[float, float] = (None, None),
         ylim: tuple[float, float] = (None, None),
-        legend: bool = False,
-        return_fig: bool = False,
         figure_kwargs: dict | None = None,
         legend_kwargs: dict | None = None,
         plot_kwargs: dict | None = None,
+        *,
+        legend: bool = False,
+        return_fig: bool = False,
     ):
         """Plot the raw and flagged power curve data.
 
@@ -603,6 +589,7 @@ class TurbineLongTermGrossEnergy(FromDictMixin, ResetValuesMixin):
         Returns:
             None | tuple[matplotlib.pyplot.Figure, matplotlib.pyplot.Axes]: If `return_fig` is True, then
                 the figure and axes objects are returned for further tinkering/saving.
+
         """
         return plot.plot_power_curves(
             data=self.scada_dict,
@@ -628,18 +615,19 @@ class TurbineLongTermGrossEnergy(FromDictMixin, ResetValuesMixin):
         max_cols: int = 3,
         xlim: tuple[float, float] = (None, None),
         ylim: tuple[float, float] = (None, None),
-        legend: bool = False,
-        return_fig: bool = False,
         figure_kwargs: dict | None = None,
         legend_kwargs: dict | None = None,
         plot_kwargs: dict | None = None,
+        *,
+        legend: bool = False,
+        return_fig: bool = False,
     ):
         """Plot the raw, imputed, and modeled power curve data.
 
         Args:
             turbines(:obj:`list[str]`, optional): The list of turbines to be plot, if not all of the
                 keys in :py:attr:`data`.
-            labels (:obj:`tuple[str, str]`, optional): The labels to give to the scatter points,
+            flag_labels (:obj:`tuple[str, str]`, optional): The labels to give to the scatter points,
                 corresponding to the modeled, imputed, and input data, respectively. Defaults to
                 ("Modeled", "Imputed", "Input").
             max_cols(:obj:`int`, optional): The maximum number of columns in the plot. Defaults to 3.
@@ -661,6 +649,7 @@ class TurbineLongTermGrossEnergy(FromDictMixin, ResetValuesMixin):
         Returns:
             None | tuple[matplotlib.pyplot.Figure, matplotlib.pyplot.Axes]: If :py:attr`return_fig`
                 is True, then the figure and axes objects are returned for further tinkering/saving.
+
         """
         if figure_kwargs is None:
             figure_kwargs = {}
@@ -681,7 +670,7 @@ class TurbineLongTermGrossEnergy(FromDictMixin, ResetValuesMixin):
         fig, axes_list = plt.subplots(num_rows, max_cols, **figure_kwargs)
 
         ws_daily = self.daily_reanalysis["WMETR_HorWdSpd"]
-        for i, (t, ax) in enumerate(zip(turbines, axes_list.flatten())):
+        for i, (t, ax) in enumerate(zip(turbines, axes_list.flatten(), strict=False)):
             df = self.turbine_model_dict[t]
             df_imputed = df.loc[df["energy_corrected"] != df["energy_imputed"]]
 
@@ -751,15 +740,16 @@ __defaults_correction_threshold = (
 )
 
 
-def create_TurbineLongTermGrossEnergy(
+def create_TurbineLongTermGrossEnergy(  # ruff: ignore[D103]
     project: PlantData,
-    UQ: bool = __defaults_UQ,
     num_sim: int = __defaults_num_sim,
     reanalysis_products=__defaults_reanalysis_products,
     uncertainty_scada: float = __defaults_uncertainty_scada,
     wind_bin_threshold: NDArrayFloat = __defaults_wind_bin_threshold,
     max_power_filter: NDArrayFloat = __defaults_max_power_filter,
     correction_threshold: NDArrayFloat = __defaults_correction_threshold,
+    *,
+    UQ: bool = __defaults_UQ,
 ) -> TurbineLongTermGrossEnergy:
     return TurbineLongTermGrossEnergy(
         plant=project,
