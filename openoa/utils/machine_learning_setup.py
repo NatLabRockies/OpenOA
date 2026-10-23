@@ -52,7 +52,6 @@ import numpy as np
 import pandas as pd
 import sklearn
 from attrs import field, define
-from pygam import GAM
 from sklearn.metrics import r2_score, make_scorer
 from sklearn.ensemble import ExtraTreesRegressor, GradientBoostingRegressor
 from sklearn.linear_model import TweedieRegressor
@@ -61,7 +60,7 @@ from sklearn.model_selection import KFold, RandomizedSearchCV
 
 def _algorithm_map(
     abbreviation: str,
-) -> GAM | ExtraTreesRegressor | GradientBoostingRegressor:
+) -> TweedieRegressor | ExtraTreesRegressor | GradientBoostingRegressor:
     """Maps the input string abbreviation to an instantiated ML model.
 
     Args:
