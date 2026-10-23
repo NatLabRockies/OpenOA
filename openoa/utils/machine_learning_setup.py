@@ -55,6 +55,7 @@ from attrs import field, define
 from pygam import GAM
 from sklearn.metrics import r2_score, make_scorer
 from sklearn.ensemble import ExtraTreesRegressor, GradientBoostingRegressor
+from sklearn.linear_model import TweedieRegressor
 from sklearn.model_selection import KFold, RandomizedSearchCV
 
 
@@ -66,7 +67,8 @@ def _algorithm_map(
     Args:
         abbreviation (str): One of "etr", "gbm", or "gam", which maps to one of
             :py:class:`sklearn.ensemble.ExtraTreesRegressor`,
-            :py:class:`sklearn.ensemble.GradientBoostingRegressor`, or :py:class:`pygam.GAM`,
+            :py:class:`sklearn.ensemble.GradientBoostingRegressor`, or
+            :py:class:`sklearn.linear.TweedieRegressor`,
             respectively.
 
     Returns:
@@ -78,7 +80,7 @@ def _algorithm_map(
     if abbreviation == "gbm":
         return GradientBoostingRegressor()
     if abbreviation == "gam":
-        return GAM()
+        return TweedieRegressor()
 
     valid = ("etr", "gbm", "gam")
     raise NotImplementedError(
@@ -120,8 +122,8 @@ class MachineLearningSetup:
                 "min_samples_leaf": np.arange(1, 11),
                 "n_estimators": np.arange(10, 801, 40),
             }
-        elif isinstance(self.algorithm, GAM):
-            self.hyper_range = {"n_splines": np.arange(5, 40)}
+        elif isinstance(self.algorithm, TweedieRegressor):
+            self.hyper_range = {"power": [0, *np.linspace(1, 2, 21)]}
 
         self.hyper_range.update(self.params)
 
