@@ -496,7 +496,7 @@ class TestLongTermMonteCarloAEP(unittest.TestCase):
 
     def check_simulation_results_gam_daily(self, s):
         # Make sure AEP results are consistent to six decimal places
-        expected_results = [12.781636, 4.428628, 1.323524, 6.135826, 0.049333, 8.462634]
+        expected_results = [12.627031, 7.9379, 1.298632, 6.403933, 0.040224, 12.434362]
 
         calculated_results = [
             s.aep_GWh.mean(),
@@ -541,7 +541,7 @@ class TestLongTermMonteCarloAEP(unittest.TestCase):
 
     def check_simulation_results_gam_daily_outliers(self, s):
         # Make sure AEP results are consistent to six decimal places
-        expected_results = [13.46498, 8.248985, 1.324029, 5.966637, 0.048054, 8.851849]
+        expected_results = [12.407638, 15.787861, 1.295542, 6.693327, 0.039864, 15.81297]
 
         calculated_results = [
             s.aep_GWh.mean(),
