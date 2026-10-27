@@ -122,7 +122,11 @@ class MachineLearningSetup:
                 "n_estimators": np.arange(10, 801, 40),
             }
         elif isinstance(self.algorithm, TweedieRegressor):
-            self.hyper_range = {"power": [0, *np.linspace(1, 2, 21)]}
+            self.hyper_range = {
+                "power": [0, 1, 1.1, 1.25, 1.5, 1.75, 1.9, 2, 3],
+                "alpha": [10 ** (i - 2) for i in range(6)],
+                "max_iter": [1000],
+            }
 
         self.hyper_range.update(self.params)
 

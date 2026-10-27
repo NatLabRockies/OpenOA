@@ -918,6 +918,15 @@ class MonteCarloAEP(FromDictMixin, ResetValuesMixin):
         """
         reg_data = self.set_regression_data(n)  # Get regression data
 
+        # Ensure only a normal distribution-based GAM is used in the TweedieRegressor
+        # when values <= 0 exist in the y
+        if self.reg_model == "gam":  # noqa: SIM102
+            if np.any(reg_data[reg_data.columns[-1]] <= 0):
+                if self.ml_setup_kwargs.get("params") is None:
+                    self.ml_setup_kwargs["params"] = {"power": [0]}
+                else:
+                    self.ml_setup_kwargs["params"]["power"] = [0]
+
         # Bootstrap input data to incorporate some regression uncertainty
         reg_data = np.array(reg_data.sample(frac=1.0, replace=True))
 
