@@ -23,10 +23,9 @@ def test_wake_losses_without_UQ(subtests, wake_loss_project):
     change in wind direction reference. Otherwise, use default parameters.
     """
     reset_prng()
-    project = wake_loss_project
 
     analysis = wake_losses.WakeLosses(
-        plant=project,
+        plant=wake_loss_project,
         wind_direction_asset_ids=["R80711", "R80721", "R80736"],
         end_date="2015-11-25 00:00",
         UQ=False,
@@ -55,14 +54,14 @@ def test_wake_losses_without_UQ(subtests, wake_loss_project):
         nptest.assert_array_almost_equal(expected_results_lt, calculated_results_lt)
 
 
-def test_wake_losses_with_UQ(subtests, project):
+def test_wake_losses_with_UQ(subtests, wake_loss_project):
     """Test POR and long-term corrected wake losses at plant and turbine level, with UQ.
     Limit wind direction assets to three reliable turbines and limit date range to exclude
     change in wind direction reference. Otherwise, use default parameters.
     """
     reset_prng()
     analysis = wake_losses.WakeLosses(
-        plant=project,
+        plant=wake_loss_project,
         wind_direction_asset_ids=["R80711", "R80721", "R80736"],
         end_date="2015-11-25 00:00",
         UQ=True,
@@ -135,14 +134,14 @@ def test_wake_losses_with_UQ(subtests, project):
             nptest.assert_array_almost_equal(expected_results_lt_darwin, calculated_results_lt)
 
 
-def test_wake_losses_with_UQ_new_parameters(subtests, project):
+def test_wake_losses_with_UQ_new_parameters(subtests, wake_loss_project):
     """Test POR and long-term corrected wake losses at plant and turbine level, with UQ.
     Limit wind direction assets to three reliable turbines. Assign non-default start and
     end dates and end date for reanalysis data for long-term correction.
     """
     reset_prng()
     analysis = wake_losses.WakeLosses(
-        plant=project,
+        plant=wake_loss_project,
         wind_direction_asset_ids=["R80711", "R80721", "R80736"],
         start_date="2014-03-01 00:00",
         end_date="2015-10-31 23:50",
@@ -230,7 +229,7 @@ def test_wake_losses_with_UQ_new_parameters(subtests, project):
             nptest.assert_array_almost_equal(expected_results_lt_darwin, calculated_results_lt)
 
 
-def test_wake_losses_with_heterogeneity_corrections(subtests, project):
+def test_wake_losses_with_heterogeneity_corrections(subtests, wake_loss_project):
     """Test POR and long-term corrected wake losses at plant and turbine level, without UQ, with
     corrections for freestream wind speed heterogeneity across the wind plant using the wind
     speedup factor file from the examples folder. Limit wind direction assets to three
@@ -239,7 +238,7 @@ def test_wake_losses_with_heterogeneity_corrections(subtests, project):
     """
     reset_prng()
     analysis = wake_losses.WakeLosses(
-        plant=project,
+        plant=wake_loss_project,
         wind_direction_asset_ids=["R80711", "R80721", "R80736"],
         end_date="2015-11-25 00:00",
         UQ=False,
