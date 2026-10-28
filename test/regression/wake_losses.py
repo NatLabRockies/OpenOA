@@ -1,5 +1,4 @@
 import random
-import platform
 
 import numpy as np
 import pytest
@@ -9,9 +8,6 @@ from openoa.analysis import wake_losses
 
 
 from test.conftest import project_ENGIE, example_data_path_str  # isort: skip
-
-
-OS = platform.system()
 
 
 def reset_prng():
@@ -100,20 +96,6 @@ def test_wake_losses_with_UQ(subtests, project):
         1.545941,
     ]
     expected_results_lt = [
-        0.644775,
-        1.372648,
-        -9.436220,
-        10.614411,
-        3.111282,
-        -1.732393,
-        1.546301,
-        1.323577,
-        1.365420,
-        1.426536,
-    ]
-
-    # Linux produces a different result at the 5th decimal with low num_sim
-    expected_results_lt_linux = [
         0.644797,
         1.372684,
         -9.436232,
@@ -124,6 +106,20 @@ def test_wake_losses_with_UQ(subtests, project):
         1.323549,
         1.365501,
         1.426605,
+    ]
+
+    # Some Macs produces a different result at the 5th decimal with low num_sim
+    expected_results_lt_darwin = [
+        0.644775,
+        1.372648,
+        -9.436220,
+        10.614411,
+        3.111282,
+        -1.732393,
+        1.546301,
+        1.323577,
+        1.365420,
+        1.426536,
     ]
 
     calculated_results_por = [
@@ -144,8 +140,10 @@ def test_wake_losses_with_UQ(subtests, project):
     calculated_results_lt += list(100 * np.array(analysis.turbine_wake_losses_lt_std))
 
     with subtests.test("LT results check."):
-        expected_lt = expected_results_lt_linux if OS == "Linux" else expected_results_lt
-        nptest.assert_array_almost_equal(expected_lt, calculated_results_lt)
+        try:
+            nptest.assert_array_almost_equal(expected_results_lt, calculated_results_lt)
+        except AssertionError:
+            nptest.assert_array_almost_equal(expected_results_lt_darwin, calculated_results_lt)
 
 
 def test_wake_losses_with_UQ_new_parameters(subtests, project):
@@ -193,20 +191,6 @@ def test_wake_losses_with_UQ_new_parameters(subtests, project):
         2.631516,
     ]
     expected_results_lt = [
-        1.140835,
-        2.426398,
-        -8.811414,
-        10.995446,
-        3.487754,
-        -1.108443,
-        2.525045,
-        2.318111,
-        2.507327,
-        2.43125,
-    ]
-
-    # Linux produces a different result at the 5th decimal with low num_sim
-    expected_results_lt_linux = [
         1.140879,
         2.426438,
         -8.811587,
@@ -217,6 +201,20 @@ def test_wake_losses_with_UQ_new_parameters(subtests, project):
         2.3181,
         2.507358,
         2.43127,
+    ]
+
+    # Some Macs produces a different result at the 5th decimal with low num_sim
+    expected_results_lt_darwin = [
+        1.140835,
+        2.426398,
+        -8.811414,
+        10.995446,
+        3.487754,
+        -1.108443,
+        2.525045,
+        2.318111,
+        2.507327,
+        2.43125,
     ]
 
     calculated_results_por = [
@@ -237,8 +235,10 @@ def test_wake_losses_with_UQ_new_parameters(subtests, project):
     calculated_results_lt += list(100 * np.array(analysis.turbine_wake_losses_lt_std))
 
     with subtests.test("LT results check."):
-        expected_lt = expected_results_lt_linux if OS == "Linux" else expected_results_lt
-        nptest.assert_array_almost_equal(expected_lt, calculated_results_lt)
+        try:
+            nptest.assert_array_almost_equal(expected_results_lt, calculated_results_lt)
+        except AssertionError:
+            nptest.assert_array_almost_equal(expected_results_lt_darwin, calculated_results_lt)
 
 
 def test_wake_losses_with_heterogeneity_corrections(subtests, project):
