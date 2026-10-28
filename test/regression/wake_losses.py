@@ -1,4 +1,5 @@
 import random
+import platform
 
 import numpy as np
 import pytest
@@ -8,6 +9,9 @@ from openoa.analysis import wake_losses
 
 
 from test.conftest import project_ENGIE, example_data_path_str  # isort: skip
+
+
+OS = platform.system()
 
 
 def reset_prng():
@@ -108,6 +112,20 @@ def test_wake_losses_with_UQ(subtests, project):
         1.426536,
     ]
 
+    # Linux produces a different result at the 5th decimal with low num_sim
+    expected_results_lt_linux = [
+        0.644797,
+        1.372684,
+        -9.436232,
+        10.61438,
+        3.111327,
+        -1.732307,
+        1.546312,
+        1.323549,
+        1.365501,
+        1.426605,
+    ]
+
     calculated_results_por = [
         100 * analysis.wake_losses_por_mean,
         100 * analysis.wake_losses_por_std,
@@ -126,7 +144,8 @@ def test_wake_losses_with_UQ(subtests, project):
     calculated_results_lt += list(100 * np.array(analysis.turbine_wake_losses_lt_std))
 
     with subtests.test("LT results check."):
-        nptest.assert_array_almost_equal(expected_results_lt, calculated_results_lt)
+        expected_lt = expected_results_lt_linux if OS == "Linux" else expected_results_lt
+        nptest.assert_array_almost_equal(expected_lt, calculated_results_lt)
 
 
 def test_wake_losses_with_UQ_new_parameters(subtests, project):
@@ -186,6 +205,20 @@ def test_wake_losses_with_UQ_new_parameters(subtests, project):
         2.43125,
     ]
 
+    # Linux produces a different result at the 5th decimal with low num_sim
+    expected_results_lt_linux = [
+        1.140879,
+        2.426438,
+        -8.811587,
+        10.995558,
+        3.487861,
+        -1.108315,
+        2.525147,
+        2.3181,
+        2.507358,
+        2.43127,
+    ]
+
     calculated_results_por = [
         100 * analysis.wake_losses_por_mean,
         100 * analysis.wake_losses_por_std,
@@ -204,7 +237,8 @@ def test_wake_losses_with_UQ_new_parameters(subtests, project):
     calculated_results_lt += list(100 * np.array(analysis.turbine_wake_losses_lt_std))
 
     with subtests.test("LT results check."):
-        nptest.assert_array_almost_equal(expected_results_lt, calculated_results_lt)
+        expected_lt = expected_results_lt_linux if OS == "Linux" else expected_results_lt
+        nptest.assert_array_almost_equal(expected_lt, calculated_results_lt)
 
 
 def test_wake_losses_with_heterogeneity_corrections(subtests, project):
