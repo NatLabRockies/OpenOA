@@ -1,5 +1,3 @@
-import random
-
 import numpy as np
 import pytest
 from numpy import testing as nptest
@@ -7,35 +5,26 @@ from numpy import testing as nptest
 from openoa.analysis import wake_losses
 
 
-from test.conftest import project_ENGIE, example_data_path_str  # isort: skip
+from test.conftest import reset_prng  # isort: skip
 
 
-def reset_prng():
-    np.random.seed(42)
-    random.seed(42)
-
-
-@pytest.fixture(autouse=True, scope="module")
-def project():
+@pytest.fixture(scope="module")
+def wake_loss_project(project):
     """Load and prepare the ENGIE plant data for each regression test."""
-    reset_prng()
-
-    # Set up data to use for testing (ENGIE example plant)
-    project = project_ENGIE.prepare(example_data_path_str, use_cleansed=False)
-    project.analysis_type.append("WakeLosses-scada")
-    project.validate()
-
     # Apply estimated northing calibration to SCADA wind directions
+    project = project("WakeLosses-scada")
     project.scada["WMET_HorWdDir"] = (project.scada["WMET_HorWdDir"] + 15.85) % 360.0
     return project
 
 
-def test_wake_losses_without_UQ(subtests, project):
+def test_wake_losses_without_UQ(subtests, wake_loss_project):
     """Test POR and long-term corrected wake losses at plant and turbine level, without UQ.
     Limit wind direction assets to three reliable turbines and limit date range to exclude
     change in wind direction reference. Otherwise, use default parameters.
     """
     reset_prng()
+    project = wake_loss_project
+
     analysis = wake_losses.WakeLosses(
         plant=project,
         wind_direction_asset_ids=["R80711", "R80721", "R80736"],
