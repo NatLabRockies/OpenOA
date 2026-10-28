@@ -1,5 +1,4 @@
 import random
-import platform
 import unittest
 
 import numpy as np
@@ -14,9 +13,6 @@ from test.conftest import project_ENGIE, example_data_path_str  # isort: skip
 def reset_prng():
     np.random.seed(42)
     random.seed(42)
-
-
-OS = platform.system()
 
 
 class TestWakeLosses(unittest.TestCase):
@@ -74,7 +70,7 @@ class TestWakeLosses(unittest.TestCase):
         # Aside from no_wakes_ws_thresh_LT_corr and num_sim, use default parameters.
         # Confirm the results are consistent.
         self.analysis.run(
-            num_sim=50, no_wakes_ws_thresh_LT_corr=15.0, reanalysis_products=["merra2", "era5"]
+            num_sim=100, no_wakes_ws_thresh_LT_corr=15.0, reanalysis_products=["merra2", "era5"]
         )
         self.check_simulation_results_wake_losses_with_UQ()
 
@@ -100,7 +96,7 @@ class TestWakeLosses(unittest.TestCase):
         # assume no wake losses above a certain wind speed for long-term correction.
         # Confirm the results are consistent.
         self.analysis.run(
-            num_sim=50,
+            num_sim=100,
             wd_bin_width=10.0,
             freestream_sector_width=(60.0, 100.0),
             freestream_power_method="median",
@@ -161,28 +157,28 @@ class TestWakeLosses(unittest.TestCase):
         # Confirm plant-level and turbine-level means and std. devs. from Monte Carlo simulation results
         # for POR and long-term corrected wake loss estimates.
         expected_results_por = [
-            0.466709,
-            1.519220,
-            -11.560934,
-            11.021836,
-            4.167384,
-            -1.795656,
-            1.698255,
-            1.364234,
-            1.483180,
-            1.545941,
+            0.371908,
+            1.843993,
+            -11.66068,
+            10.935266,
+            4.089681,
+            -1.908338,
+            2.055884,
+            1.665445,
+            1.758941,
+            1.904624,
         ]
         expected_results_lt = [
-            0.644775,
-            1.372648,
-            -9.436220,
-            10.614411,
-            3.111282,
-            -1.732393,
-            1.546301,
-            1.323577,
-            1.365420,
-            1.426536,
+            0.509802,
+            1.741565,
+            -9.58431,
+            10.484412,
+            2.994903,
+            -1.878146,
+            1.910081,
+            1.631341,
+            1.729989,
+            1.826569,
         ]
 
         calculated_results_por = [
@@ -192,11 +188,7 @@ class TestWakeLosses(unittest.TestCase):
         calculated_results_por += list(100 * np.array(self.analysis.turbine_wake_losses_por_mean))
         calculated_results_por += list(100 * np.array(self.analysis.turbine_wake_losses_por_std))
 
-        # Linux CI produces different results at the 5th decimal, but increasing runs is costly
-        decimal = 4 if OS == "Linux" else 6
-        nptest.assert_array_almost_equal(
-            expected_results_por, calculated_results_por, decimal=decimal
-        )
+        nptest.assert_array_almost_equal(expected_results_por, calculated_results_por)
 
         calculated_results_lt = [
             100 * self.analysis.wake_losses_lt_mean,
@@ -205,37 +197,35 @@ class TestWakeLosses(unittest.TestCase):
         calculated_results_lt += list(100 * np.array(self.analysis.turbine_wake_losses_lt_mean))
         calculated_results_lt += list(100 * np.array(self.analysis.turbine_wake_losses_lt_std))
 
-        nptest.assert_array_almost_equal(
-            expected_results_lt, calculated_results_lt, decimal=decimal
-        )
+        nptest.assert_array_almost_equal(expected_results_lt, calculated_results_lt)
 
     def check_simulation_results_wake_losses_with_UQ_new_params(self):
         # Make sure wake loss results are consistent to six decimal places
         # Confirm plant-level and turbine-level means and std. devs. from Monte Carlo simulation results
         # for POR and long-term corrected wake loss estimates.
         expected_results_por = [
-            0.917651,
-            2.541353,
-            -10.941171,
-            11.134159,
-            5.245831,
-            -1.768214,
-            2.867614,
-            2.271275,
-            2.404548,
-            2.631516,
+            0.710157,
+            2.577237,
+            -11.165535,
+            10.933589,
+            5.048472,
+            -1.975898,
+            2.874619,
+            2.308689,
+            2.494147,
+            2.640463,
         ]
         expected_results_lt = [
-            1.140835,
-            2.426398,
-            -8.811414,
-            10.995446,
-            3.487754,
-            -1.108443,
-            2.525045,
-            2.318111,
-            2.507327,
-            2.43125,
+            0.924492,
+            2.448263,
+            -9.069407,
+            10.801903,
+            3.265381,
+            -1.299908,
+            2.618235,
+            2.264517,
+            2.482767,
+            2.518168,
         ]
 
         calculated_results_por = [
@@ -245,11 +235,7 @@ class TestWakeLosses(unittest.TestCase):
         calculated_results_por += list(100 * np.array(self.analysis.turbine_wake_losses_por_mean))
         calculated_results_por += list(100 * np.array(self.analysis.turbine_wake_losses_por_std))
 
-        # Linux CI produces different results at the 5th decimal, but increasing runs is costly
-        decimal = 4 if OS == "Linux" else 6
-        nptest.assert_array_almost_equal(
-            expected_results_por, calculated_results_por, decimal=decimal
-        )
+        nptest.assert_array_almost_equal(expected_results_por, calculated_results_por)
 
         calculated_results_lt = [
             100 * self.analysis.wake_losses_lt_mean,
@@ -258,9 +244,7 @@ class TestWakeLosses(unittest.TestCase):
         calculated_results_lt += list(100 * np.array(self.analysis.turbine_wake_losses_lt_mean))
         calculated_results_lt += list(100 * np.array(self.analysis.turbine_wake_losses_lt_std))
 
-        nptest.assert_array_almost_equal(
-            expected_results_lt, calculated_results_lt, decimal=decimal
-        )
+        nptest.assert_array_almost_equal(expected_results_lt, calculated_results_lt)
 
     def check_simulation_results_wake_losses_with_heterogeneity_corrections(self):
         # Make sure wake loss results are consistent to six decimal places
