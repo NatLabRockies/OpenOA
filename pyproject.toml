@@ -130,10 +130,6 @@ testpaths = [
   "test/regression/*.py",
 ]
 cache_dir = ".cache"
-filterwarnings = [
-  "ignore::DeprecationWarning:sklearn.*:",
-  "ignore::DeprecationWarning:patsy.*:",
-]
 
 [tool.isort]
 # https://github.com/PyCQA/isort
@@ -153,9 +149,10 @@ known_third_party = [
     "numpy",
     "scipy",
     "pandas",
+    "pygam",
     "tqdm",
     "statsmodels",
-    "scikit_learn",
+    "sklearn",
     "EIA-python",
     "requests",
     "pyproj",
