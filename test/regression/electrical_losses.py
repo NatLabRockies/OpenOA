@@ -1,6 +1,7 @@
 import pytest
 import numpy.testing as npt
 
+from test.conftest import reset_prng
 from openoa.analysis.electrical_losses import ElectricalLosses
 
 
@@ -10,6 +11,7 @@ def el_project(project):
 
 
 def test_electrical_losses_results(el_project):
+    reset_prng()
     analysis = ElectricalLosses(el_project, UQ=False, uncertainty_correction_threshold=0.95)
     analysis.run()
 
@@ -23,6 +25,7 @@ def test_electrical_losses_results(el_project):
 
 
 def test_electrical_losses_results_with_UQ(el_project):
+    reset_prng()
     analysis_uq = ElectricalLosses(
         el_project, UQ=True, num_sim=3000, uncertainty_correction_threshold=(0.9, 0.995)
     )
