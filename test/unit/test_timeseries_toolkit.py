@@ -31,14 +31,20 @@ def two_days_of_data(day_of_data):
     return two_days_of_data
 
 
-def test_convert_local_to_utc():
+def test_convert_local_to_utc(subtests):
     mountain_tz = timezone("US/Mountain")
     summer_midnight = datetime(2018, 0o7, 16, 0, 0, 0)
     winter_midnight = datetime(2018, 0o1, 11, 0, 0, 0)
 
-    # Pass in a localized datetime with matching tz string and make sure it throws an exception
-    with pytest.raises(Exception):
-        mountain_tz.localize(summer_midnight)
+    # Localize
+    with subtests.test("Non-localized dt is localized w/o change"):
+        new = mountain_tz.localize(summer_midnight)
+        assert summer_midnight.year == new.year
+        assert summer_midnight.month == new.month
+        assert summer_midnight.day == new.day
+        assert summer_midnight.hour == new.hour
+        assert summer_midnight.minute == new.minute
+        assert new.tzinfo.tzname(new) in ("MST", "MDT")  # test passes regardless of DST
 
     # Pass in a non-localized datetime with tz string
     mm_utc = timeseries.convert_local_to_utc(summer_midnight, "US/Pacific")
