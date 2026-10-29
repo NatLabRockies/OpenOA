@@ -45,13 +45,13 @@ def test_wake_losses_without_UQ(subtests, wake_loss_project):
     calculated_results_por += list(100 * np.array(analysis.turbine_wake_losses_por))
 
     with subtests.test("POR results check."):
-        npt.assert_array_almost_equal(expected_results_por, calculated_results_por)
+        npt.assert_array_almost_equal(calculated_results_por, expected_results_por)
 
     calculated_results_lt = [100 * analysis.wake_losses_lt]
     calculated_results_lt += list(100 * np.array(analysis.turbine_wake_losses_lt))
 
     with subtests.test("LT results check."):
-        npt.assert_array_almost_equal(expected_results_lt, calculated_results_lt)
+        npt.assert_array_almost_equal(calculated_results_lt, expected_results_lt)
 
 
 def test_wake_losses_with_UQ(subtests, wake_loss_project):
@@ -118,7 +118,7 @@ def test_wake_losses_with_UQ(subtests, wake_loss_project):
     calculated_results_por += list(100 * np.array(analysis.turbine_wake_losses_por_std))
 
     with subtests.test("POR results check."):
-        npt.assert_array_almost_equal(expected_results_por, calculated_results_por)
+        npt.assert_array_almost_equal(calculated_results_por, expected_results_por)
 
     calculated_results_lt = [
         100 * analysis.wake_losses_lt_mean,
@@ -129,9 +129,9 @@ def test_wake_losses_with_UQ(subtests, wake_loss_project):
 
     with subtests.test("LT results check."):
         try:
-            npt.assert_array_almost_equal(expected_results_lt, calculated_results_lt)
+            npt.assert_array_almost_equal(calculated_results_lt, expected_results_lt)
         except AssertionError:
-            npt.assert_array_almost_equal(expected_results_lt_darwin, calculated_results_lt)
+            npt.assert_array_almost_equal(calculated_results_lt, expected_results_lt_darwin)
 
 
 def test_wake_losses_with_UQ_new_parameters(subtests, wake_loss_project):
@@ -213,7 +213,7 @@ def test_wake_losses_with_UQ_new_parameters(subtests, wake_loss_project):
     calculated_results_por += list(100 * np.array(analysis.turbine_wake_losses_por_std))
 
     with subtests.test("POR results check."):
-        npt.assert_array_almost_equal(expected_results_por, calculated_results_por)
+        npt.assert_array_almost_equal(calculated_results_por, expected_results_por)
 
     calculated_results_lt = [
         100 * analysis.wake_losses_lt_mean,
@@ -224,9 +224,9 @@ def test_wake_losses_with_UQ_new_parameters(subtests, wake_loss_project):
 
     with subtests.test("LT results check."):
         try:
-            npt.assert_array_almost_equal(expected_results_lt, calculated_results_lt)
+            npt.assert_array_almost_equal(calculated_results_lt, expected_results_lt)
         except AssertionError:
-            npt.assert_array_almost_equal(expected_results_lt_darwin, calculated_results_lt)
+            npt.assert_array_almost_equal(calculated_results_lt, expected_results_lt_darwin)
 
 
 def test_wake_losses_with_heterogeneity_corrections(subtests, wake_loss_project):
@@ -260,10 +260,10 @@ def test_wake_losses_with_heterogeneity_corrections(subtests, wake_loss_project)
     calculated_results_por += list(100 * np.array(analysis.turbine_wake_losses_por))
 
     with subtests.test("POR results check."):
-        npt.assert_array_almost_equal(expected_results_por, calculated_results_por)
+        npt.assert_array_almost_equal(calculated_results_por, expected_results_por)
 
     calculated_results_lt = [100 * analysis.wake_losses_lt]
     calculated_results_lt += list(100 * np.array(analysis.turbine_wake_losses_lt))
 
     with subtests.test("LT results check."):
-        npt.assert_array_almost_equal(expected_results_lt, calculated_results_lt)
+        npt.assert_array_almost_equal(calculated_results_lt, expected_results_lt)

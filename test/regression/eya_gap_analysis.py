@@ -38,4 +38,4 @@ def test_gap_analysis(gap_analysis_project):
 
     expected_compiled_data = [467.0, -41.441648, 6.59437, 6.230899, 9.61638]
     actual_compiled_data = analysis.compiled_data
-    npt.assert_array_almost_equal(expected_compiled_data, actual_compiled_data, decimal=3)
+    npt.assert_array_almost_equal(actual_compiled_data, expected_compiled_data, decimal=3)

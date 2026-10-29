@@ -25,7 +25,7 @@ def test_asset_correlation_matrix(subtests, test_df_2_assets_1_NaN):
     y = imputing.asset_correlation_matrix(test_df_2_assets_1_NaN, "data")
     with subtests.test("Simple correlation of 2 assets"):
         npt.assert_array_almost_equal(
-            y, np.array([[np.nan, 0.970166], [0.970166, np.nan]]), decimal=4
+            np.array([[np.nan, 0.970166], [0.970166, np.nan]]), y, decimal=4
         )
 
     # Test 2, if no overlapping data are present, make sure correlation matrix is all NaN
@@ -119,7 +119,7 @@ def test_impute_data(subtests, test_df_2_assets_1_NaN):
     )
     with subtests.test("No imputation on NaN-less data"):
         npt.assert_array_almost_equal(
-            y_test.to_numpy(), test_df_single_asset_no_nan1["data1"].to_numpy()
+            test_df_single_asset_no_nan1["data1"].to_numpy(), y_test.to_numpy()
         )
 
     # Test 4, make sure two NaNs are imputed when there 3 total but reference data only matches 2
@@ -133,7 +133,7 @@ def test_impute_data(subtests, test_df_2_assets_1_NaN):
     )
 
     with subtests.test("NaN imputation only when matching reference data"):
-        npt.assert_array_almost_equal(y_test.loc[["c", "d"]], np.array([2.0, 4.0]), decimal=4)
+        npt.assert_array_almost_equal(np.array([2.0, 4.0]), y_test.loc[["c", "d"]], decimal=4)
 
     # Test 5a: Invalid reference data column
     with pytest.raises(ValueError):
@@ -259,8 +259,8 @@ def test_impute_all_assets_by_correlation(subtests):
         ).to_frame()
         y = pd.Series([0.440789, 3.401316, 14.3677, 42.8312, 62.887218, 96.734818])
         npt.assert_array_almost_equal(
-            (y_test.loc[test_df["data"].isnull(), "imputed_data"]).values,
             y.values,
+            (y_test.loc[test_df["data"].isnull(), "imputed_data"]).values,
             decimal=4,
         )
 
@@ -313,7 +313,7 @@ def test_impute_all_assets_by_correlation(subtests):
     ).to_frame()
     with subtests.test("3 highly correlated assets w/less data"):
         nan_ind = test_df.loc[test_df["data"].isnull()].index
-        npt.assert_array_almost_equal(y_test.loc[nan_ind, "imputed_data"], y, decimal=4)
+        npt.assert_array_almost_equal(y, y_test.loc[nan_ind, "imputed_data"], decimal=4)
 
     # Test 3: 2 poorly correlated data sets, no data should be imputed
     # Data frame of two assets that are poorly correlated
@@ -344,4 +344,4 @@ def test_impute_all_assets_by_correlation(subtests):
         y_test = imputing.impute_all_assets_by_correlation(
             test_df, "data", "data", r2_threshold=0.7
         ).to_frame()
-        npt.assert_array_almost_equal(y_test["imputed_data"], test_df["data"], decimal=4)
+        npt.assert_array_almost_equal(test_df["data"], y_test["imputed_data"], decimal=4)

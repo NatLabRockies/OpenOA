@@ -42,7 +42,7 @@ def test_circular_mean():
     wd_ans = [310.066954, 23.552040]  # Expected result
 
     y = mt.circular_mean(df)  # Test result
-    npt.assert_array_almost_equal(y, wd_ans)
+    npt.assert_array_almost_equal(wd_ans, y)
 
     # test Series input
     wd_ans = 310.066954  # Expected result
@@ -76,8 +76,8 @@ def test_compute_u_v_components():
     u_ans = np.array([0, -sqrt_2, -1, -sqrt_2, 0, sqrt_2, 1, sqrt_2])  # Expected result for 'u'
     v_ans = np.array([-1, -sqrt_2, 0, sqrt_2, 1, sqrt_2, 0, -sqrt_2])  # Expected result for 'v'
 
-    npt.assert_array_almost_equal(u, u_ans, decimal=5)
-    npt.assert_array_almost_equal(v, v_ans, decimal=5)
+    npt.assert_array_almost_equal(u_ans, u, decimal=5)
+    npt.assert_array_almost_equal(v_ans, v, decimal=5)
 
 
 def test_compute_air_density():
@@ -89,7 +89,7 @@ def test_compute_air_density():
     rho = mt.compute_air_density(temp, pres)  # Test result
     rho_ans = np.array([1.11741, 1.15807, 1.19702, 1.23424])  # Expected result
 
-    npt.assert_array_almost_equal(rho, rho_ans, decimal=5)
+    npt.assert_array_almost_equal(rho_ans, rho, decimal=5)
 
 
 def test_pressure_vertical_extrapolation():
@@ -102,7 +102,7 @@ def test_pressure_vertical_extrapolation():
     p1 = mt.pressure_vertical_extrapolation(p_samp, t_samp, z0_samp, z1_samp)  # Test result
     p1_ans = np.array([988288.905, 942457.391])  # Expected result
 
-    npt.assert_array_almost_equal(p1, p1_ans, decimal=2)
+    npt.assert_array_almost_equal(p1_ans, p1, decimal=2)
 
 
 def test_air_density_adjusted_wind_speed():
@@ -113,7 +113,7 @@ def test_air_density_adjusted_wind_speed():
     adjusted_ws = mt.air_density_adjusted_wind_speed(wind_speed, dens)  # Test answer
     adjusted_ws_ans = np.array([0.0, 1.988235, 4.0, 6.034885, 8.092494])  # Expected answer
 
-    npt.assert_array_almost_equal(adjusted_ws, adjusted_ws_ans, decimal=5)
+    npt.assert_array_almost_equal(adjusted_ws_ans, adjusted_ws, decimal=5)
 
 
 def test_compute_turbulence_intensity():

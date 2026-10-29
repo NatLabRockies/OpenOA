@@ -20,8 +20,8 @@ def test_electrical_losses_results(el_project):
     actual_compiled_data = analysis.electrical_losses.mean()
     actual_compiled_data_std = analysis.electrical_losses.std()
 
-    npt.assert_array_almost_equal(expected_losses, actual_compiled_data, decimal=3)
-    npt.assert_array_almost_equal(expected_losses_std, actual_compiled_data_std, decimal=3)
+    npt.assert_array_almost_equal(actual_compiled_data, expected_losses, decimal=3)
+    npt.assert_array_almost_equal(actual_compiled_data_std, expected_losses_std, decimal=3)
 
 
 def test_electrical_losses_results_with_UQ(el_project):
@@ -36,5 +36,5 @@ def test_electrical_losses_results_with_UQ(el_project):
     actual_compiled_data_uq = analysis_uq.electrical_losses.mean()
     actual_compiled_data_uq_std = analysis_uq.electrical_losses.std()
 
-    npt.assert_array_almost_equal(expected_losses_uq, actual_compiled_data_uq, decimal=3)
-    npt.assert_array_almost_equal(expected_losses_uq_std, actual_compiled_data_uq_std, decimal=3)
+    npt.assert_array_almost_equal(actual_compiled_data_uq, expected_losses_uq, decimal=3)
+    npt.assert_array_almost_equal(actual_compiled_data_uq_std, expected_losses_uq_std, decimal=3)

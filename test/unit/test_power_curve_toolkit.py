@@ -62,7 +62,7 @@ def test_IEC(generic_power_curve):
     y_pred = curve(x)
     # Does the IEC power curve match the test data?
     npt.assert_allclose(
-        y, y_pred, rtol=1, atol=noise * 2, err_msg="Power curve did not properly fit."
+        y_pred, y, rtol=1, atol=noise * 2, err_msg="Power curve did not properly fit."
     )
 
 
@@ -99,7 +99,7 @@ def test_logistic_5_param(generic_power_curve):
     y_pred = curve(x)
     # Does the logistic-5 power curve match the test data?
     npt.assert_allclose(
-        y, y_pred, rtol=1, atol=noise * 2, err_msg="Power curve did not properly fit."
+        y_pred, y, rtol=1, atol=noise * 2, err_msg="Power curve did not properly fit."
     )
 
 
@@ -109,7 +109,7 @@ def test_gam(generic_power_curve):
     curve = power_curve.gam(windspeed_col=x, power_col=y, n_splines=20)
     y_pred = curve(x)
     # Does the spline-fit power curve match the test data?
-    npt.assert_allclose(y, y_pred, rtol=0.05, atol=20, err_msg="Power curve did not properly fit.")
+    npt.assert_allclose(y_pred, y, rtol=0.05, atol=20, err_msg="Power curve did not properly fit.")
 
 
 def test_3paramgam(generic_power_curve):
@@ -126,25 +126,25 @@ def test_3paramgam(generic_power_curve):
     )
     y_pred = curve(x, winddir, airdens)
     # Does the spline-fit power curve match the test data?
-    npt.assert_allclose(y, y_pred, rtol=0.05, atol=20, err_msg="Power curve did not properly fit.")
+    npt.assert_allclose(y_pred, y, rtol=0.05, atol=20, err_msg="Power curve did not properly fit.")
 
 
 def test_logistic5parameter():
     y_pred = logistic5param(np.array([1.0, 2.0, 3.0]), *[1300.0, -7.0, 11.0, 2.0, 0.5])
     y = np.array([2.29403585, 5.32662505, 15.74992462])
-    npt.assert_allclose(y, y_pred, err_msg="Power curve did not properly fit.")
+    npt.assert_allclose(y_pred, y, err_msg="Power curve did not properly fit.")
 
     y_pred = logistic5param(np.array([1, 2, 3]), *[1300.0, -7.0, 11.0, 2.0, 0.5])
     y = np.array([2.29403585, 5.32662505, 15.74992462])
-    npt.assert_allclose(y, y_pred, err_msg="Power curve did not handle integer inputs properly.")
+    npt.assert_allclose(y_pred, y, err_msg="Power curve did not handle integer inputs properly.")
 
     y_pred = logistic5param(np.array([0.01, 0.0]), 1300, 7, 11, 2, 0.5)
     y = np.array([1300.0, 1300.0])
-    npt.assert_allclose(y, y_pred, err_msg="Power curve did not handle zero properly (b>0).")
+    npt.assert_allclose(y_pred, y, err_msg="Power curve did not handle zero properly (b>0).")
 
     y_pred = logistic5param(np.array([0.01, 0.0]), 1300, -7, 11, 2, 0.5)
     y = np.array([2.0, 2.0])
-    npt.assert_allclose(y, y_pred, err_msg="Power curve did not handle zero properly (b<0).")
+    npt.assert_allclose(y_pred, y, err_msg="Power curve did not handle zero properly (b<0).")
 
 
 def test_logistic5parameter_capped():
@@ -153,25 +153,25 @@ def test_logistic5parameter_capped():
         np.array([1.0, 2.0, 3.0]), *[1300.0, -7.0, 11.0, 2.0, 0.5], lower=5.0, upper=20.0
     )
     y = np.array([5.0, 5.32662505, 15.74992462])
-    npt.assert_allclose(y, y_pred, err_msg="Power curve did not properly fit.")
+    npt.assert_allclose(y_pred, y, err_msg="Power curve did not properly fit.")
 
     # Numpy array + Upper and Lower Bound
     y_pred = logistic5param_capped(
         np.array([1.0, 2.0, 3.0]), *[1300.0, -7.0, 11.0, 2.0, 0.5], lower=5.0, upper=10.0
     )
     y = np.array([5.0, 5.32662505, 10.0])
-    npt.assert_allclose(y, y_pred, err_msg="Power curve did not properly fit.")
+    npt.assert_allclose(y_pred, y, err_msg="Power curve did not properly fit.")
 
     # Pandas Series + Upper and Lower Bound
     y_pred = logistic5param_capped(
         pd.Series([1.0, 2.0, 3.0]), *[1300.0, -7.0, 11.0, 2.0, 0.5], lower=5.0, upper=20.0
     )
     y = pd.Series([5.0, 5.32662505, 15.74992462])
-    npt.assert_allclose(y, y_pred, err_msg="Power curve did not properly fit.")
+    npt.assert_allclose(y_pred, y, err_msg="Power curve did not properly fit.")
 
     # Pandas Series + Upper and Lower Bound
     y_pred = logistic5param_capped(
         pd.Series([1.0, 2.0, 3.0]), *[1300.0, -7.0, 11.0, 2.0, 0.5], lower=5.0, upper=10.0
     )
     y = pd.Series([5.0, 5.32662505, 10.0])
-    npt.assert_allclose(y, y_pred, err_msg="Power curve did not properly fit.")
+    npt.assert_allclose(y_pred, y, err_msg="Power curve did not properly fit.")
