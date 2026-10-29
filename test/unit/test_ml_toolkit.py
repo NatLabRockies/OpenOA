@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 import pandas as pd
-from numpy import testing as nptest
+from numpy import testing as npt
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import KFold
 
@@ -55,7 +55,7 @@ class TestMLToolkit(unittest.TestCase):
             )  # RMSE between predicted and actual power
 
             # Mean power in GW is within 3 decimal places
-            nptest.assert_approx_equal(
+            npt.assert_approx_equal(
                 self.y.sum() / 1e6,
                 y_pred.sum() / 1e6,
                 significant=3,
@@ -63,7 +63,7 @@ class TestMLToolkit(unittest.TestCase):
             )
 
             # Test correlation of model fit
-            nptest.assert_approx_equal(
+            npt.assert_approx_equal(
                 corr,
                 required_metrics[a][0],
                 significant=4,

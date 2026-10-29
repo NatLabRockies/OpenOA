@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from numpy import testing as nptest
+from numpy import testing as npt
 
 from openoa.analysis import yaw_misalignment
 
@@ -105,21 +105,21 @@ def test_yaw_misaliginment_without_UQ(subtests, yaw_project):
     calculated_yaw_mis_results_overall = analysis.yaw_misalignment
 
     with subtests.test("Checking overall results"):
-        nptest.assert_array_almost_equal(
+        npt.assert_array_almost_equal(
             expected_yaw_mis_results_overall, calculated_yaw_mis_results_overall, decimal=5
         )
 
     calculated_yaw_mis_results_ws = analysis.yaw_misalignment_ws
 
     with subtests.test("Checking wind speeds"):
-        nptest.assert_array_almost_equal(
+        npt.assert_array_almost_equal(
             expected_yaw_mis_results_ws, calculated_yaw_mis_results_ws, decimal=5
         )
 
     calculated_mean_vane_results_ws = analysis.mean_vane_angle_ws
 
     with subtests.test("Checking wind vane"):
-        nptest.assert_array_almost_equal(
+        npt.assert_array_almost_equal(
             expected_mean_vane_results_ws, calculated_mean_vane_results_ws, decimal=5
         )
 
@@ -211,7 +211,7 @@ def test_yaw_misaliginment_with_UQ(subtests, yaw_project):
     calculated_yaw_mis_results_avg_overall = analysis.yaw_misalignment_avg
 
     with subtests.test("Checking average of overall results"):
-        nptest.assert_array_almost_equal(
+        npt.assert_array_almost_equal(
             expected_yaw_mis_results_avg_overall,
             calculated_yaw_mis_results_avg_overall,
             decimal=5,
@@ -220,7 +220,7 @@ def test_yaw_misaliginment_with_UQ(subtests, yaw_project):
     calculated_yaw_mis_results_std_overall = analysis.yaw_misalignment_std
 
     with subtests.test("Checking standard deviation wind speeds"):
-        nptest.assert_array_almost_equal(
+        npt.assert_array_almost_equal(
             expected_yaw_mis_results_std_overall,
             calculated_yaw_mis_results_std_overall,
             decimal=5,
@@ -228,7 +228,7 @@ def test_yaw_misaliginment_with_UQ(subtests, yaw_project):
 
     # calculated_yaw_mis_results_95ci_overall = analysis.yaw_misalignment_95ci
 
-    # nptest.assert_array_almost_equal(
+    # npt.assert_array_almost_equal(
     #     expected_yaw_mis_results_95ci_overall,
     #     calculated_yaw_mis_results_95ci_overall,
     #     decimal=5,
@@ -237,20 +237,20 @@ def test_yaw_misaliginment_with_UQ(subtests, yaw_project):
     calculated_yaw_mis_results_avg_ws = analysis.yaw_misalignment_avg_ws
 
     with subtests.test("Checking average wind speeds"):
-        nptest.assert_array_almost_equal(
+        npt.assert_array_almost_equal(
             expected_yaw_mis_results_avg_ws, calculated_yaw_mis_results_avg_ws, decimal=5
         )
 
     calculated_yaw_mis_results_std_ws = analysis.yaw_misalignment_std_ws
 
     with subtests.test("Checking standard deviation wind speeds"):
-        nptest.assert_array_almost_equal(
+        npt.assert_array_almost_equal(
             expected_yaw_mis_results_std_ws, calculated_yaw_mis_results_std_ws, decimal=5
         )
 
     # calculated_yaw_mis_results_95ci_ws = analysis.yaw_misalignment_95ci_ws
 
-    # nptest.assert_array_almost_equal(
+    # npt.assert_array_almost_equal(
     #     expected_yaw_mis_results_95ci_ws, calculated_yaw_mis_results_95ci_ws, decimal=5
     # )
 
@@ -320,7 +320,7 @@ def test_yaw_misaliginment_with_UQ_new_parameters(subtests, yaw_project):
     calculated_yaw_mis_results_avg_overall = analysis.yaw_misalignment_avg
 
     with subtests.test("Checking average of overall results"):
-        nptest.assert_array_almost_equal(
+        npt.assert_array_almost_equal(
             expected_yaw_mis_results_avg_overall,
             calculated_yaw_mis_results_avg_overall,
             decimal=5,
@@ -329,7 +329,7 @@ def test_yaw_misaliginment_with_UQ_new_parameters(subtests, yaw_project):
     calculated_yaw_mis_results_std_overall = analysis.yaw_misalignment_std
 
     with subtests.test("Checking standard deviation of overall results"):
-        nptest.assert_array_almost_equal(
+        npt.assert_array_almost_equal(
             expected_yaw_mis_results_std_overall,
             calculated_yaw_mis_results_std_overall,
             decimal=5,
@@ -337,7 +337,7 @@ def test_yaw_misaliginment_with_UQ_new_parameters(subtests, yaw_project):
 
     # calculated_yaw_mis_results_95ci_overall = analysis.yaw_misalignment_95ci
 
-    # nptest.assert_array_almost_equal(
+    # npt.assert_array_almost_equal(
     #     expected_yaw_mis_results_95ci_overall,
     #     calculated_yaw_mis_results_95ci_overall,
     #     decimal=5,
@@ -346,19 +346,19 @@ def test_yaw_misaliginment_with_UQ_new_parameters(subtests, yaw_project):
     calculated_yaw_mis_results_avg_ws = analysis.yaw_misalignment_avg_ws
 
     with subtests.test("Checking average wind speeds"):
-        nptest.assert_array_almost_equal(
+        npt.assert_array_almost_equal(
             expected_yaw_mis_results_avg_ws, calculated_yaw_mis_results_avg_ws, decimal=5
         )
 
     calculated_yaw_mis_results_std_ws = analysis.yaw_misalignment_std_ws
 
     with subtests.test("Checking standard deviation of wind speeds"):
-        nptest.assert_array_almost_equal(
+        npt.assert_array_almost_equal(
             expected_yaw_mis_results_std_ws, calculated_yaw_mis_results_std_ws, decimal=5
         )
 
     # calculated_yaw_mis_results_95ci_ws = analysis.yaw_misalignment_95ci_ws
 
-    # nptest.assert_array_almost_equal(
+    # npt.assert_array_almost_equal(
     #     expected_yaw_mis_results_95ci_ws, calculated_yaw_mis_results_95ci_ws, decimal=5
     # )

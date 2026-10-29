@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 import pandas as pd
-from numpy import testing as nptest
+from numpy import testing as npt
 
 from openoa.utils import imputing
 
@@ -251,13 +251,13 @@ class SimpleFilters(unittest.TestCase):
     def test_asset_correlation_matrix(self):
         # Test 1, make sure a simple correlation of two assets works
         y = imputing.asset_correlation_matrix(self.test_df, "data")
-        nptest.assert_array_almost_equal(
+        npt.assert_array_almost_equal(
             y, np.array([[np.nan, 0.970166], [0.970166, np.nan]]), decimal=4
         )
 
         # Test 2, if no overlapping data are present, make sure correlation matrix is all NaN
         y2 = imputing.asset_correlation_matrix(self.test9_df, "data")
-        nptest.assert_array_equal(y2, np.array([[np.nan, np.nan], [np.nan, np.nan]]))
+        npt.assert_array_equal(y2, np.array([[np.nan, np.nan], [np.nan, np.nan]]))
 
     def test_impute_data(self):
         # Test 1a, make sure single NaN is imputed using old style of inputs
@@ -270,14 +270,14 @@ class SimpleFilters(unittest.TestCase):
             align_col="time",
             method="linear",
         )
-        nptest.assert_almost_equal(y_test.values[1], y, decimal=4)
+        npt.assert_almost_equal(y_test.values[1], y, decimal=4)
 
         # Test 1b, make sure single NaN is imputed properly and that the index is correct
         data = self.test_df.unstack().droplevel(0, axis=1)
         y_test = imputing.impute_data(
             data=data, target_col="a", reference_col="b", method="polynomial", degree=1
         )
-        nptest.assert_almost_equal(y_test.values[1], y, decimal=4)
+        npt.assert_almost_equal(y_test.values[1], y, decimal=4)
 
         # Test 2, make sure only the first NaN entry is imputed
         y_test = imputing.impute_data(
@@ -287,8 +287,8 @@ class SimpleFilters(unittest.TestCase):
             self.test2_df.loc[self.test2_df.asset_id == "b"],
             "time",
         )
-        nptest.assert_almost_equal(np.float64(y_test.loc["c"]), np.float64(3.874429), decimal=4)
-        nptest.assert_equal(y_test.loc["b"], np.nan)
+        npt.assert_almost_equal(np.float64(y_test.loc["c"]), np.float64(3.874429), decimal=4)
+        npt.assert_equal(y_test.loc["b"], np.nan)
 
         # Test 3, make sure no data is imputed when no NaN are present
         # NOTE: This test shouldn't have ever worked, but for some reason does, but open to
@@ -300,7 +300,7 @@ class SimpleFilters(unittest.TestCase):
             reference_data=self.test4_df,
             align_col="align",
         )
-        nptest.assert_array_almost_equal(y_test.to_numpy(), self.test3_df["data1"].to_numpy())
+        npt.assert_array_almost_equal(y_test.to_numpy(), self.test3_df["data1"].to_numpy())
 
         # Test 4, make sure two NaNs are imputed when there 3 total but reference data only matches 2
         y_test = imputing.impute_data(
@@ -310,7 +310,7 @@ class SimpleFilters(unittest.TestCase):
             target_data=self.test5_df,
             align_col="align",
         )
-        nptest.assert_array_almost_equal(y_test.loc[["c", "d"]], np.array([2.0, 4.0]), decimal=4)
+        npt.assert_array_almost_equal(y_test.loc[["c", "d"]], np.array([2.0, 4.0]), decimal=4)
 
         # Test 5a: Invalid reference data column
         with self.assertRaises(ValueError):
@@ -359,7 +359,7 @@ class SimpleFilters(unittest.TestCase):
             self.test11_df, "data", "data", r2_threshold=0.7
         ).to_frame()
         y = pd.Series([0.440789, 3.401316, 14.3677, 42.8312, 62.887218, 96.734818])
-        nptest.assert_array_almost_equal(
+        npt.assert_array_almost_equal(
             (y_test.loc[self.test11_df["data"].isnull(), "imputed_data"]).values,
             y.values,
             decimal=4,
@@ -371,13 +371,13 @@ class SimpleFilters(unittest.TestCase):
             self.test10_df, "data", "data", r2_threshold=0.7
         ).to_frame()
         nan_ind = self.test10_df.loc[self.test10_df["data"].isnull()].index
-        nptest.assert_array_almost_equal(y_test.loc[nan_ind, "imputed_data"], y, decimal=4)
+        npt.assert_array_almost_equal(y_test.loc[nan_ind, "imputed_data"], y, decimal=4)
 
         # Test 3, 2 poorly correlated data sets, no data should be imputed
         y_test = imputing.impute_all_assets_by_correlation(
             self.test12_df, "data", "data", r2_threshold=0.7
         ).to_frame()
-        nptest.assert_array_almost_equal(y_test["imputed_data"], self.test12_df["data"], decimal=4)
+        npt.assert_array_almost_equal(y_test["imputed_data"], self.test12_df["data"], decimal=4)
 
     def tearDown(self):
         pass

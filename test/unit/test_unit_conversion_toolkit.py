@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 import pandas as pd
-from numpy import testing as nptest
+from numpy import testing as npt
 
 from openoa.utils import unit_conversion
 
@@ -20,7 +20,7 @@ class SimpleUnitConversionTests(unittest.TestCase):
         for key, item in time_interval.items():
             energy = power * item / 60
             energy_test = unit_conversion.convert_power_to_energy(df["power_kw"], key)
-            nptest.assert_almost_equal(
+            npt.assert_almost_equal(
                 energy, energy_test, err_msg="Convert power to energy is broken"
             )
 
@@ -41,28 +41,28 @@ class SimpleUnitConversionTests(unittest.TestCase):
         )
 
         # Make sure different combinations of 'frac' and 'energy' based measurements work out
-        nptest.assert_almost_equal(
+        npt.assert_almost_equal(
             unit_conversion.compute_gross_energy(
                 net.test1, avail.test1, curtail.test1, "frac", "frac"
             ),
             [1.1111, 1.1494, 1.3333],
             decimal=4,
         )
-        nptest.assert_almost_equal(
+        npt.assert_almost_equal(
             unit_conversion.compute_gross_energy(
                 net.test1, avail.test1, curtail.test1, "energy", "frac"
             ),
             [1.1026, 1.1326, 1.2526],
             decimal=4,
         )
-        nptest.assert_almost_equal(
+        npt.assert_almost_equal(
             unit_conversion.compute_gross_energy(
                 net.test1, avail.test1, curtail.test1, "frac", "energy"
             ),
             [1.1026, 1.1370, 1.3000],
             decimal=4,
         )
-        nptest.assert_almost_equal(
+        npt.assert_almost_equal(
             unit_conversion.compute_gross_energy(
                 net.test1, avail.test1, curtail.test1, "energy", "energy"
             ),
@@ -95,9 +95,7 @@ class SimpleUnitConversionTests(unittest.TestCase):
 
         ft_to_m_test = unit_conversion.convert_feet_to_meter(df["test_data_ft"])
 
-        nptest.assert_almost_equal(
-            random_m, ft_to_m_test, err_msg="Convert feet to meter is broken"
-        )
+        npt.assert_almost_equal(random_m, ft_to_m_test, err_msg="Convert feet to meter is broken")
 
     def tearDown(self):
         pass

@@ -4,7 +4,7 @@ from datetime import datetime
 import numpy as np
 import pandas as pd
 from pytz import timezone
-from numpy import testing as nptest
+from numpy import testing as npt
 
 from openoa.utils import timeseries
 
@@ -157,7 +157,7 @@ class SimpleTimeseriesTests(unittest.TestCase):
         nan_values = {"a": 0.0, "b": 0.2, "c": 0.4}
 
         for a in test_dict:
-            nptest.assert_almost_equal(
+            npt.assert_almost_equal(
                 nan_values[a],
                 timeseries.percent_nan(test_dict[a]),
                 err_msg="NaN percentage function is broken",

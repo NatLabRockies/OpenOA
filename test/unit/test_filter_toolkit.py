@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 import pandas as pd
-from numpy import testing as nptest
+from numpy import testing as npt
 
 from openoa.utils import filters
 
@@ -137,7 +137,7 @@ class SimpleFilters(unittest.TestCase):
         x = pd.Series(np.array([-1, -1, -1, 1, -1, -1, -1]), name="data")
         y_test = filters.std_range_flag(x, 2)
         y = pd.Series([False, False, False, True, False, False, False])
-        nptest.assert_array_equal(y_test, y)
+        npt.assert_array_equal(y_test, y)
 
     def test_std_range_flag_df(self):
         x = pd.DataFrame(
@@ -189,14 +189,14 @@ class SimpleFilters(unittest.TestCase):
         x_bin = pd.Series(np.array([1, 1.5, 2, 2.5, 3, 3.5, 4]))
         flag = filters.bin_filter(x_bin, x_val, 3)
         expected = pd.Series([False, False, False, False, False, True, False])
-        nptest.assert_array_equal(flag, expected)
+        npt.assert_array_equal(flag, expected)
 
     def test_cluster_mahalanobis_2d(self):
         col1 = pd.Series(np.array([1.0, 1.01, 1.001, 2.0, 2.01, 2.001, 2.0001]))
         col2 = pd.Series(np.array([3.0, 3.02, 3.001, 4.0, 4.01, 4.001, 5.0001]))
         flag = filters.cluster_mahalanobis_2d(col1, col2, 2, 1.5)
         expected = pd.Series(np.array([False, False, False, False, False, False, True]))
-        nptest.assert_array_equal(flag, expected)
+        npt.assert_array_equal(flag, expected)
 
     def tearDown(self):
         pass
