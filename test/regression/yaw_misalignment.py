@@ -282,9 +282,9 @@ def test_yaw_misaliginment_with_UQ_new_parameters(subtests, yaw_project):
     # Average, std. dev., and 95% confidence intervals of yaw misaligment values for each turbine
     expected_yaw_mis_results_avg_overall = [1.75706202, 1.47057408]
     expected_yaw_mis_results_std_overall = [0.45806813, 0.34581758]
-    # expected_yaw_mis_results_95ci_overall = np.array(
-    #     [[1.06914694, 2.70370656], [1.04684644, 2.35213362]]
-    # )
+    expected_yaw_mis_results_95ci_overall = np.array(
+        [[1.06914694, 2.70370656], [1.04684644, 2.35213362]]
+    )
 
     # Average, std. dev., and 95% confidence intervals of yaw misaligment values for each
     # turbine and wind speed bin
@@ -302,54 +302,47 @@ def test_yaw_misaliginment_with_UQ_new_parameters(subtests, yaw_project):
         ]
     )
 
-    # expected_yaw_mis_results_95ci_ws = np.array(
-    #     [
-    #         [
-    #             [-0.74446219, 0.65962477],
-    #             [-0.24180804, 0.27773465],
-    #             [-0.27946949, 4.04273506],
-    #             [3.2966667, 8.66164706],
-    #         ],
-    #         [
-    #             [0.36079998, 1.80124256],
-    #             [0.17200058, 0.50014899],
-    #             [0.10686569, 2.2130124],
-    #             [1.90708771, 6.94464261],
-    #         ],
-    #     ]
-    # )
-
-    calculated_yaw_mis_results_avg_overall = analysis.yaw_misalignment_avg
+    expected_yaw_mis_results_95ci_ws = np.array(
+        [
+            [
+                [-0.74446219, 0.65962477],
+                [-0.24180804, 0.27773465],
+                [-0.27946949, 4.04273506],
+                [3.2966667, 8.66164706],
+            ],
+            [
+                [0.36079998, 1.80124256],
+                [0.17200058, 0.50014899],
+                [0.10686569, 2.2130124],
+                [1.90708771, 6.94464261],
+            ],
+        ]
+    )
 
     with subtests.test("Checking average of overall results"):
         npt.assert_array_almost_equal(
             expected_yaw_mis_results_avg_overall,
-            calculated_yaw_mis_results_avg_overall,
+            analysis.yaw_misalignment_avg,
             decimal=5,
         )
-
-    calculated_yaw_mis_results_std_overall = analysis.yaw_misalignment_std
 
     with subtests.test("Checking standard deviation of overall results"):
         npt.assert_array_almost_equal(
             expected_yaw_mis_results_std_overall,
-            calculated_yaw_mis_results_std_overall,
+            analysis.yaw_misalignment_std,
             decimal=5,
         )
 
-    # calculated_yaw_mis_results_95ci_overall = analysis.yaw_misalignment_95ci
-
-    # npt.assert_array_almost_equal(
-    #     expected_yaw_mis_results_95ci_overall,
-    #     calculated_yaw_mis_results_95ci_overall,
-    #     decimal=5,
-    # )
-
-    calculated_yaw_mis_results_avg_ws = analysis.yaw_misalignment_avg_ws
+    with subtests.test("95% CI of overall results"):
+        npt.assert_array_almost_equal(
+            expected_yaw_mis_results_95ci_overall,
+            analysis.yaw_misalignment_95ci,
+            decimal=5,
+        )
 
     with subtests.test("Checking average wind speeds"):
         npt.assert_array_almost_equal(
-            expected_yaw_mis_results_avg_ws, calculated_yaw_mis_results_avg_ws, decimal=5
+            expected_yaw_mis_results_avg_ws, analysis.yaw_misalignment_avg_ws, decimal=5
         )
 
     calculated_yaw_mis_results_std_ws = analysis.yaw_misalignment_std_ws
@@ -359,8 +352,7 @@ def test_yaw_misaliginment_with_UQ_new_parameters(subtests, yaw_project):
             expected_yaw_mis_results_std_ws, calculated_yaw_mis_results_std_ws, decimal=5
         )
 
-    # calculated_yaw_mis_results_95ci_ws = analysis.yaw_misalignment_95ci_ws
-
-    # npt.assert_array_almost_equal(
-    #     expected_yaw_mis_results_95ci_ws, calculated_yaw_mis_results_95ci_ws, decimal=5
-    # )
+    with subtests.test("95% CI of wind speed"):
+        npt.assert_array_almost_equal(
+            expected_yaw_mis_results_95ci_ws, analysis.yaw_misalignment_95ci_ws, decimal=5
+        )
