@@ -151,9 +151,9 @@ def test_yaw_misaliginment_with_UQ(subtests, yaw_project):
     # turbine
     expected_yaw_mis_results_avg_overall = [3.39786547, 2.83936406]
     expected_yaw_mis_results_std_overall = [1.07213289, 0.20931013]
-    # expected_yaw_mis_results_95ci_overall = np.array(
-    #     [[2.34081532, 6.26432238], [2.54339698, 3.27505334]]
-    # )
+    expected_yaw_mis_results_95ci_overall = np.array(
+        [[2.34081532, 6.26432238], [2.54339698, 3.27505334]]
+    )
 
     # Average, std. dev., and 95% confidence intervals of yaw misaligment values for each
     # turbine and wind speed bin
@@ -189,64 +189,56 @@ def test_yaw_misaliginment_with_UQ(subtests, yaw_project):
     expected_yaw_mis_results_std_ws_acceptable_variant = deepcopy(expected_yaw_mis_results_std_ws)
     expected_yaw_mis_results_std_ws_acceptable_variant[0, 6] = 3.85031
 
-    # expected_yaw_mis_results_95ci_ws = np.array(
-    #     [
-    #         [
-    #             [-0.18432679, 0.76832261],
-    #             [1.30016145, 2.087357],
-    #             [0.43874719, 1.00960424],
-    #             [-0.07071617, 0.77464821],
-    #             [2.44271128, 6.85382468],
-    #             [3.30097555, 26.7256876],
-    #             [4.65659024, 17.31832531],
-    #         ],
-    #         [
-    #             [0.15930799, 1.19891363],
-    #             [1.20126952, 1.92257919],
-    #             [0.20607552, 0.66990626],
-    #             [0.57507836, 1.92932954],
-    #             [3.35247832, 6.65183919],
-    #             [4.3391722, 6.80123652],
-    #             [4.3402178, 8.74113964],
-    #         ],
-    #     ]
-    # )
-
-    calculated_yaw_mis_results_avg_overall = analysis.yaw_misalignment_avg
+    expected_yaw_mis_results_95ci_ws = np.array(
+        [
+            [
+                [-0.18432679, 0.76832261],
+                [1.30016145, 2.087357],
+                [0.43874719, 1.00960424],
+                [-0.07071617, 0.77464821],
+                [2.44271128, 6.85382468],
+                [3.30097555, 26.7256876],
+                [4.65659024, 17.31832531],
+            ],
+            [
+                [0.15930799, 1.19891363],
+                [1.20126952, 1.92257919],
+                [0.20607552, 0.66990626],
+                [0.57507836, 1.92932954],
+                [3.35247832, 6.65183919],
+                [4.3391722, 6.80123652],
+                [4.3402178, 8.74113964],
+            ],
+        ]
+    )
 
     with subtests.test("Checking average of overall results"):
         npt.assert_array_almost_equal(
             expected_yaw_mis_results_avg_overall,
-            calculated_yaw_mis_results_avg_overall,
+            analysis.yaw_misalignment_avg,
             decimal=5,
         )
-
-    calculated_yaw_mis_results_std_overall = analysis.yaw_misalignment_std
 
     with subtests.test("Checking standard deviation wind speeds"):
         npt.assert_array_almost_equal(
             expected_yaw_mis_results_std_overall,
-            calculated_yaw_mis_results_std_overall,
+            analysis.yaw_misalignment_std,
             decimal=5,
         )
 
-    # calculated_yaw_mis_results_95ci_overall = analysis.yaw_misalignment_95ci
-
-    # npt.assert_array_almost_equal(
-    #     expected_yaw_mis_results_95ci_overall,
-    #     calculated_yaw_mis_results_95ci_overall,
-    #     decimal=5,
-    # )
-
-    calculated_yaw_mis_results_avg_ws = analysis.yaw_misalignment_avg_ws
+    with subtests.test("95% CI of overall results"):
+        npt.assert_array_almost_equal(
+            expected_yaw_mis_results_95ci_overall,
+            analysis.yaw_misalignment_95ci,
+            decimal=5,
+        )
 
     with subtests.test("Checking average wind speeds"):
         npt.assert_array_almost_equal(
-            expected_yaw_mis_results_avg_ws, calculated_yaw_mis_results_avg_ws, decimal=5
+            expected_yaw_mis_results_avg_ws, analysis.yaw_misalignment_avg_ws, decimal=5
         )
 
     calculated_yaw_mis_results_std_ws = analysis.yaw_misalignment_std_ws
-
     with subtests.test("Checking standard deviation wind speeds"):
         try:
             npt.assert_array_almost_equal(
@@ -259,11 +251,10 @@ def test_yaw_misaliginment_with_UQ(subtests, yaw_project):
                 decimal=5,
             )
 
-    # calculated_yaw_mis_results_95ci_ws = analysis.yaw_misalignment_95ci_ws
-
-    # npt.assert_array_almost_equal(
-    #     expected_yaw_mis_results_95ci_ws, calculated_yaw_mis_results_95ci_ws, decimal=5
-    # )
+    with subtests.test("95% CI of windspeed"):
+        npt.assert_array_almost_equal(
+            expected_yaw_mis_results_95ci_ws, analysis.yaw_misalignment_95ci_ws, decimal=5
+        )
 
 
 def test_yaw_misaliginment_with_UQ_new_parameters(subtests, yaw_project):
