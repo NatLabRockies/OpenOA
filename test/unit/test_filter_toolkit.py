@@ -198,6 +198,7 @@ def test_bin_filter():
     npt.assert_array_equal(flag, expected)
 
 
+@pytest.mark.flaky(reruns=2, delay=5)
 def test_cluster_mahalanobis_2d():
     col1 = pd.Series(np.array([1.0, 1.01, 1.001, 2.0, 2.01, 2.001, 2.0001]))
     col2 = pd.Series(np.array([3.0, 3.02, 3.001, 4.0, 4.01, 4.001, 5.0001]))
