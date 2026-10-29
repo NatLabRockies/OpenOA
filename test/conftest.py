@@ -52,9 +52,10 @@ def project():
     def _project(analysis_type: str | list[str]):
         project = project_ENGIE.prepare(example_data_path_str, use_cleansed=False)
 
-        if isinstance(analysis_type, str):
-            analysis_type = [analysis_type]
-        project.analysis_type.extend(analysis_type)
+        if analysis_type is not None:
+            if isinstance(analysis_type, str):
+                analysis_type = [analysis_type]
+            project.analysis_type.extend(analysis_type)
 
         project.validate()
         return project
