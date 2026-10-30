@@ -5,12 +5,13 @@ from numpy import testing as npt
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import KFold
 
+from test.conftest import reset_prng
 from openoa.utils.machine_learning_setup import MachineLearningSetup
 
 
 @pytest.fixture
 def create_X_y():
-    np.random.seed(42)
+    reset_prng()
 
     # Create 2 random features, 1st to mimic wind speed, the other air density
     x1 = pd.Series(np.random.random(1000) * 30)  # Wind speed
@@ -30,7 +31,7 @@ def create_X_y():
     [("etr", 0.999852, 130.0), ("gbm", 0.999999, 60.0), ("gam", 0.98397, 1400.0)],
 )
 def test_algorithm_defaults(subtests, create_X_y, algorithm, r2, rmse):
-    np.random.seed(42)
+    reset_prng()
 
     X, y = create_X_y
 

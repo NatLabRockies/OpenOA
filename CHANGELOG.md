@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file. If you make
 - End support for Python 3.10 now that it has hit EOL.
 - Enable support for Pandas 3.x and address minor bugs to support 2 & 3 simultaneously.
 - Replace `black` and `flake8` with `ruff` for faster and more robust linting/automated formatting.
+- Convert testing infrastructure to rely solely on pytest and function-based tests for simplification of the testing infrastructure.
 - Replaces the use of `pyGAM.GAM` with `sklearn.linear_model.TweedieRegressor` in the `MachineLearningSetup`
   workflow to temporarily resolve the issue of pyGAM being incompatible with scikit-learn ML tooling.
   While pyGAM uses the normal distribution by default, the TweedieRegressor is now set to use the normal,

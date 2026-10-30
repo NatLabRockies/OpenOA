@@ -5,7 +5,7 @@ import unittest
 import numpy as np
 import pandas as pd
 import pytest
-from numpy import testing as nptest
+from numpy import testing as npt
 
 from openoa.analysis import MonteCarloAEP
 
@@ -81,7 +81,7 @@ class TestLongTermMonteCarloAEP(unittest.TestCase):
         }
 
         for key in expected:
-            nptest.assert_array_almost_equal(expected[key], computed[key])
+            npt.assert_array_almost_equal(computed[key], expected[key])
 
         # ____________________________________________________________________
         # Check for invalid user-defined end dates
@@ -127,7 +127,7 @@ class TestLongTermMonteCarloAEP(unittest.TestCase):
         }
 
         for key in expected:
-            nptest.assert_array_almost_equal(expected[key], computed[key])
+            npt.assert_array_almost_equal(computed[key], expected[key])
 
     def test_reanalysis_aggregate_daily(self):
         reset_prng()
@@ -152,7 +152,7 @@ class TestLongTermMonteCarloAEP(unittest.TestCase):
         }
 
         for key in expected:
-            nptest.assert_array_almost_equal(expected[key], computed[key])
+            npt.assert_array_almost_equal(computed[key], expected[key])
 
         # ____________________________________________________________________
         # Check for invalid user-defined end dates
@@ -198,7 +198,7 @@ class TestLongTermMonteCarloAEP(unittest.TestCase):
         }
 
         for key in expected:
-            nptest.assert_array_almost_equal(expected[key], computed[key])
+            npt.assert_array_almost_equal(computed[key], expected[key])
 
     def test_reanalysis_aggregate_hourly(self):
         reset_prng()
@@ -223,7 +223,7 @@ class TestLongTermMonteCarloAEP(unittest.TestCase):
         }
 
         for key in expected:
-            nptest.assert_array_almost_equal(expected[key], computed[key])
+            npt.assert_array_almost_equal(computed[key], expected[key])
 
         # ____________________________________________________________________
         # Check for invalid user-defined end dates
@@ -269,7 +269,7 @@ class TestLongTermMonteCarloAEP(unittest.TestCase):
         }
 
         for key in expected:
-            nptest.assert_array_almost_equal(expected[key], computed[key])
+            npt.assert_array_almost_equal(computed[key], expected[key])
 
     def test_monthly_lin(self):
         reset_prng()
@@ -379,23 +379,23 @@ class TestLongTermMonteCarloAEP(unittest.TestCase):
 
     def check_process_revenue_meter_energy_monthly(self, df):
         # Energy Nan flags are all zero
-        nptest.assert_array_equal(df["energy_nan_perc"].values, np.repeat(0.0, df.shape[0]))
+        npt.assert_array_equal(df["energy_nan_perc"].values, np.repeat(0.0, df.shape[0]))
 
         # Expected number of days per month are equal to number of actual days
-        nptest.assert_array_equal(df["num_days_expected"], df["num_days_actual"])
+        npt.assert_array_equal(df["num_days_expected"], df["num_days_actual"])
 
         # Check a few energy values
         expected_gwh = pd.Series([0.692400, 1.471730, 0.580035])
         actual_gwh = df.loc[
             pd.to_datetime(["2014-06-01", "2014-12-01", "2015-10-01"]), "energy_gwh"
         ]
-        nptest.assert_array_almost_equal(expected_gwh, actual_gwh)
+        npt.assert_array_almost_equal(actual_gwh, expected_gwh)
 
     def check_process_loss_estimates_monthly(self, df):
         # Availablity, curtailment nan fields both 0, NaN flag is all False
-        nptest.assert_array_equal(df["avail_nan_perc"].values, np.repeat(0.0, df.shape[0]))
-        nptest.assert_array_equal(df["curt_nan_perc"].values, np.repeat(0.0, df.shape[0]))
-        nptest.assert_array_equal(df["nan_flag"].values, np.repeat(False, df.shape[0]))  # noqa: FBT003
+        npt.assert_array_equal(df["avail_nan_perc"].values, np.repeat(0.0, df.shape[0]))
+        npt.assert_array_equal(df["curt_nan_perc"].values, np.repeat(0.0, df.shape[0]))
+        npt.assert_array_equal(df["nan_flag"].values, np.repeat(False, df.shape[0]))  # noqa: FBT003
 
         # Check a few reported availabilty and curtailment values
         expected_avail_gwh = pd.Series([0.029417, 0.021005, 0.000444])
@@ -405,10 +405,10 @@ class TestLongTermMonteCarloAEP(unittest.TestCase):
 
         date_ind = pd.to_datetime(["2014-06-01", "2014-12-01", "2015-10-01"])
 
-        nptest.assert_array_almost_equal(expected_avail_gwh, df.loc[date_ind, "availability_gwh"])
-        nptest.assert_array_almost_equal(expected_curt_gwh, df.loc[date_ind, "curtailment_gwh"])
-        nptest.assert_array_almost_equal(expected_avail_pct, df.loc[date_ind, "availability_pct"])
-        nptest.assert_array_almost_equal(expected_curt_pct, df.loc[date_ind, "curtailment_pct"])
+        npt.assert_array_almost_equal(df.loc[date_ind, "availability_gwh"], expected_avail_gwh)
+        npt.assert_array_almost_equal(df.loc[date_ind, "curtailment_gwh"], expected_curt_gwh)
+        npt.assert_array_almost_equal(df.loc[date_ind, "availability_pct"], expected_avail_pct)
+        npt.assert_array_almost_equal(df.loc[date_ind, "curtailment_pct"], expected_curt_pct)
 
     def check_process_reanalysis_data_monthly(self, df, df_rean):
         expected = {
@@ -424,7 +424,7 @@ class TestLongTermMonteCarloAEP(unittest.TestCase):
         computed = {key: df.loc[date_ind, key].to_numpy() for key in expected}
 
         for key in expected:
-            nptest.assert_array_almost_equal(expected[key], computed[key])
+            npt.assert_array_almost_equal(computed[key], expected[key])
 
         # check that date range is truncated correctly
         assert (df_rean.index[0], df_rean.index[-1]) == (
@@ -434,20 +434,20 @@ class TestLongTermMonteCarloAEP(unittest.TestCase):
 
     def check_process_revenue_meter_energy_daily(self, df):
         # Energy Nan flags are all zero
-        nptest.assert_array_equal(df["energy_nan_perc"].values, np.repeat(0.0, df.shape[0]))
+        npt.assert_array_equal(df["energy_nan_perc"].values, np.repeat(0.0, df.shape[0]))
 
         # Check a few energy values
         expected_gwh = pd.Series([0.0848525, 0.0253657, 0.0668642])
         actual_gwh = df.loc[
             pd.to_datetime(["2014-01-02", "2014-10-12", "2015-12-28"]), "energy_gwh"
         ]
-        nptest.assert_array_almost_equal(expected_gwh, actual_gwh)
+        npt.assert_array_almost_equal(actual_gwh, expected_gwh)
 
     def check_process_loss_estimates_daily(self, df):
         # Availablity, curtailment nan fields both 0, NaN flag is all False
-        nptest.assert_array_equal(df["avail_nan_perc"].values, np.repeat(0.0, df.shape[0]))
-        nptest.assert_array_equal(df["curt_nan_perc"].values, np.repeat(0.0, df.shape[0]))
-        nptest.assert_array_equal(df["nan_flag"].values, np.repeat(False, df.shape[0]))  # noqa: FBT003
+        npt.assert_array_equal(df["avail_nan_perc"].values, np.repeat(0.0, df.shape[0]))
+        npt.assert_array_equal(df["curt_nan_perc"].values, np.repeat(0.0, df.shape[0]))
+        npt.assert_array_equal(df["nan_flag"].values, np.repeat(False, df.shape[0]))  # noqa: FBT003
 
         # Check a few reported availabilty and curtailment values
         expected_avail_gwh = pd.Series([0.0000483644, 0.000000, 0.000000])
@@ -457,10 +457,10 @@ class TestLongTermMonteCarloAEP(unittest.TestCase):
 
         date_ind = pd.to_datetime(["2014-01-02", "2014-10-12", "2015-12-28"])
 
-        nptest.assert_array_almost_equal(expected_avail_gwh, df.loc[date_ind, "availability_gwh"])
-        nptest.assert_array_almost_equal(expected_curt_gwh, df.loc[date_ind, "curtailment_gwh"])
-        nptest.assert_array_almost_equal(expected_avail_pct, df.loc[date_ind, "availability_pct"])
-        nptest.assert_array_almost_equal(expected_curt_pct, df.loc[date_ind, "curtailment_pct"])
+        npt.assert_array_almost_equal(df.loc[date_ind, "availability_gwh"], expected_avail_gwh)
+        npt.assert_array_almost_equal(df.loc[date_ind, "curtailment_gwh"], expected_curt_gwh)
+        npt.assert_array_almost_equal(df.loc[date_ind, "availability_pct"], expected_avail_pct)
+        npt.assert_array_almost_equal(df.loc[date_ind, "curtailment_pct"], expected_curt_pct)
 
     def check_process_reanalysis_data_daily(self, df):
         expected = {
@@ -477,7 +477,7 @@ class TestLongTermMonteCarloAEP(unittest.TestCase):
 
         for key in expected:
             with self.subTest(f"checking {key}"):
-                nptest.assert_array_almost_equal(expected[key], computed[key])
+                npt.assert_array_almost_equal(computed[key], expected[key])
 
     def check_simulation_results_lin_monthly(self, s):
         # Make sure AEP results are consistent to six decimal places
@@ -492,7 +492,7 @@ class TestLongTermMonteCarloAEP(unittest.TestCase):
             s.curt_pct.std() / s.curt_pct.mean() * 100,
         ]
 
-        nptest.assert_array_almost_equal(expected_results, calculated_results)
+        npt.assert_array_almost_equal(calculated_results, expected_results)
 
     def check_simulation_results_gam_daily(self, s):
         # Make sure AEP results are consistent to six decimal places
@@ -507,7 +507,7 @@ class TestLongTermMonteCarloAEP(unittest.TestCase):
             s.curt_pct.std() / s.curt_pct.mean() * 100,
         ]
 
-        nptest.assert_array_almost_equal(expected_results, calculated_results)
+        npt.assert_array_almost_equal(calculated_results, expected_results)
 
     def check_simulation_results_gbm_daily(self, s):
         # Make sure AEP results are consistent to six decimal places
@@ -522,7 +522,7 @@ class TestLongTermMonteCarloAEP(unittest.TestCase):
             s.curt_pct.std() / s.curt_pct.mean() * 100,
         ]
 
-        nptest.assert_array_almost_equal(expected_results, calculated_results)
+        npt.assert_array_almost_equal(calculated_results, expected_results)
 
     def check_simulation_results_etr_daily(self, s):
         # Make sure AEP results are consistent to six decimal places
@@ -537,7 +537,7 @@ class TestLongTermMonteCarloAEP(unittest.TestCase):
             s.curt_pct.std() / s.curt_pct.mean() * 100,
         ]
 
-        nptest.assert_array_almost_equal(expected_results, calculated_results)
+        npt.assert_array_almost_equal(calculated_results, expected_results)
 
     def check_simulation_results_gam_daily_outliers(self, s):
         # Make sure AEP results are consistent to six decimal places
@@ -552,7 +552,7 @@ class TestLongTermMonteCarloAEP(unittest.TestCase):
             s.curt_pct.std() / s.curt_pct.mean() * 100,
         ]
 
-        nptest.assert_array_almost_equal(expected_results, calculated_results)
+        npt.assert_array_almost_equal(calculated_results, expected_results)
 
     def tearDown(self):
         pass
