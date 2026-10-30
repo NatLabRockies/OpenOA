@@ -134,7 +134,7 @@ cache_dir = ".cache"
 
 [tool.isort]
 # https://github.com/PyCQA/isort
-py_version = 310
+py_version = 311
 src_paths = ["isort", "test"]
 combine_as_imports = true
 multi_line_output = 3
@@ -164,7 +164,7 @@ known_third_party = [
 [tool.ruff]
 src = ["openoa", "test"]
 line-length = 100
-target-version = "py310"
+target-version = "py311"
 fix = true
 
 [tool.ruff.lint]
