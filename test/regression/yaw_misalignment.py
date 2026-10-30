@@ -245,9 +245,8 @@ def test_yaw_misaliginment_with_UQ(subtests, yaw_project):
             npt.assert_array_almost_equal(
                 analysis.yaw_misalignment_95ci_ws, expected_yaw_mis_results_95ci_ws, decimal=5
             )
-        except (
-            AssertionError
-        ):  # Some Macs produces different result, ensure Linux/Windows still pass
+        # Some Macs produces different result, ensure Linux/Windows still pass
+        except AssertionError:
             expected_yaw_mis_results_95ci_ws[0, 3, 0] = -0.07069646597155013
             expected_yaw_mis_results_95ci_ws[0, 5, 1] = 26.725665379519217
             expected_yaw_mis_results_95ci_ws[0, 6, 1] = 17.318368774796227
@@ -341,9 +340,8 @@ def test_yaw_misaliginment_with_UQ_new_parameters(subtests, yaw_project):
                 expected_yaw_mis_results_95ci_overall,
                 decimal=5,
             )
-        except (
-            AssertionError
-        ):  # Some Macs produces different result, ensure Linux/Windows still pass
+        # Some Macs produces different result, ensure Linux/Windows still pass
+        except AssertionError:
             expected_yaw_mis_results_95ci_overall[0, 0] = 1.0691650409617461
             npt.assert_array_almost_equal(
                 analysis.yaw_misalignment_95ci,
@@ -368,9 +366,8 @@ def test_yaw_misaliginment_with_UQ_new_parameters(subtests, yaw_project):
             npt.assert_array_almost_equal(
                 analysis.yaw_misalignment_95ci_ws, expected_yaw_mis_results_95ci_ws, decimal=5
             )
-        except (
-            AssertionError
-        ):  # Some Macs produces different result, ensure Linux/Windows still pass
+        # Some Macs produces different result, ensure Linux/Windows still pass
+        except AssertionError:
             expected_yaw_mis_results_95ci_ws[1, 2, 0] = 0.10684688334492018
             npt.assert_array_almost_equal(
                 analysis.yaw_misalignment_95ci_ws, expected_yaw_mis_results_95ci_ws, decimal=5
