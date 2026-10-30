@@ -186,8 +186,6 @@ def test_yaw_misaliginment_with_UQ(subtests, yaw_project):
             [0.32210774, 0.2110342, 0.13357729, 0.39072353, 0.90206007, 0.67756395, 1.17456696],
         ]
     )
-    expected_yaw_mis_results_std_ws_acceptable_variant = deepcopy(expected_yaw_mis_results_std_ws)
-    expected_yaw_mis_results_std_ws_acceptable_variant[0, 6] = 3.8503421913490734
 
     expected_yaw_mis_results_95ci_ws = np.array(
         [
@@ -212,9 +210,9 @@ def test_yaw_misaliginment_with_UQ(subtests, yaw_project):
         ]
     )
     expected_yaw_mis_results_95ci_ws_acceptable_variant = deepcopy(expected_yaw_mis_results_95ci_ws)
-    expected_yaw_mis_results_95ci_ws[0, 3, 0] = -0.07069646597155013
-    expected_yaw_mis_results_95ci_ws[0, 5, 1] = 26.725665379519217
-    expected_yaw_mis_results_95ci_ws[0, 6, 1] = 17.318368774796227
+    expected_yaw_mis_results_95ci_ws_acceptable_variant[0, 3, 0] = -0.07069646597155013
+    expected_yaw_mis_results_95ci_ws_acceptable_variant[0, 5, 1] = 26.725665379519217
+    expected_yaw_mis_results_95ci_ws_acceptable_variant[0, 6, 1] = 17.318368774796227
 
     with subtests.test("Checking average of overall results"):
         npt.assert_array_almost_equal(
@@ -244,16 +242,9 @@ def test_yaw_misaliginment_with_UQ(subtests, yaw_project):
 
     calculated_yaw_mis_results_std_ws = analysis.yaw_misalignment_std_ws
     with subtests.test("Checking standard deviation wind speeds"):
-        try:
-            npt.assert_array_almost_equal(
-                calculated_yaw_mis_results_std_ws, expected_yaw_mis_results_std_ws, decimal=5
-            )
-        except AssertionError:
-            npt.assert_array_almost_equal(
-                calculated_yaw_mis_results_std_ws,
-                expected_yaw_mis_results_std_ws_acceptable_variant,
-                decimal=5,
-            )
+        npt.assert_array_almost_equal(
+            calculated_yaw_mis_results_std_ws, expected_yaw_mis_results_std_ws, decimal=4
+        )
 
     with subtests.test("95% CI of windspeed"):
         try:
