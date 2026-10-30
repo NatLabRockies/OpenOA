@@ -27,7 +27,7 @@ def reanalysis_aep_project(aep_project):
     return project
 
 
-def test_monthly_inputs(aep_project):
+def test_monthly_inputs(subtests, aep_project):
     """Test inputs to the regression model, at monthly time resolution."""
     reset_prng()
 
@@ -42,9 +42,58 @@ def test_monthly_inputs(aep_project):
     df_rean = analysis._reanalysis_aggregate
 
     # Check the pre-processing functions
-    check_process_revenue_meter_energy_monthly(df)
-    check_process_loss_estimates_monthly(df)
-    check_process_reanalysis_data_monthly(df, df_rean)
+    # Energy Nan flags are all zero
+    with subtests.test("Check pre-processing results"):
+        npt.assert_array_equal(df["energy_nan_perc"].values, np.repeat(0.0, df.shape[0]))
+
+        # Expected number of days per month are equal to number of actual days
+        npt.assert_array_equal(df["num_days_expected"], df["num_days_actual"])
+
+        # Check a few energy values
+        expected_gwh = pd.Series([0.692400, 1.471730, 0.580035])
+        actual_gwh = df.loc[
+            pd.to_datetime(["2014-06-01", "2014-12-01", "2015-10-01"]), "energy_gwh"
+        ]
+        npt.assert_array_almost_equal(actual_gwh, expected_gwh)
+
+    with subtests.test("Check availability and curtailment"):
+        # Availablity, curtailment nan fields both 0, NaN flag is all False
+        npt.assert_array_equal(df["avail_nan_perc"].values, np.repeat(0.0, df.shape[0]))
+        npt.assert_array_equal(df["curt_nan_perc"].values, np.repeat(0.0, df.shape[0]))
+        npt.assert_array_equal(df["nan_flag"].values, np.repeat(False, df.shape[0]))  # noqa: FBT003
+
+        # Check a few reported availabilty and curtailment values
+        expected_avail_gwh = pd.Series([0.029417, 0.021005, 0.000444])
+        expected_curt_gwh = pd.Series([0.013250, 0.000000, 0.000000])
+        expected_avail_pct = pd.Series([0.040019, 0.014071, 0.000765])
+        expected_curt_pct = pd.Series([0.018026, 0.000000, 0.000000])
+
+        date_ind = pd.to_datetime(["2014-06-01", "2014-12-01", "2015-10-01"])
+
+        npt.assert_array_almost_equal(df.loc[date_ind, "availability_gwh"], expected_avail_gwh)
+        npt.assert_array_almost_equal(df.loc[date_ind, "curtailment_gwh"], expected_curt_gwh)
+        npt.assert_array_almost_equal(df.loc[date_ind, "availability_pct"], expected_avail_pct)
+        npt.assert_array_almost_equal(df.loc[date_ind, "curtailment_pct"], expected_curt_pct)
+
+    with subtests.test("Check reanalysis data"):
+        # check that date range is truncated correctly
+        assert (df_rean.index[0], df_rean.index[-1]) == (
+            pd.to_datetime("1999-01-01 00:00:00"),
+            pd.to_datetime("2019-04-01 00:00:00"),
+        )
+
+        expected = {
+            "merra2": [5.42523278, 6.86883337, 5.02690892],
+            "era5": [5.20508049, 6.71586744, 5.23824611],
+            "merra2_WMETR_HorWdDir": [11.74700241, 250.90081133, 123.70142025],
+            "era5_WMETR_HorWdDir": [23.4291153, 253.14150601, 121.25886916],
+            "merra2_WMETR_EnvTmp": [289.87128364, 275.26493716, 281.72562887],
+            "era5_WMETR_EnvTmp": [290.82110632, 276.62490053, 282.71629935],
+        }
+        date_ind = pd.to_datetime(["2014-06-01", "2014-12-01", "2015-10-01"])
+        computed = {key: df.loc[date_ind, key].to_numpy() for key in expected}
+        for key in expected:
+            npt.assert_array_almost_equal(computed[key], expected[key])
 
 
 def test_reanalysis_aggregate_monthly(reanalysis_aep_project):
@@ -273,11 +322,24 @@ def test_monthly_lin(aep_project):
     # Run Monte Carlo AEP analysis, confirm the results are consistent
     analysis.run(num_sim=10)
     sim_results = analysis.results
-    check_simulation_results_lin_monthly(sim_results)
+
+    # Make sure AEP results are consistent to six decimal places
+    expected_results = [11.284629, 10.801102, 1.130812, 4.287147, 0.061666, 5.365357]
+
+    calculated_results = [
+        sim_results.aep_GWh.mean(),
+        sim_results.aep_GWh.std() / sim_results.aep_GWh.mean() * 100,
+        sim_results.avail_pct.mean() * 100,
+        sim_results.avail_pct.std() / sim_results.avail_pct.mean() * 100,
+        sim_results.curt_pct.mean() * 100,
+        sim_results.curt_pct.std() / sim_results.curt_pct.mean() * 100,
+    ]
+
+    npt.assert_array_almost_equal(calculated_results, expected_results)
 
 
 # Test inputs to the regression model, at daily time resolution
-def test_daily_inputs(aep_project):
+def test_daily_inputs(subtests, aep_project):
     reset_prng()
     # ____________________________________________________________________
     # Test inputs to the regression model, at monthly time resolution
@@ -291,9 +353,52 @@ def test_daily_inputs(aep_project):
     df = analysis.aggregate
 
     # Check the pre-processing functions
-    check_process_revenue_meter_energy_daily(df)
-    check_process_loss_estimates_daily(df)
-    check_process_reanalysis_data_daily(df)
+    with subtests.test("Revenue meter pre-processing"):
+        # Energy Nan flags are all zero
+        npt.assert_array_equal(df["energy_nan_perc"].values, np.repeat(0.0, df.shape[0]))
+
+        # Check a few energy values
+        expected_gwh = pd.Series([0.0848525, 0.0253657, 0.0668642])
+        actual_gwh = df.loc[
+            pd.to_datetime(["2014-01-02", "2014-10-12", "2015-12-28"]), "energy_gwh"
+        ]
+        npt.assert_array_almost_equal(actual_gwh, expected_gwh)
+
+    with subtests.test("Availability and curtailment pre-processing"):
+        # Availablity, curtailment nan fields both 0, NaN flag is all False
+        npt.assert_array_equal(df["avail_nan_perc"].values, np.repeat(0.0, df.shape[0]))
+        npt.assert_array_equal(df["curt_nan_perc"].values, np.repeat(0.0, df.shape[0]))
+        npt.assert_array_equal(df["nan_flag"].values, np.repeat(False, df.shape[0]))  # noqa: FBT003
+
+        # Check a few reported availabilty and curtailment values
+        expected_avail_gwh = pd.Series([0.0000483644, 0.000000, 0.000000])
+        expected_curt_gwh = pd.Series([0.000000, 0.00019581, 0.000000])
+        expected_avail_pct = pd.Series([0.000569658, 0.000000, 0.000000])
+        expected_curt_pct = pd.Series([0.000000, 0.00766034, 0.000000])
+
+        date_ind = pd.to_datetime(["2014-01-02", "2014-10-12", "2015-12-28"])
+
+        npt.assert_array_almost_equal(df.loc[date_ind, "availability_gwh"], expected_avail_gwh)
+        npt.assert_array_almost_equal(df.loc[date_ind, "curtailment_gwh"], expected_curt_gwh)
+        npt.assert_array_almost_equal(df.loc[date_ind, "availability_pct"], expected_avail_pct)
+        npt.assert_array_almost_equal(df.loc[date_ind, "curtailment_pct"], expected_curt_pct)
+
+    with subtests.test("Reanalysis pre-processing"):
+        expected = {
+            "merra2": np.array([11.02459231, 7.04306896, 8.41880152]),
+            "era5": np.array([10.47942319, 7.71069617, 9.60864791]),
+            "merra2_WMETR_HorWdDir": np.array([213.81683361, 129.08053181, 170.39815032]),
+            "era5_WMETR_HorWdDir": np.array([212.23854097, 127.75317448, 170.33488958]),
+            "merra2_WMETR_EnvTmp": np.array([279.67922333, 285.69317833, 278.15574917]),
+            "era5_WMETR_EnvTmp": np.array([281.14880642, 285.81961816, 280.42017656]),
+        }
+
+        date_ind = pd.to_datetime(["2014-01-02", "2014-10-12", "2015-12-28"])
+        computed = {key: df.loc[date_ind, key].to_numpy() for key in expected}
+
+        for key in expected:
+            with subtests.test(f"checking {key}"):
+                npt.assert_array_almost_equal(computed[key], expected[key])
 
 
 def test_daily_gam(aep_project):
@@ -311,7 +416,20 @@ def test_daily_gam(aep_project):
     # Run Monte Carlo AEP analysis, confirm the results are consistent
     analysis.run(num_sim=5)
     sim_results = analysis.results
-    check_simulation_results_gam_daily(sim_results)
+
+    # Make sure AEP results are consistent to six decimal places
+    expected_results = [12.627031, 7.9379, 1.298632, 6.403933, 0.040224, 12.434362]
+
+    calculated_results = [
+        sim_results.aep_GWh.mean(),
+        sim_results.aep_GWh.std() / sim_results.aep_GWh.mean() * 100,
+        sim_results.avail_pct.mean() * 100,
+        sim_results.avail_pct.std() / sim_results.avail_pct.mean() * 100,
+        sim_results.curt_pct.mean() * 100,
+        sim_results.curt_pct.std() / sim_results.curt_pct.mean() * 100,
+    ]
+
+    npt.assert_array_almost_equal(calculated_results, expected_results)
 
 
 @pytest.mark.xfail(reason="Fails intermittently depending, mostly on MacOS.")
@@ -330,7 +448,20 @@ def test_daily_gbm(aep_project):
     # Run Monte Carlo AEP analysis, confirm the results are consistent
     analysis.run(num_sim=5)
     sim_results = analysis.results
-    check_simulation_results_gbm_daily(sim_results)
+
+    # Make sure AEP results are consistent to six decimal places
+    expected_results = [12.955753, 14.918292, 1.310864, 5.250295, 0.049952, 9.226035]
+
+    calculated_results = [
+        sim_results.aep_GWh.mean(),
+        sim_results.aep_GWh.std() / sim_results.aep_GWh.mean() * 100,
+        sim_results.avail_pct.mean() * 100,
+        sim_results.avail_pct.std() / sim_results.avail_pct.mean() * 100,
+        sim_results.curt_pct.mean() * 100,
+        sim_results.curt_pct.std() / sim_results.curt_pct.mean() * 100,
+    ]
+
+    npt.assert_array_almost_equal(calculated_results, expected_results)
 
 
 def test_daily_etr(aep_project):
@@ -348,7 +479,20 @@ def test_daily_etr(aep_project):
     # Run Monte Carlo AEP analysis, confirm the results are consistent
     analysis.run(num_sim=5)
     sim_results = analysis.results
-    check_simulation_results_etr_daily(sim_results)
+
+    # Make sure AEP results are consistent to six decimal places
+    expected_results = [12.938535, 8.561778, 1.334704, 5.33619, 0.057874, 11.339982]
+
+    calculated_results = [
+        sim_results.aep_GWh.mean(),
+        sim_results.aep_GWh.std() / sim_results.aep_GWh.mean() * 100,
+        sim_results.avail_pct.mean() * 100,
+        sim_results.avail_pct.std() / sim_results.avail_pct.mean() * 100,
+        sim_results.curt_pct.mean() * 100,
+        sim_results.curt_pct.std() / sim_results.curt_pct.mean() * 100,
+    ]
+
+    npt.assert_array_almost_equal(calculated_results, expected_results)
 
 
 def test_daily_gam_outliers(aep_project):
@@ -367,188 +511,16 @@ def test_daily_gam_outliers(aep_project):
     # Run Monte Carlo AEP analysis, confirm the results are consistent
     analysis.run(num_sim=5)
     sim_results = analysis.results
-    check_simulation_results_gam_daily_outliers(sim_results)
 
-
-def check_process_revenue_meter_energy_monthly(df):
-    # Energy Nan flags are all zero
-    npt.assert_array_equal(df["energy_nan_perc"].values, np.repeat(0.0, df.shape[0]))
-
-    # Expected number of days per month are equal to number of actual days
-    npt.assert_array_equal(df["num_days_expected"], df["num_days_actual"])
-
-    # Check a few energy values
-    expected_gwh = pd.Series([0.692400, 1.471730, 0.580035])
-    actual_gwh = df.loc[pd.to_datetime(["2014-06-01", "2014-12-01", "2015-10-01"]), "energy_gwh"]
-    npt.assert_array_almost_equal(actual_gwh, expected_gwh)
-
-
-def check_process_loss_estimates_monthly(df):
-    # Availablity, curtailment nan fields both 0, NaN flag is all False
-    npt.assert_array_equal(df["avail_nan_perc"].values, np.repeat(0.0, df.shape[0]))
-    npt.assert_array_equal(df["curt_nan_perc"].values, np.repeat(0.0, df.shape[0]))
-    npt.assert_array_equal(df["nan_flag"].values, np.repeat(False, df.shape[0]))  # noqa: FBT003
-
-    # Check a few reported availabilty and curtailment values
-    expected_avail_gwh = pd.Series([0.029417, 0.021005, 0.000444])
-    expected_curt_gwh = pd.Series([0.013250, 0.000000, 0.000000])
-    expected_avail_pct = pd.Series([0.040019, 0.014071, 0.000765])
-    expected_curt_pct = pd.Series([0.018026, 0.000000, 0.000000])
-
-    date_ind = pd.to_datetime(["2014-06-01", "2014-12-01", "2015-10-01"])
-
-    npt.assert_array_almost_equal(df.loc[date_ind, "availability_gwh"], expected_avail_gwh)
-    npt.assert_array_almost_equal(df.loc[date_ind, "curtailment_gwh"], expected_curt_gwh)
-    npt.assert_array_almost_equal(df.loc[date_ind, "availability_pct"], expected_avail_pct)
-    npt.assert_array_almost_equal(df.loc[date_ind, "curtailment_pct"], expected_curt_pct)
-
-
-def check_process_reanalysis_data_monthly(df, df_rean):
-    expected = {
-        "merra2": [5.42523278, 6.86883337, 5.02690892],
-        "era5": [5.20508049, 6.71586744, 5.23824611],
-        "merra2_WMETR_HorWdDir": [11.74700241, 250.90081133, 123.70142025],
-        "era5_WMETR_HorWdDir": [23.4291153, 253.14150601, 121.25886916],
-        "merra2_WMETR_EnvTmp": [289.87128364, 275.26493716, 281.72562887],
-        "era5_WMETR_EnvTmp": [290.82110632, 276.62490053, 282.71629935],
-    }
-
-    date_ind = pd.to_datetime(["2014-06-01", "2014-12-01", "2015-10-01"])
-    computed = {key: df.loc[date_ind, key].to_numpy() for key in expected}
-
-    for key in expected:
-        npt.assert_array_almost_equal(computed[key], expected[key])
-
-    # check that date range is truncated correctly
-    assert (df_rean.index[0], df_rean.index[-1]) == (
-        pd.to_datetime("1999-01-01 00:00:00"),
-        pd.to_datetime("2019-04-01 00:00:00"),
-    )
-
-
-def check_process_revenue_meter_energy_daily(df):
-    # Energy Nan flags are all zero
-    npt.assert_array_equal(df["energy_nan_perc"].values, np.repeat(0.0, df.shape[0]))
-
-    # Check a few energy values
-    expected_gwh = pd.Series([0.0848525, 0.0253657, 0.0668642])
-    actual_gwh = df.loc[pd.to_datetime(["2014-01-02", "2014-10-12", "2015-12-28"]), "energy_gwh"]
-    npt.assert_array_almost_equal(actual_gwh, expected_gwh)
-
-
-def check_process_loss_estimates_daily(df):
-    # Availablity, curtailment nan fields both 0, NaN flag is all False
-    npt.assert_array_equal(df["avail_nan_perc"].values, np.repeat(0.0, df.shape[0]))
-    npt.assert_array_equal(df["curt_nan_perc"].values, np.repeat(0.0, df.shape[0]))
-    npt.assert_array_equal(df["nan_flag"].values, np.repeat(False, df.shape[0]))  # noqa: FBT003
-
-    # Check a few reported availabilty and curtailment values
-    expected_avail_gwh = pd.Series([0.0000483644, 0.000000, 0.000000])
-    expected_curt_gwh = pd.Series([0.000000, 0.00019581, 0.000000])
-    expected_avail_pct = pd.Series([0.000569658, 0.000000, 0.000000])
-    expected_curt_pct = pd.Series([0.000000, 0.00766034, 0.000000])
-
-    date_ind = pd.to_datetime(["2014-01-02", "2014-10-12", "2015-12-28"])
-
-    npt.assert_array_almost_equal(df.loc[date_ind, "availability_gwh"], expected_avail_gwh)
-    npt.assert_array_almost_equal(df.loc[date_ind, "curtailment_gwh"], expected_curt_gwh)
-    npt.assert_array_almost_equal(df.loc[date_ind, "availability_pct"], expected_avail_pct)
-    npt.assert_array_almost_equal(df.loc[date_ind, "curtailment_pct"], expected_curt_pct)
-
-
-def check_process_reanalysis_data_daily(df):
-    expected = {
-        "merra2": np.array([11.02459231, 7.04306896, 8.41880152]),
-        "era5": np.array([10.47942319, 7.71069617, 9.60864791]),
-        "merra2_WMETR_HorWdDir": np.array([213.81683361, 129.08053181, 170.39815032]),
-        "era5_WMETR_HorWdDir": np.array([212.23854097, 127.75317448, 170.33488958]),
-        "merra2_WMETR_EnvTmp": np.array([279.67922333, 285.69317833, 278.15574917]),
-        "era5_WMETR_EnvTmp": np.array([281.14880642, 285.81961816, 280.42017656]),
-    }
-
-    date_ind = pd.to_datetime(["2014-01-02", "2014-10-12", "2015-12-28"])
-    computed = {key: df.loc[date_ind, key].to_numpy() for key in expected}
-
-    for key in expected:
-        # with subtests.test(f"checking {key}"):
-        npt.assert_array_almost_equal(computed[key], expected[key])
-
-
-def check_simulation_results_lin_monthly(s):
-    # Make sure AEP results are consistent to six decimal places
-    expected_results = [11.284629, 10.801102, 1.130812, 4.287147, 0.061666, 5.365357]
-
-    calculated_results = [
-        s.aep_GWh.mean(),
-        s.aep_GWh.std() / s.aep_GWh.mean() * 100,
-        s.avail_pct.mean() * 100,
-        s.avail_pct.std() / s.avail_pct.mean() * 100,
-        s.curt_pct.mean() * 100,
-        s.curt_pct.std() / s.curt_pct.mean() * 100,
-    ]
-
-    npt.assert_array_almost_equal(calculated_results, expected_results)
-
-
-def check_simulation_results_gam_daily(s):
-    # Make sure AEP results are consistent to six decimal places
-    expected_results = [12.627031, 7.9379, 1.298632, 6.403933, 0.040224, 12.434362]
-
-    calculated_results = [
-        s.aep_GWh.mean(),
-        s.aep_GWh.std() / s.aep_GWh.mean() * 100,
-        s.avail_pct.mean() * 100,
-        s.avail_pct.std() / s.avail_pct.mean() * 100,
-        s.curt_pct.mean() * 100,
-        s.curt_pct.std() / s.curt_pct.mean() * 100,
-    ]
-
-    npt.assert_array_almost_equal(calculated_results, expected_results)
-
-
-def check_simulation_results_gbm_daily(s):
-    # Make sure AEP results are consistent to six decimal places
-    expected_results = [12.955753, 14.918292, 1.310864, 5.250295, 0.049952, 9.226035]
-
-    calculated_results = [
-        s.aep_GWh.mean(),
-        s.aep_GWh.std() / s.aep_GWh.mean() * 100,
-        s.avail_pct.mean() * 100,
-        s.avail_pct.std() / s.avail_pct.mean() * 100,
-        s.curt_pct.mean() * 100,
-        s.curt_pct.std() / s.curt_pct.mean() * 100,
-    ]
-
-    npt.assert_array_almost_equal(calculated_results, expected_results)
-
-
-def check_simulation_results_etr_daily(s):
-    # Make sure AEP results are consistent to six decimal places
-    expected_results = [12.938535, 8.561778, 1.334704, 5.33619, 0.057874, 11.339982]
-
-    calculated_results = [
-        s.aep_GWh.mean(),
-        s.aep_GWh.std() / s.aep_GWh.mean() * 100,
-        s.avail_pct.mean() * 100,
-        s.avail_pct.std() / s.avail_pct.mean() * 100,
-        s.curt_pct.mean() * 100,
-        s.curt_pct.std() / s.curt_pct.mean() * 100,
-    ]
-
-    npt.assert_array_almost_equal(calculated_results, expected_results)
-
-
-def check_simulation_results_gam_daily_outliers(s):
     # Make sure AEP results are consistent to six decimal places
     expected_results = [12.407638, 15.787861, 1.295542, 6.693327, 0.039864, 15.81297]
-
     calculated_results = [
-        s.aep_GWh.mean(),
-        s.aep_GWh.std() / s.aep_GWh.mean() * 100,
-        s.avail_pct.mean() * 100,
-        s.avail_pct.std() / s.avail_pct.mean() * 100,
-        s.curt_pct.mean() * 100,
-        s.curt_pct.std() / s.curt_pct.mean() * 100,
+        sim_results.aep_GWh.mean(),
+        sim_results.aep_GWh.std() / sim_results.aep_GWh.mean() * 100,
+        sim_results.avail_pct.mean() * 100,
+        sim_results.avail_pct.std() / sim_results.avail_pct.mean() * 100,
+        sim_results.curt_pct.mean() * 100,
+        sim_results.curt_pct.std() / sim_results.curt_pct.mean() * 100,
     ]
 
     npt.assert_array_almost_equal(calculated_results, expected_results)
