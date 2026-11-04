@@ -54,8 +54,8 @@ master_doc = "index"
 
 # General information about the project.
 project = "OpenOA"
-copyright = "2023, NREL"
-author = "NREL PRUF OA Team"
+copyright = "2026, Alliance for Energy Innovation, LLC"
+author = "NLR PRUF OA Team"
 
 
 # The version info for the project you're documenting, acts as replacement for
@@ -122,7 +122,7 @@ html_css_files = [
 # documentation.
 #
 html_theme_options = {
-    "github_url": "https://github.com/NREL/OpenOA",
+    "github_url": "https://github.com/NatLabRockies/OpenOA",
     "navbar_start": ["navbar-logo"],
     "show_toc_level": 3,
     "show_nav_level": 2,
@@ -193,7 +193,7 @@ latex_documents = [
         master_doc,
         "OperationalAnalysis.tex",
         "Operational Analysis Documentation",
-        "NREL PRUF OA Team",
+        "NLR PRUF OA Team",
         "manual",
     ),
 ]

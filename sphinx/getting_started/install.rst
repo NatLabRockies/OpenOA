@@ -34,9 +34,9 @@ at the same time with the following.
 Additional options:
 - `develop`: for linting, automated formatting, and testing
 - `docs`: for building the documentation
-- `examples`: for the full Jupyter Lab suite (also contains `reanalysis` and `nrel-wind`)
+- `examples`: for the full Jupyter Lab suite (also contains `reanalysis` and `nlr-wind`)
 - `renalysis`: for accessing and processing MERRA2 and ERA5 data
-- `nrel-wind`: for accessing the NREL WIND Toolkit
+- `nlr-wind`: for accessing the NLR WIND Toolkit
 - `all`: for the complete dependency stack
 
 
@@ -57,7 +57,7 @@ guidelines and processes, please see the :ref:`contributors guide <contributing>
 
 .. code-block:: bash
 
-    git clone https://github.com/NREL/OpenOA.git
+    git clone https://github.com/NatLabRockies/OpenOA.git
     cd openoa
     pip install -e .
 

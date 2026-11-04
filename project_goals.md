@@ -1,9 +1,9 @@
-<img src="https://github.com/NREL/OpenOA/blob/develop/Open%20OA%20Final%20Logos/Color/Open%20OA%20Color%20Transparent%20Background.png?raw=true" alt="OpenOA" width="300"/>
+<img src="https://github.com/NatLabRockies/OpenOA/blob/develop/Open%20OA%20Final%20Logos/Color/Open%20OA%20Color%20Transparent%20Background.png?raw=true" alt="OpenOA" width="300"/>
 
 Project Goals
 =============
 OpenOA is an open source software project started at the
-National Renewable Energy Laboratory (NREL) to standardize,
+Nataional Laboratory of the Rockies (NLR) to standardize,
 streamline, and improve data analysis workflows in the wind
 energy industry.
 

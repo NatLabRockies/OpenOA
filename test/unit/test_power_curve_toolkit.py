@@ -22,7 +22,7 @@ def generic_power_curve():
 
 @pytest.fixture
 def nrel_15mw_power_curve():
-    # power curve source: https://github.com/NREL/turbine-models/blob/master/Offshore/2020ATB_NREL_Reference_15MW_240.csv
+    # power curve source: https://github.com/NatLabRockies/turbine-models/blob/master/Offshore/2020ATB_NREL_Reference_15MW_240.csv
     nrel_15mw_wind = pd.Series(np.arange(4, 26))
     nrel_15mw_power = pd.Series(
         np.array(

@@ -4,7 +4,7 @@
 ## Getting Started
 
 These contributing guidelines should be read by software developers wishing to contribute code or
-documentation changes into OpenOA, or to push changes upstream to the main NREL/OpenOA repository.
+documentation changes into OpenOA, or to push changes upstream to the main NatLabRockies/OpenOA repository.
 
 1. Create a fork of OpenOA on GitHub
 2. Clone your fork of the repository
@@ -36,9 +36,9 @@ documentation changes into OpenOA, or to push changes upstream to the main NREL/
    pre-commit install
    ```
 
-## Keeping your fork in sync with NREL/OpenOA
+## Keeping your fork in sync with NatLabRockies/OpenOA
 
-The "main" OpenOA repository is regularly updated with ongoing research at NREL and beyond. After
+The "main" OpenOA repository is regularly updated with ongoing research at NLR and beyond. After
 creating and cloning your fork from the previous section, you might be wondering how to keep it
 up to date with the latest improvements.
 
@@ -53,14 +53,14 @@ inevitably arise in development work.
    cd /your/path/to/OpenOA/
    ```
 
-2. If you haven't already, add NREL/OpenOA as the "upstream" location (or whichever naming
+2. If you haven't already, add NatLabRockies/OpenOA as the "upstream" location (or whichever naming
    convention you prefer).
 
    ```bash
-   git remote add upstream https://github.com/NREL/OpenOA.git
+   git remote add upstream https://github.com/NatLabRockies/OpenOA.git
    ```
 
-   To find the name you've given NREL/Openoa again, you can simply run the following to display
+   To find the name you've given NatLabRockies/Openoa again, you can simply run the following to display
    all of the remote sources you're tracking.
 
    ```bash
@@ -73,7 +73,7 @@ inevitably arise in development work.
    git fetch --all
    ```
 
-4. Sync the upstream (NREL) changes
+4. Sync the upstream (NatLabRockies) changes
 
    ```bash
    # If there was a new release this will need to be updated
@@ -96,10 +96,10 @@ inevitably arise in development work.
 ## Issue Tracking
 
 New feature requests, changes, enhancements, non-methodology features, and bug reports can be filed
-as new issues in the [Github.com issue tracker](https://github.com/NREL/OpenOA/issues) at any time.
+as new issues in the [Github.com issue tracker](https://github.com/NatLabRockies/OpenOA/issues) at any time.
 Please be sure to fully describe the issue.
 
-For other issues, please email the OpenOA distribution list at `openoa@nrel.gov`.
+For other issues, please email the OpenOA distribution list at `openoa@nlr.gov`.
 
 ### Issue Submission Checklist
 
@@ -118,7 +118,7 @@ For other issues, please email the OpenOA distribution list at `openoa@nrel.gov`
 
 ## Repository
 
-The OpenOA repository is hosted on Github, and located here: http://github.com/NREL/OpenOA
+The OpenOA repository is hosted on Github, and located here: http://github.com/NatLabRockies/OpenOA
 
 This repository is organized using a modified git-flow system. Branches are organized as follows:
 
@@ -133,12 +133,12 @@ To work on a feature, please fork OpenOA first and then create a feature branch 
 Work out of this feature branch before submitting a pull request.
 Be sure to periodically synchronize the upstream develop branch into your feature branch to avoid conflicts in the pull request.
 
-When your branch is ready, make a pull request to NREL/OpenOA through the
-[GitHub web interface](https://github.com/NREL/OpenOA/pulls). When submitting a pull request, you
+When your branch is ready, make a pull request to NatLabRockies/OpenOA through the
+[GitHub web interface](https://github.com/NatLabRockies/OpenOA/pulls). When submitting a pull request, you
 will need to accept the Contributor License Agreement(CLA).
 [CLA Language](https://gist.github.com/Dynorat/118aaa0c8277be986c59c32029898faa)
 
-[![CLA assistant](https://cla-assistant.io/readme/badge/NREL/OpenOA)](https://cla-assistant.io/NREL/OpenOA)
+[![CLA assistant](https://cla-assistant.io/readme/badge/NatLabRockies/OpenOA)](https://cla-assistant.io/NatLabRockies/OpenOA)
 
 ## Coding Style
 
@@ -147,7 +147,7 @@ commits their code. Specifically, this code utilizes ``ruff`` for automatic form
 quotation usage, hanging lines, etc.) and linting and ``isort`` for automatic import sorting.
 
 To activate the ``pre-commit`` workflow, the user must install the develop version as outlined in the
-[Readme](https://github.com/NREL/OpenOA/tree/develop#Development), and run the following line:
+[Readme](https://github.com/NatLabRockies/OpenOA/tree/develop#Development), and run the following line:
 
 ```bash
 pre-commit install
@@ -284,5 +284,5 @@ over time, regardless of who the core developers are.
    ```
 
 - Deploying a Package to PyPi
-  - The repository is equipped with a github action to build and publish new versions to PyPI. A maintainer can invoke this workflow by pushing a tag to the NREL/OpenOA repository with prefix "v", such as "v1.2.3".
+  - The repository is equipped with a github action to build and publish new versions to PyPI. A maintainer can invoke this workflow by pushing a tag to the NatLabRockies/OpenOA repository with prefix "v", such as "v1.2.3".
   - The action is defined in `.github/workflows/tags-to-pypi.yml`.
