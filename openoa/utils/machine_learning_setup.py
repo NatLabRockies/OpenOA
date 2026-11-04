@@ -10,13 +10,13 @@ Specifically, this toolkit constrains the following:
     1. The learning algorithms available
 
     These include extremely randomized trees, gradient boosting, and a generalized additive model
-    (from pyGAM library, not SciKit-Learn). These algorithms have been used extensively at NREL and
+    (from pyGAM library, not SciKit-Learn). These algorithms have been used extensively at NLR and
     have been found to provide robust results for a range of turbine and wind plant power analyses.
 
     2. Hyperparameter ranges for optimizing algorithms
 
     Specific hyperparameter ranges for each algorithm are provided in this toolkit. Similar to the
-    learning algorithms, the hyperparameter ranges are based on NREL's experience in applying these
+    learning algorithms, the hyperparameter ranges are based on NLR's experience in applying these
     algorithms to several turbine and wind plant energy analyses.
 
     3. The type of grid search used for cross-validation

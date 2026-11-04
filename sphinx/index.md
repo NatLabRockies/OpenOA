@@ -9,7 +9,7 @@ methods, and utility functions relevant to wind plant OA, while providing a plat
 on new functionality.
 
 Development of OpenOA was motivated by the Wind Plant Performance Prediction (WP3) Benchmark project
-[^2], led by the National Renewable Energy Laboratory (NREL), which focuses on quantifying and
+[^2], led by the Nataional Laboratory of the Rockies (NLR), which focuses on quantifying and
 understanding differences between the expected and actual energy production of wind plants. To
 support the WP3 Benchmark project, OpenOA was initially developed to provide a baseline
 implementation of a long-term operational annual energy production (AEP) estimation method. It has
@@ -18,18 +18,18 @@ schema for time-series data from wind power plants.
 
 ```{warning}
 OpenOA is a research software library and is released under a BSD-3 license. Please refer
-to the accompanying [license file](https://github.com/NREL/OpenOA/blob/docs/main/LICENSE.txt) for
+to the accompanying [license file](https://github.com/NatLabRockies/OpenOA/blob/docs/main/LICENSE.txt) for
 the full terms. We encourage caution, use of best practices, and engagement with subject matter
 experts when performing any data analysis.
 ```
 
 ### Part of the WETO Stack
 
-OpenOA is primarily developed with the support of the U.S. Department of Energy and is part of the [WETO Software Stack](https://nrel.github.io/WETOStack). For more information and other integrated modeling software, see:
+OpenOA is primarily developed with the support of the U.S. Department of Energy and is part of the [WETO Software Stack](https://natlabrockies.github.io/WETOStack). For more information and other integrated modeling software, see:
 
-- [Portfolio Overview](https://nrel.github.io/WETOStack/portfolio_analysis/overview.html)
-- [Entry Guide](https://nrel.github.io/WETOStack/_static/entry_guide/index.html)
-- [Controls and Analysis Workshop](https://nrel.github.io/WETOStack/workshops/user_workshops_2024.html#wind-farm-controls-and-analysis)
+- [Portfolio Overview](https://natlabrockies.github.io/WETOStack/portfolio_analysis/overview.html)
+- [Entry Guide](https://natlabrockies.github.io/WETOStack/_static/entry_guide/index.html)
+- [Controls and Analysis Workshop](https://natlabrockies.github.io/WETOStack/workshops/user_workshops_2024.html#wind-farm-controls-and-analysis)
 
 
 ### Analysis Methods
@@ -99,7 +99,7 @@ conda activate openoa-env
 Clone the repository and install the library and its dependencies using pip:
 
 ```bash
-git clone https://github.com/NREL/OpenOA.git
+git clone https://github.com/NatLabRockies/OpenOA.git
 cd OpenOA
 pip install .
 ```
@@ -149,7 +149,7 @@ effort more broadly,** please use citation [^1], which is provided below in BibT
 
 [^1]: Perr-Sauer, J., and Optis, M., Fields, J.M., Bodini, N., Lee, J.C.Y., Todd, A., Simley, E., Hammond, R., Phillips, C., Lunacek, M., Kemper, T., Williams, L., Craig, A., Agarwal, N., Sheng, S., and Meissner, J. OpenOA: An Open-Source Codebase For Operational Analysis of Wind Farms. *Journal of Open Source Software*, 6(58):2171 (2022). https://doi.org/10.21105/joss.02171.
 
-[^2]: Fields, M. J., Optis, M., Perr-Sauer, J., Todd, A., Lee, J. C. Y., Meissner, J., Simley, E., Bodini, N., Williams, L., Sheng, S., and Hammond, R.. Wind plant performance prediction benchmark phase 1 technical report, NREL/TP-5000-78715. Technical Report, National Renewable Energy Laboratory, Golden, CO (2021). https://doi.org/10.2172/1826665.
+[^2]: Fields, M. J., Optis, M., Perr-Sauer, J., Todd, A., Lee, J. C. Y., Meissner, J., Simley, E., Bodini, N., Williams, L., Sheng, S., and Hammond, R.. Wind plant performance prediction benchmark phase 1 technical report, NLR/TP-5000-78715. Technical Report, National Renewable Energy Laboratory, Golden, CO (2021). https://doi.org/10.2172/1826665.
 
 [^3]: Bodini, N. & Optis, M. Operational-based annual energy production uncertainty: are its components actually uncorrelated? *Wind Energy Science* 5(4):1435–1448 (2020). https://doi.org/10.5194/wes-5-1435-2020.
 

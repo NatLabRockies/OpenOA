@@ -510,7 +510,7 @@ def wtk_coordinate_indices(
 def wtk_diurnal_prep(
     latitude: float,
     longitude: float,
-    fn: str = "/nrel/wtk-us.h5",
+    fn: str = "/nlr/wtk-us.h5",
     start_date: str = "2007-01-01",
     end_date: str = "2013-12-31",
 ) -> pd.Series:
@@ -520,7 +520,7 @@ def wtk_diurnal_prep(
     Args:
         latitude (:obj: `float`): The latitude of the wind power plant's center.
         longitude (:obj: `float`): The longitude of the wind power plant's center.
-        fn (:obj: `str`, optional): The path and name of the WTK API file. Defaults to "/nrel/wtk-us.h5".
+        fn (:obj: `str`, optional): The path and name of the WTK API file. Defaults to "/nlr/wtk-us.h5".
         start_date (:obj: `str`, optional): Starting date for the WTK data. Defaults to "2007-01-01".
         end_date (:obj: `str`, optional): Ending date for the WTK data. Defaults to "2013-12-31".
 
@@ -566,7 +566,7 @@ def wtk_diurnal_plot(
     *,
     latitude: float = 0,
     longitude: float = 0,
-    fn: str = "/nrel/wtk-us.h5",
+    fn: str = "/nlr/wtk-us.h5",
     start_date: str = "2007-01-01",
     end_date: str = "2013-12-31",
     return_fig: bool = False,
@@ -583,7 +583,7 @@ def wtk_diurnal_plot(
         power_col (:obj: `str`): The name of the power column in :py:attr:`scada_df`
         latitude (:obj: `float`): The latitude of the wind power plant's center.
         longitude (:obj: `float`): The longitude of the wind power plant's center.
-        fn (:obj: `str`, optional): WTK API file path and location. Defaults to "/nrel/wtk-us.h5".
+        fn (:obj: `str`, optional): WTK API file path and location. Defaults to "/nlr/wtk-us.h5".
         start_date (:obj: `str` | None, optional): Starting date for the WTK data. If None, then it
             uses the starting date of :py:attr:`scada_df`. Defaults to None.
         end_date (:obj: `str` | None, optional): Ending date for the WTK data. If None, then it

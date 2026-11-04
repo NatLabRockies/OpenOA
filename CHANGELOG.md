@@ -1,5 +1,5 @@
 # Changelog
-All notable changes to this project will be documented in this file. If you make a notable change to the project, please add a line describing the change to the "unreleased" section. The maintainers will make an effort to keep the [Github Releases](https://github.com/NREL/OpenOA/releases) page up to date with this changelog. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+All notable changes to this project will be documented in this file. If you make a notable change to the project, please add a line describing the change to the "unreleased" section. The maintainers will make an effort to keep the [Github Releases](https://github.com/NatLabRockies/OpenOA/releases) page up to date with this changelog. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## Unreleased
 
@@ -95,7 +95,7 @@ which helps avoid Pandas warnings.
 - Python 3.11 is now supported.
 - Updates the dependency requirements to minimize the number of required packages, and have a more
   expansive list of modifiers. Users can now use any combination of
-  `pip install openoa[examples, develop, docs, nrel-wind, reanalysis]` to ensure the appropriate
+  `pip install openoa[examples, develop, docs, nlr-wind, reanalysis]` to ensure the appropriate
   packages are installed for their workflow.
 - Adds a `--unit` and `--regression` flag for running pytest that works in addition to
 `pytest test/unit` or `pytest test/regression`.

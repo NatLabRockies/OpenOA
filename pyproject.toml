@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "OpenOA"
 dynamic = ["version"]
-authors = [{name = "NREL PRUF OA Team", email = "openoa@nrel.gov"}]
+authors = [{name = "NLR PRUF OA Team", email = "openoa@nlr.gov"}]
 readme = {file = "README.md", content-type = "text/markdown"}
 description = "A package for collecting and assigning wind turbine metrics"
 requires-python = ">=3.11,<3.15"  # TODO: Check back in for 3.15 support in pyGAm
@@ -61,10 +61,10 @@ classifiers = [  # https://pypi.org/classifiers/
 ]
 
 [project.urls]
-source = "https://github.com/NREL/OpenOA"
+source = "https://github.com/NatLabRockies/OpenOA"
 documentation = "https://openoa.readthedocs.io/"
-issues = "https://github.com/NREL/OpenOA/issues"
-changelog = "https://github.com/NREL/OpenOA/blob/main/CHANGELOG.md"
+issues = "https://github.com/NatLabRockies/OpenOA/issues"
+changelog = "https://github.com/NatLabRockies/OpenOA/blob/main/CHANGELOG.md"
 
 [project.optional-dependencies]
 develop = [
@@ -83,7 +83,7 @@ docs = [
   "myst-nb",
   "myst-parser",
 ]
-nrel-wind = ["h5pyd"]
+nlr-wind = ["h5pyd"]
 reanalysis = [
   "cdsapi",
   "xarray[parallel]",
@@ -91,7 +91,7 @@ reanalysis = [
   "netcdf4",
 ]
 examples = [
-  "openoa[reanalysis,nrel-wind]",
+  "openoa[reanalysis,nlr-wind]",
   "jupyterlab"
 ]
 all = ["openoa[develop,docs,examples]"]
