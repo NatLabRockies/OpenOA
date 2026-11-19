@@ -3,9 +3,9 @@
 -----
 
 [![Journal of Open Source Software Badge](https://joss.theoj.org/papers/d635ef3c3784d49f6e81e07a0b35ff6b/status.svg)](https://joss.theoj.org/papers/d635ef3c3784d49f6e81e07a0b35ff6b)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24294532.svg)](https://doi.org/10.5281/zenodo.24294532)
 [![PyPI version](https://badge.fury.io/py/openoa.svg)](https://badge.fury.io/py/openoa)
 [![License](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
-[![Gitter Badge](https://badges.gitter.im/NREL_OpenOA/community.svg)](https://gitter.im/NREL_OpenOA/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 [![Binder Badge](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/NatLabRockies/OpenOA/main?filepath=examples)
 
 [![Documentation Badge](https://readthedocs.org/projects/openoa/badge/?version=latest)](https://openoa.readthedocs.io)
@@ -118,11 +118,27 @@ effort more broadly,** please use citation [^1], which is provided below in BibT
    }
 ```
 
+For citing a specific version of the software, starting with the v3 release, please use our Zenodo
+citation, below.
+
+```bibtex
+@software{perr_sauer_2026_24293849
+  author = {Perr-Sauer, Jordan and Optis, Mike and Fields, Jason M. and Bodini, Nicola and Lee, Joseph C.Y. and Todd, Austin and Simley, Eric and Hammond, Rob and Phillips, Caleb and Lunacek, Monte and Kemper, Travis and Williams, Lindy and Craig, Anna and Agarwal, Nathan and Sheng, Shawn and Meissner, John},
+  title = {OpenOA},
+  month = jan,
+  year = 2026,
+  publisher = {Zenodo},
+  version = {3.2},
+  doi = {10.5281/zenodo.24293849},
+  url = {https://doi.org/10.5281/zenodo.24293849},
+}
+```
+
 ## Installation and Usage
 
 ### Requirements
 
-- Python 3.9-3.12 with pip.
+- Python 3.11-14 with pip.
 
 We strongly recommend using the Anaconda Python distribution and creating a new conda environment
 for OpenOA. You can download Anaconda through

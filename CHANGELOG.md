@@ -12,6 +12,8 @@ All notable changes to this project will be documented in this file. If you make
   While pyGAM uses the normal distribution by default, the TweedieRegressor is now set to use the normal,
   combined Poisson-Gamma, and Inverse Gamma distributions with the `MonteCarloAEP` overriding the default
   hyper parameter selection to use the normal distribution only when non-positive energy generation is present.
+- A Zenodo reference has been added for simplified version citations: https://doi.org/10.5281/zenodo.24293849 with
+  an Action to automatically upload new releases.
 
 ## v3.2 - 2026-01-29
 
