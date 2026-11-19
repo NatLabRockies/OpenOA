@@ -122,15 +122,15 @@ For citing a specific version of the software, starting with the v3 release, ple
 citation, below.
 
 ```bibtex
-@software{perr_sauer_2026_24294532,
+@software{perr_sauer_2026_24293849
   author = {Perr-Sauer, Jordan and Optis, Mike and Fields, Jason M. and Bodini, Nicola and Lee, Joseph C.Y. and Todd, Austin and Simley, Eric and Hammond, Rob and Phillips, Caleb and Lunacek, Monte and Kemper, Travis and Williams, Lindy and Craig, Anna and Agarwal, Nathan and Sheng, Shawn and Meissner, John},
   title = {OpenOA},
   month = jan,
   year = 2026,
   publisher = {Zenodo},
   version = {3.2},
-  doi = {10.5281/zenodo.24294532},
-  url = {https://doi.org/10.5281/zenodo.24294532},
+  doi = {10.5281/zenodo.24293849},
+  url = {https://doi.org/10.5281/zenodo.24293849},
 }
 ```
 
@@ -138,7 +138,7 @@ citation, below.
 
 ### Requirements
 
-- Python 3.9-3.12 with pip.
+- Python 3.11-14 with pip.
 
 We strongly recommend using the Anaconda Python distribution and creating a new conda environment
 for OpenOA. You can download Anaconda through
