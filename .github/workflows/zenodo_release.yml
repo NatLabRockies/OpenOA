@@ -1,0 +1,29 @@
+name: Zenodo Release
+on:
+  release:
+    types: [published]
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Download archive to runner
+        env:
+          tarball: ${{ github.event.release.tarball_url }}
+          zipball: ${{ github.event.release.zipball_url }}
+          version: ${{ github.event.release.tag_name }}
+        run: |
+          name=$(basename ${zipball}).zip
+          curl -L $zipball > $name
+          echo "archive=${name}" >> $GITHUB_ENV
+      - name: Run Zenodo Deploy
+        uses: rseng/zenodo-release@main
+        with:
+          token: ${{ secrets.ZENODO_TOKEN }}
+          version: ${{ github.event.release.tag_name }}
+          zenodo_json: .zenodo.json
+          html_url: ${{ github.event.release.html_url }}
+          archive: ${{ env.archive }}
+          title: ${{ github.repository }}:${{ github.event.release.tag_name }}
+          description: <h1>${{ github.event.release.tag_name }}</h1>
+          doi: 10.5281/zenodo.24293849
